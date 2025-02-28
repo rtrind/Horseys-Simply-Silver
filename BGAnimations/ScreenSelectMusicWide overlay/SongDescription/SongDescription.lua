@@ -73,7 +73,7 @@ af[#af+1] = Def.ActorFrame{
  			 else
  			--  This is a cleaner way to call the group name of a selected song, but I prefer the above method because it shows the actual songfolder directory, which sometimes has information in it. You can set your preference in Simply Love Options for which method you prefer.
  				 if song then
- 					 actor:settext(song:GetGroupName());
+ 					 actor:settext(string.gsub(song:GetGroupName(),"^%w%d%d%d%d%w? ?%- ?", ""));
  				 else
  					 actor:settext("")
  				 end
