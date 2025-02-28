@@ -200,6 +200,32 @@ for player in ivalues(PlayerNumber) do
 			self:visible(false)
 		end,
 	}
+
+	-- Favorite for profile
+	af[#af+1] = Def.Sprite{
+		Texture=THEME:GetPathG("", "_VisualStyles/Hearts/SelectColor.png"),
+		InitCommand=function(self)
+			self:visible(false)
+		end,
+		SetCommand=function(self, params)
+			-- Only display if a profile is found for an enabled player and a song is selected.
+			if not GAMESTATE:IsPlayerEnabled(player) or not PROFILEMAN:IsPersistentProfile(player) or not params.Song then
+				self:visible(false)
+				return
+			end
+
+			self:zoom(0.045):diffuse(1,0,0,0.3):y(0):horizalign(center)
+			if player == PLAYER_1 then
+				self:x(SL_WideScale(10, 17))
+			elseif player == PLAYER_2 then
+				self:x(SL_WideScale(26, 47))
+			end
+
+			-- Show sprite if favorite
+			local profile = PROFILEMAN:GetProfile(player)
+			self:visible(profile:SongIsFavorite(params.Song))
+		end
+	}
 end
 
 return af

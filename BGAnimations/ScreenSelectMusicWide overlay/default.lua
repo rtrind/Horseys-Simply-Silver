@@ -87,6 +87,8 @@ local af = Def.ActorFrame{
 
 	LoadActor("./SongSearch/default.lua"),
 
+	LoadActor("../ScreenSelectMusic overlay/ToggleFavorite.lua"),
+
 	LoadActor("./footer.lua"),
 }
 

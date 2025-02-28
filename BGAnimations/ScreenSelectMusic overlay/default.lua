@@ -84,6 +84,8 @@ local af = Def.ActorFrame{
 	LoadActor("./EscapeFromEventMode.lua"),
 
 	LoadActor("./SongSearch/default.lua"),
+
+	LoadActor("./ToggleFavorite.lua"),
 }
 
 return af
