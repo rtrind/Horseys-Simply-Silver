@@ -67,7 +67,7 @@ af[#af+1] = Def.Sprite{
 	Texture=THEME:GetPathG("", "Has Edit (doubleres).png"),
 	InitCommand=function(self)
 		self:horizalign(left):visible(false):zoom(0.375)
-		self:x(_screen.w/2.125 - self:GetWidth()*self:GetZoom())
+		self:x(_screen.w/WideScale(2.19,2.125) - self:GetWidth()*self:GetZoom())
 	end,
 	SetCommand=function(self, params)
 		self:visible(params.Song and params.Song:HasEdits(stepstype) or false)
