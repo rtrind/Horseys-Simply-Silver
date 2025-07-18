@@ -770,6 +770,24 @@ local Overrides = {
 	-------------------------------------------------------------------------
 	BPMLines = {
 		Values = { "Off", "On" },
+		LoadSelections = function(self, list, pn)
+			local val = SL[ToEnumShortString(pn)].ActiveModifiers.BPMLines or "Off"
+			for i,v in ipairs(self.Values) do
+				if v == val then
+					list[i] = true
+					break
+				end
+			end
+			return list
+		end,
+		SaveSelections = function(self, list, pn)
+			for i,v in ipairs(self.Values) do
+				if list[i] then
+					SL[ToEnumShortString(pn)].ActiveModifiers.BPMLines = v
+					break
+				end
+			end
+		end
 	},
 	-------------------------------------------------------------------------
 	TimingWindows = {
