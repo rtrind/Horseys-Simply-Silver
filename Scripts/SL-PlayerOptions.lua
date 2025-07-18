@@ -768,6 +768,10 @@ local Overrides = {
 		Values = { "Off", "Measure", "Quarter", "Eighth" },
 	},
 	-------------------------------------------------------------------------
+	BPMLines = {
+		Values = { "Off", "On" },
+	},
+	-------------------------------------------------------------------------
 	TimingWindows = {
 		Values = function()
 			return {

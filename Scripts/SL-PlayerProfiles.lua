@@ -62,6 +62,7 @@ local permitted_profile_settings = {
 	MiniIndicatorColor	 = "string",
 
 	MeasureLines         = "string",
+	BPMLines             = "string",
 
 	ColumnFlashOnMiss    = "boolean",
 	SubtractiveScoring   = "boolean",

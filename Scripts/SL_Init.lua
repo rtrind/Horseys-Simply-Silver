@@ -30,6 +30,7 @@ local PlayerDefaults = {
 				MeasureCounterLeft = true,
 				MeasureCounterUp = false,
 				MeasureLines = "Off",
+				BPMLines = "Off",
 				DataVisualizations = "None",
 				StepStatsExtra = "None",
 				TargetScore = "Personal best",
