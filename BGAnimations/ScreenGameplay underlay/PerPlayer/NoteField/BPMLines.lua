@@ -17,33 +17,71 @@ end
 -- Thickness (pixels) of the horizontal line we will draw.
 local LINE_HEIGHT = 6
 
--- Which beat to draw the line at.
-local TARGET_BEAT = 4
+-- Beat offset (in beats) used to anchor the horizontal line relative to the
+-- current top-visible beat.
+local TARGET_BEAT = 36
 
--- Size (pixels) of the square we will draw.
--- This y-offset puts the square near the first upcoming arrow when playing
--- with standard (non-reverse) orientation.  It is based on the value used by
--- Simply Love for other NoteField decorations (see ColumnCues.lua etc.).
+-- Vertical offset (in pixels) that positions the horizontal line close to the
+-- first upcoming arrow when playing with a normal (non-reverse) scroll
+-- direction.  The value is borrowed from Simply Love's other NoteField
+-- decorations (e.g. ColumnCues.lua).
 local NOTEFIELD_Y_OFFSET = 80
 
 -- Cache some engine objects we will need every update.
 local ps   = GAMESTATE:GetPlayerState(player)
 local opts = ps:GetCurrentPlayerOptions()
 
--- Helper: convert a fractional beat offset into pixels on the notefield.  We
--- benefit from a Lua binding added to OutFox: NoteField:GetYPosForBeat(beat).
--- If it is not available (older SM/ITG engine) we fall back to a reasonable
--- approximation that uses a fixed pixel-per-beat scale (48px).
+-- Helper: convert a fractional beat offset into Y-pixels on the NoteField.
+-- We first try the OutFox-specific binding NoteField:GetYPosForBeat(beat).
+-- On engines that lack this helper we fall back to a simple approximation
+-- that assumes 64 px per beat at 1× scroll speed.
 local function BeatToPixels(notefield, beat)
 	if notefield and notefield.GetYPosForBeat then
 		return notefield:GetYPosForBeat(beat)
 	else
-		-- Fallback: assume 48px per beat at 1x scroll speed, then scale by the
-		-- player 0s actual scroll speed.
+		-- Fallback: assume 64 px per beat at 1× scroll speed and scale by the
+		-- player's actual SpeedMod.
 		local speed = tonumber(mods.SpeedMod) or 1
 		return beat * 64 * speed
 	end
 end
+
+-- Remove earlier single-line child creation; replace with multi-line implementation
+-- Examine the song's timing data and build a list of beats where the BPM
+-- changes by ≥3 % (ignoring beat 0).
+local beats_to_draw = {}
+local song = GAMESTATE:GetCurrentSong()
+if song and song:GetTimingData() and song:GetTimingData().GetBPMsAndTimes then
+    local bpm_table = song:GetTimingData():GetBPMsAndTimes()
+    if bpm_table and #bpm_table > 0 then
+        local prev_bpm = nil
+        for _,entry in ipairs(bpm_table) do
+            -- OutFox returns strings like "36.000000=196.007004"; parse them.
+            local beat_str, bpm_str = tostring(entry):match("([^=]+)=([^=]+)")
+            local beat = tonumber(beat_str)
+            local bpm  = tonumber(bpm_str)
+            if beat and bpm then
+                if not prev_bpm then
+                    -- Initialize previous bpm using first entry (usually beat 0).
+                    prev_bpm = bpm
+                else
+                    -- Skip very early beats (beat 0) and tiny changes <3%.
+                    if beat > 0 then
+                        local ratio = math.abs(bpm - prev_bpm) / prev_bpm
+                        if ratio >= 0.03 then
+                            table.insert(beats_to_draw, beat)
+                        end
+                    end
+                    prev_bpm = bpm
+                end
+            end
+        end
+    end
+end
+
+-- If no qualifying BPM changes, exit early
+if #beats_to_draw == 0 then return Def.Actor{} end
+SM("beats_to_draw: " .. #beats_to_draw)
 
 -- We draw everything inside an ActorFrame so that we can apply an UpdateFunction
 -- to the whole frame (making the maths a bit easier to reason about).
@@ -65,17 +103,16 @@ return Def.ActorFrame{
 
 	SetUpdateCommand=function(self)
 		self:SetUpdateFunction(function(self, _)
-			-- Grab the NoteField actor every update in case it wasn 0t available at
-			-- Init.  Once retrieved successfully we can cache it for the remainder of
-			-- the song.
+			-- Grab the NoteField actor once it exists; afterwards cache the
+			-- reference for the rest of the song.
 			if not self.notefield then
 				local plr_af = SCREENMAN:GetTopScreen():GetChild("Player"..pn)
 				if plr_af then self.notefield = plr_af:GetChild("NoteField") end
 			end
 
-			-- Calculate the Y position so that the square appears "with" beat 0 (the
-			-- next upcoming arrow).  The magic numbers below mirror how Simply Love
-			-- positions other overlay actors (MeasureCounter, ColumnCues, etc.)
+			-- Calculate the Y position so that the horizontal line moves in step
+			-- with the target beat. The constants below replicate Simply Love's
+			-- positioning for other overlay actors (e.g. MeasureCounter).
 			local curBeatVis = ps:GetSongPosition():GetSongBeatVisible()
 			local diffBeat   = TARGET_BEAT - curBeatVis
 			local pixels     = BeatToPixels(self.notefield, diffBeat)
