@@ -17,12 +17,8 @@ end
 -- Thickness (pixels) of the horizontal line we will draw.
 local LINE_HEIGHT = 6
 
--- Beat offset (in beats) used to anchor the horizontal line relative to the
--- current top-visible beat.
-local TARGET_BEAT = 36
-
--- Additional line to be drawn at this beat
-local SECOND_BEAT = 8
+-- Ratio to consider the change so small that it's not worth drawing a line for.
+local RATIO_TO_IGNORE = 0.10
 
 -- Vertical offset (in pixels) that positions the horizontal line close to the
 -- first upcoming arrow when playing with a normal (non-reverse) scroll
@@ -122,10 +118,10 @@ if song and song:GetTimingData() and song:GetTimingData().GetBPMsAndTimes then
                     -- Initialize previous bpm using first entry (usually beat 0).
                     prev_bpm = bpm
                 else
-                    -- Skip very early beats (beat 0) and tiny changes <3%.
+                    -- Skip very early beats (beat 0) and tiny changes < RATIO_TO_IGNORE%.
                     if beat > 0 then
                         local ratio = math.abs(bpm - prev_bpm) / prev_bpm
-                        if ratio >= 0.03 then
+                        if ratio >= RATIO_TO_IGNORE then
                             table.insert(beats_to_draw, beat)
                         end
                     end
@@ -140,8 +136,10 @@ end
 if #beats_to_draw == 0 then return Def.Actor{} end
 SM("beats_to_draw: " .. #beats_to_draw)
 
--- Build the actor tree containing a line for TARGET_BEAT and SECOND_BEAT.
-return Def.ActorFrame{
-	CreateLineActor(TARGET_BEAT),
-	CreateLineActor(SECOND_BEAT)
-}
+-- Build one line per qualifying BPM-change beat detected earlier.
+local children = {}
+for _, beat in ipairs(beats_to_draw) do
+    table.insert(children, CreateLineActor(beat))
+end
+
+return Def.ActorFrame(children)
