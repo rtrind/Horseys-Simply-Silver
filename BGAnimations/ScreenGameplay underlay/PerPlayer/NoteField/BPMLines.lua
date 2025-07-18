@@ -15,7 +15,10 @@ end
 ------------------------------------------------------------
 
 -- Thickness (pixels) of the horizontal line we will draw.
-local LINE_HEIGHT = 2
+local LINE_HEIGHT = 6
+
+-- Which beat to draw the line at.
+local TARGET_BEAT = 4
 
 -- Size (pixels) of the square we will draw.
 -- This y-offset puts the square near the first upcoming arrow when playing
@@ -52,6 +55,7 @@ return Def.ActorFrame{
 		self:x( GetNotefieldX(player) )
 
 		local zoom_factor = 1 - scale( mods.Mini:gsub("%%","")/100, 0, 2, 0, 1)
+		self.zoom_factor = zoom_factor -- store for later access in update
 		self:zoomx( zoom_factor )
 
 		-- The UpdateFunction will be set once the screen has fully initialised and
@@ -72,13 +76,16 @@ return Def.ActorFrame{
 			-- Calculate the Y position so that the square appears "with" beat 0 (the
 			-- next upcoming arrow).  The magic numbers below mirror how Simply Love
 			-- positions other overlay actors (MeasureCounter, ColumnCues, etc.)
-			local curBeat = ps:GetSongPosition():GetSongBeatVisible()
-			local pixels  = BeatToPixels(self.notefield, -curBeat)
+			local curBeatVis = ps:GetSongPosition():GetSongBeatVisible()
+			local diffBeat   = TARGET_BEAT - curBeatVis
+			local pixels     = BeatToPixels(self.notefield, diffBeat)
 
 			-- Adjust for reverse scroll directions.
 			local sign = (opts:Reverse() == 1) and -1 or 1
 
-			self:y( NOTEFIELD_Y_OFFSET + sign * pixels )
+			local arrow_half = (32 + (LINE_HEIGHT / 2)) * (self.zoom_factor or 1)
+
+			self:y( NOTEFIELD_Y_OFFSET + sign * (pixels + arrow_half) )
 		end)
 	end,
 
@@ -93,7 +100,7 @@ return Def.ActorFrame{
 			local full_width = width + width * 2 * spacing
 
 			self:zoomto(full_width, LINE_HEIGHT)
-			self:diffuse(color("1,0,0,1"))
+			self:diffuse(color("1,0,0,0.6"))
 		end
 	}
 } 
