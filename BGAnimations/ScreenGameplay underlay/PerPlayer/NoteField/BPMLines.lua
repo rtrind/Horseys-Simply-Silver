@@ -38,7 +38,7 @@ local function BeatToPixels(notefield, beat)
 		-- Fallback: assume 48px per beat at 1x scroll speed, then scale by the
 		-- player 0s actual scroll speed.
 		local speed = tonumber(mods.SpeedMod) or 1
-		return beat * 48 * speed
+		return beat * 64 * speed
 	end
 end
 
