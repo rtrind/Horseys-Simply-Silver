@@ -21,6 +21,9 @@ local LINE_HEIGHT = 6
 -- current top-visible beat.
 local TARGET_BEAT = 36
 
+-- Additional line to be drawn at this beat
+local SECOND_BEAT = 8
+
 -- Vertical offset (in pixels) that positions the horizontal line close to the
 -- first upcoming arrow when playing with a normal (non-reverse) scroll
 -- direction.  The value is borrowed from Simply Love's other NoteField
@@ -44,6 +47,60 @@ local function BeatToPixels(notefield, beat)
 		local speed = tonumber(mods.SpeedMod) or 1
 		return beat * 64 * speed
 	end
+end
+
+-- Build an ActorFrame that draws and animates a single BPM-indicator line for
+-- the given target beat.
+local function CreateLineActor(target_beat)
+	return Def.ActorFrame{
+		InitCommand=function(self)
+			-- Position at the notefield's X so the line is centred.
+			self:x( GetNotefieldX(player) )
+
+			-- Respect Mini just like other notefield decorations.
+			local zoom_factor = 1 - scale( mods.Mini:gsub("%%","")/100, 0, 2, 0, 1)
+			self.zoom_factor = zoom_factor
+			self:zoomx( zoom_factor )
+
+			self.target_beat = target_beat
+			self:queuecommand("SetUpdate")
+		end,
+
+		SetUpdateCommand=function(self)
+			self:SetUpdateFunction(function(self, _)
+				-- Cache the NoteField once it exists.
+				if not self.notefield then
+					local plr_af = SCREENMAN:GetTopScreen():GetChild("Player"..pn)
+					if plr_af then self.notefield = plr_af:GetChild("NoteField") end
+				end
+
+				-- Compute vertical position so the line follows the specified beat.
+				local curBeatVis = ps:GetSongPosition():GetSongBeatVisible()
+				local diffBeat   = self.target_beat - curBeatVis
+				local pixels     = BeatToPixels(self.notefield, diffBeat)
+
+				-- Account for Reverse scroll.
+				local sign = (opts:Reverse() == 1) and -1 or 1
+
+				local arrow_half = (32 + (LINE_HEIGHT / 2)) * (self.zoom_factor or 1)
+
+				self:y( NOTEFIELD_Y_OFFSET + sign * (pixels + arrow_half) )
+			end)
+		end,
+
+		-- The horizontal line graphic.
+		Def.Quad{
+			InitCommand=function(self)
+				local width = GetNotefieldWidth() or 256
+				local spacing_str = tostring(mods.Spacing or "0"):gsub("%%", "")
+				local spacing = (tonumber(spacing_str) or 0) / 100
+				local full_width = width + width * 2 * spacing
+
+				self:zoomto(full_width, LINE_HEIGHT)
+				self:diffuse(color("1,0,0,0.6"))
+			end
+		}
+	}
 end
 
 -- Remove earlier single-line child creation; replace with multi-line implementation
@@ -83,61 +140,8 @@ end
 if #beats_to_draw == 0 then return Def.Actor{} end
 SM("beats_to_draw: " .. #beats_to_draw)
 
--- We draw everything inside an ActorFrame so that we can apply an UpdateFunction
--- to the whole frame (making the maths a bit easier to reason about).
+-- Build the actor tree containing a line for TARGET_BEAT and SECOND_BEAT.
 return Def.ActorFrame{
-	InitCommand=function(self)
-		-- Position ourselves at the notefield's X coordinate so we stay centred
-		-- horizontally.  Respect Mini by shrinking horizontally just like other
-		-- notefield decorations.
-		self:x( GetNotefieldX(player) )
-
-		local zoom_factor = 1 - scale( mods.Mini:gsub("%%","")/100, 0, 2, 0, 1)
-		self.zoom_factor = zoom_factor -- store for later access in update
-		self:zoomx( zoom_factor )
-
-		-- The UpdateFunction will be set once the screen has fully initialised and
-		-- the NoteField actor exists.
-		self:queuecommand("SetUpdate")
-	end,
-
-	SetUpdateCommand=function(self)
-		self:SetUpdateFunction(function(self, _)
-			-- Grab the NoteField actor once it exists; afterwards cache the
-			-- reference for the rest of the song.
-			if not self.notefield then
-				local plr_af = SCREENMAN:GetTopScreen():GetChild("Player"..pn)
-				if plr_af then self.notefield = plr_af:GetChild("NoteField") end
-			end
-
-			-- Calculate the Y position so that the horizontal line moves in step
-			-- with the target beat. The constants below replicate Simply Love's
-			-- positioning for other overlay actors (e.g. MeasureCounter).
-			local curBeatVis = ps:GetSongPosition():GetSongBeatVisible()
-			local diffBeat   = TARGET_BEAT - curBeatVis
-			local pixels     = BeatToPixels(self.notefield, diffBeat)
-
-			-- Adjust for reverse scroll directions.
-			local sign = (opts:Reverse() == 1) and -1 or 1
-
-			local arrow_half = (32 + (LINE_HEIGHT / 2)) * (self.zoom_factor or 1)
-
-			self:y( NOTEFIELD_Y_OFFSET + sign * (pixels + arrow_half) )
-		end)
-	end,
-
-	-- The red horizontal line itself.
-	Def.Quad{
-		InitCommand=function(self)
-			local width = GetNotefieldWidth() or 256
-			-- mods.Spacing is a string like "20%".  Remove the % and convert to number safely.
-			local spacing_str = tostring(mods.Spacing or "0"):gsub("%%", "")
-			local spacing = (tonumber(spacing_str) or 0) / 100
-			-- account for any spacing modifier widening the columns
-			local full_width = width + width * 2 * spacing
-
-			self:zoomto(full_width, LINE_HEIGHT)
-			self:diffuse(color("1,0,0,0.6"))
-		end
-	}
-} 
+	CreateLineActor(TARGET_BEAT),
+	CreateLineActor(SECOND_BEAT)
+}
