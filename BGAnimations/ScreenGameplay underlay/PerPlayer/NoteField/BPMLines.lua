@@ -14,8 +14,10 @@ end
 -- Basic constants
 ------------------------------------------------------------
 
+-- Thickness (pixels) of the horizontal line we will draw.
+local LINE_HEIGHT = 2
+
 -- Size (pixels) of the square we will draw.
-local SQUARE_SIZE = 12
 -- This y-offset puts the square near the first upcoming arrow when playing
 -- with standard (non-reverse) orientation.  It is based on the value used by
 -- Simply Love for other NoteField decorations (see ColumnCues.lua etc.).
@@ -45,8 +47,12 @@ end
 return Def.ActorFrame{
 	InitCommand=function(self)
 		-- Position ourselves at the notefield's X coordinate so we stay centred
-		-- horizontally.
+		-- horizontally.  Respect Mini by shrinking horizontally just like other
+		-- notefield decorations.
 		self:x( GetNotefieldX(player) )
+
+		local zoom_factor = 1 - scale( mods.Mini:gsub("%%","")/100, 0, 2, 0, 1)
+		self:zoomx( zoom_factor )
 
 		-- The UpdateFunction will be set once the screen has fully initialised and
 		-- the NoteField actor exists.
@@ -76,10 +82,17 @@ return Def.ActorFrame{
 		end)
 	end,
 
-	-- The red square itself.
+	-- The red horizontal line itself.
 	Def.Quad{
 		InitCommand=function(self)
-			self:zoomto(SQUARE_SIZE, SQUARE_SIZE)
+			local width = GetNotefieldWidth() or 256
+			-- mods.Spacing is a string like "20%".  Remove the % and convert to number safely.
+			local spacing_str = tostring(mods.Spacing or "0"):gsub("%%", "")
+			local spacing = (tonumber(spacing_str) or 0) / 100
+			-- account for any spacing modifier widening the columns
+			local full_width = width + width * 2 * spacing
+
+			self:zoomto(full_width, LINE_HEIGHT)
 			self:diffuse(color("1,0,0,1"))
 		end
 	}
