@@ -20,6 +20,8 @@ local NOTEFIELD_Y_OFFSET = 80
 
 local ps   = GAMESTATE:GetPlayerState(player)
 local opts = ps:GetCurrentPlayerOptions()
+local reverseOffset = THEME:GetMetric("Player", "ReceptorArrowsYReverse")
+local receptorStandard = THEME:GetMetric("Player", "ReceptorArrowsYStandard")
 
 -- Helper: convert an absolute beat value into Y-pixels on the NoteField.
 -- Uses ArrowEffects functions to properly calculate Y positions based on
@@ -55,8 +57,10 @@ local function CreateLineActor(target_beat)
 				local pixels = BeatToPixels(self.target_beat)
 
 				-- The BeatToPixels function already handles reverse mods and positioning
-				local arrow_half = (32 + LINE_HEIGHT) * (self.zoom_factor or 1)
-				self:y( NOTEFIELD_Y_OFFSET + pixels + arrow_half)
+				local arrow_half = (32 + (LINE_HEIGHT / 2)) * (self.zoom_factor or 1)
+				local extra_reverse_offset = (opts:Reverse() == 1) and (math.abs(receptorStandard) + reverseOffset) or 0
+				self:y( pixels + NOTEFIELD_Y_OFFSET + extra_reverse_offset + arrow_half )
+
 			end)
 		end,
 
