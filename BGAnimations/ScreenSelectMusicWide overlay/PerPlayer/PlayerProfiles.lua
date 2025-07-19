@@ -84,7 +84,7 @@ for i,stats in pairs( SL[ToEnumShortString(player)].Stages.Stats ) do
 		-- 2. stepcharts can have non-1 #COMBOS parameters set which would artbitraily inflate notesHitThisGame
 
 		for column, judgments in ipairs(stats.column_judgments) do
-			if judgment_count then
+			if judgments then
 				for judgment, judgment_count in pairs(judgments) do
 					if judgment ~= "Miss" then
 						notesHitThisGame = notesHitThisGame + judgment_count
