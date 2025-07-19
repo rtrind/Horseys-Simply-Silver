@@ -30,19 +30,24 @@ local NOTEFIELD_Y_OFFSET = 80
 local ps   = GAMESTATE:GetPlayerState(player)
 local opts = ps:GetCurrentPlayerOptions()
 
--- Helper: convert a fractional beat offset into Y-pixels on the NoteField.
--- We first try the OutFox-specific binding NoteField:GetYPosForBeat(beat).
--- On engines that lack this helper we fall back to a simple approximation
--- that assumes 64 px per beat at 1× scroll speed.
-local function BeatToPixels(notefield, beat)
-	if notefield and notefield.GetYPosForBeat then
-		return notefield:GetYPosForBeat(beat)
-	else
-		-- Fallback: assume 64 px per beat at 1× scroll speed and scale by the
-		-- player's actual SpeedMod.
-		local speed = tonumber(mods.SpeedMod) or 1
-		return beat * 64 * speed
-	end
+-- Helper: convert an absolute beat value into Y-pixels on the NoteField.
+-- Uses ArrowEffects functions to properly calculate Y positions based on
+-- the player's current timing data, speed mods, and other effects.
+local function BeatToPixels(beat)
+	-- Get the player state for this player
+	local ps = GAMESTATE:GetPlayerState(player)
+	
+	-- Use ArrowEffects.GetYOffset to get the Y offset for this beat
+	-- We use column 1 as reference, but the Y offset should be consistent across columns
+	local yOffset = ArrowEffects.GetYOffset(ps, 1, beat)
+	
+	-- Convert the Y offset to actual Y position.
+	-- Pass 0 for fYReverseOffsetPixels to avoid adding any extra offset that
+	-- would shift the line relative to the receptor.
+	local yPos = ArrowEffects.GetYPos(ps, 1, yOffset, 0)
+	
+	-- Return the Y position as pixels
+	return yPos
 end
 
 -- Build an ActorFrame that draws and animates a single BPM-indicator line for
@@ -64,23 +69,13 @@ local function CreateLineActor(target_beat)
 
 		SetUpdateCommand=function(self)
 			self:SetUpdateFunction(function(self, _)
-				-- Cache the NoteField once it exists.
-				if not self.notefield then
-					local plr_af = SCREENMAN:GetTopScreen():GetChild("Player"..pn)
-					if plr_af then self.notefield = plr_af:GetChild("NoteField") end
-				end
-
 				-- Compute vertical position so the line follows the specified beat.
-				local curBeatVis = ps:GetSongPosition():GetSongBeatVisible()
-				local diffBeat   = self.target_beat - curBeatVis
-				local pixels     = BeatToPixels(self.notefield, diffBeat)
+				local pixels = BeatToPixels(self.target_beat)
 
-				-- Account for Reverse scroll.
-				local sign = (opts:Reverse() == 1) and -1 or 1
-
-				local arrow_half = (32 + (LINE_HEIGHT / 2)) * (self.zoom_factor or 1)
-
-				self:y( NOTEFIELD_Y_OFFSET + sign * (pixels + arrow_half) )
+				-- The BeatToPixels function already handles reverse mods and positioning
+				-- Offset the line to sit just below the upcoming arrow head.
+				local arrow_half = (32 + LINE_HEIGHT) * (self.zoom_factor or 1)
+				self:y( NOTEFIELD_Y_OFFSET + pixels + arrow_half)
 			end)
 		end,
 
@@ -134,7 +129,7 @@ end
 
 -- If no qualifying BPM changes, exit early
 if #beats_to_draw == 0 then return Def.Actor{} end
-SM("beats_to_draw: " .. #beats_to_draw)
+-- SM("beats_to_draw: " .. beats_to_draw)
 
 -- Build one line per qualifying BPM-change beat detected earlier.
 local children = {}
