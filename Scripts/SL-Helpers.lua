@@ -1041,6 +1041,11 @@ GetPlayerOptionsString = function(player, modsLevel)
 		optionslist = optionslist .. ", " .. (ScreenString("TimingWindowScale")):format(TimingWindowScale*100)
 	end
 
+	-- Display BPMLines as a modifier if it's enabled
+	if SL[pn].ActiveModifiers.BPMLines and SL[pn].ActiveModifiers.BPMLines ~= "Off" then
+		optionslist = optionslist .. ", " .. "BpmBars"
+	end
+
 	local substitutions = {
 		["SuperShuffle"] = "Blender",
 		["HyperShuffle"] = "Random",
