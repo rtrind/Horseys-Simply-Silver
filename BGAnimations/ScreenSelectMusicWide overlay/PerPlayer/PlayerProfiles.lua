@@ -63,6 +63,50 @@ local CalculateScrollSpeed = function(player)
 	return ("%s-%s"):format(bpms[1], bpms[2])
 end
 
+-- Helper to get a profile by GUID (empty string = machine profile)
+local function GetProfileByGUID(guid)
+	if guid == "" then
+		return PROFILEMAN:GetMachineProfile()
+	end
+	for i = 0, PROFILEMAN:GetNumLocalProfiles() - 1 do
+		local profile = PROFILEMAN:GetLocalProfileFromIndex(i)
+		if profile:GetGUID() == guid then
+			return profile
+		end
+	end
+	return nil
+end
+
+-- Helper to format lifetime gameplay time into readable text
+local function FormatLifetimeText(lifetime_seconds)
+	local TotalDays = math.floor(lifetime_seconds/86400)
+	local TotalHours = math.floor(math.fmod(lifetime_seconds, 86400)/3600)
+	local TotalMinutes = math.floor(math.fmod(lifetime_seconds,3600)/60)
+	
+	if TotalDays > 1 and TotalHours == 1 then
+		return TotalDays .. " days, " .. TotalHours .. " hr"
+	elseif TotalDays > 1 and TotalHours ~= 1 then
+		return TotalDays .. " days, " .. TotalHours .. " hrs"
+	elseif TotalDays == 1 and TotalHours == 1 then
+		return TotalDays .. " day, " .. TotalHours .. " hr"
+	elseif TotalDays == 1 and TotalHours ~= 1 then
+		return TotalDays .. " day, " .. TotalHours .. " hrs"
+	elseif TotalDays <= 0 and TotalHours > 1 and TotalMinutes > 1 then
+		return TotalHours .. " hrs, " .. TotalMinutes .. " mins"
+	elseif TotalDays <= 0 and TotalHours > 1 and TotalMinutes == 0 then
+		return TotalHours .. " hrs, " .. TotalMinutes .. " mins"
+	elseif TotalDays <= 0 and TotalHours > 1 and TotalMinutes == 1 then
+		return TotalHours .. " hrs, " .. TotalMinutes .. " min"
+	elseif TotalDays <= 0 and TotalHours == 1 and TotalMinutes == 1 then
+		return TotalHours .. " hr, " .. TotalMinutes .. " min"
+	elseif TotalDays <= 0 and TotalHours == 1 and TotalMinutes ~= 1 then
+		return TotalHours .. " hr, " .. TotalMinutes .. " mins"
+	elseif TotalDays <= 0 and TotalHours <= 0 and TotalMinutes ~= 1 then
+		return TotalMinutes .. " mins"
+	elseif TotalDays <= 0 and TotalHours <= 0 and TotalMinutes == 1 then
+		return TotalMinutes .. " min"
+	end
+end
 
 --this code was taken from ScreenGameOver overlay/PlayerStatsWithoutProfile.lua
 --this code will calculate Steps Hit during the session and for how long a session lasted
@@ -98,7 +142,6 @@ end
 local hours = math.floor(totalTime/3600)
 local minutes = math.floor((totalTime-(hours*3600))/60)
 local seconds = round(totalTime%60)
-
 
 ----------Single Player Mode Player Profile
 if GAMESTATE:GetNumPlayersEnabled() == 1 then return Def.ActorFrame{
@@ -174,6 +217,14 @@ if GAMESTATE:GetNumPlayersEnabled() == 1 then return Def.ActorFrame{
 			self:xy(42,-30)
 			self:settext(profile_name)
       	end,
+		NewProfileSelectedMessageCommand = function(self, params)
+			if params and params.PlayerNumber == player and params.NewProfileGUID then
+				local new_profile = GetProfileByGUID(params.NewProfileGUID)
+				if new_profile then
+					self:settext(new_profile:GetDisplayName())
+				end
+			end
+		end,
   	},
 
 	--Total Number Of Songs Completed
@@ -185,6 +236,14 @@ if GAMESTATE:GetNumPlayersEnabled() == 1 then return Def.ActorFrame{
 			self:zoom(0.8)
 			self:settext("Total Songs Completed: ".. commify(profile:GetNumTotalSongsPlayed()))
       	end,
+		NewProfileSelectedMessageCommand = function(self, params)
+			if params and params.PlayerNumber == player and params.NewProfileGUID then
+				local new_profile = GetProfileByGUID(params.NewProfileGUID)
+				if new_profile then
+					self:settext("Total Songs Completed: ".. commify(new_profile:GetNumTotalSongsPlayed()))
+				end
+			end
+		end,
  	},
 
 	-- Profile photo
@@ -259,6 +318,15 @@ if GAMESTATE:GetNumPlayersEnabled() == 1 then return Def.ActorFrame{
 			else end
 			self:zoom(0.7):maxwidth(40)
 		end,
+		NewProfileSelectedMessageCommand = function(self, params)
+			if params and params.PlayerNumber == player and params.NewProfileGUID then
+				local new_profile = GetProfileByGUID(params.NewProfileGUID)
+				if new_profile and new_profile.GetTotalScoresWithGrade then
+					local quads = new_profile.GetTotalScoresWithGrade and new_profile:GetTotalScoresWithGrade('Grade_Tier01') or -1
+					self:settext(commify(quads))
+				end
+			end
+		end,
 	},
 
 	-- Tri Star
@@ -280,6 +348,15 @@ if GAMESTATE:GetNumPlayersEnabled() == 1 then return Def.ActorFrame{
 				self:settext(commify(tristars))
 			else end
 			self:zoom(0.7)
+		end,
+		NewProfileSelectedMessageCommand = function(self, params)
+			if params and params.PlayerNumber == player and params.NewProfileGUID then
+				local new_profile = GetProfileByGUID(params.NewProfileGUID)
+				if new_profile and new_profile.GetTotalScoresWithGrade then
+					local tristars = new_profile.GetTotalScoresWithGrade and new_profile:GetTotalScoresWithGrade('Grade_Tier02') or -1
+					self:settext(commify(tristars))
+				end
+			end
 		end,
 	},
 
@@ -303,6 +380,15 @@ if GAMESTATE:GetNumPlayersEnabled() == 1 then return Def.ActorFrame{
 			else end
 			self:zoom(0.7)
 		end,
+		NewProfileSelectedMessageCommand = function(self, params)
+			if params and params.PlayerNumber == player and params.NewProfileGUID then
+				local new_profile = GetProfileByGUID(params.NewProfileGUID)
+				if new_profile and new_profile.GetTotalScoresWithGrade then
+					local doublestars = new_profile.GetTotalScoresWithGrade and new_profile:GetTotalScoresWithGrade('Grade_Tier03') or -1
+					self:settext(commify(doublestars))
+				end
+			end
+		end,
 	},
 
 	-- Single Star
@@ -324,6 +410,15 @@ if GAMESTATE:GetNumPlayersEnabled() == 1 then return Def.ActorFrame{
 				self:settext(commify(singlestars))
 			else end
 			self:zoom(0.7)
+		end,
+		NewProfileSelectedMessageCommand = function(self, params)
+			if params and params.PlayerNumber == player and params.NewProfileGUID then
+				local new_profile = GetProfileByGUID(params.NewProfileGUID)
+				if new_profile and new_profile.GetTotalScoresWithGrade then
+					local singlestars = new_profile.GetTotalScoresWithGrade and new_profile:GetTotalScoresWithGrade('Grade_Tier04') or -1
+					self:settext(commify(singlestars))
+				end
+			end
 		end,
 	},
 
@@ -363,6 +458,14 @@ if GAMESTATE:GetNumPlayersEnabled() == 1 then return Def.ActorFrame{
 				self:settext("")
 			else
 				self:settext("Times Song Attempted: "..commify(PROFILEMAN:GetSongNumTimesPlayed(GAMESTATE:GetCurrentSong(),p)))
+			end
+		end,
+		NewProfileSelectedMessageCommand = function(self, params)
+			if params and params.PlayerNumber == player and params.NewProfileGUID then
+				local new_profile = GetProfileByGUID(params.NewProfileGUID)
+				if new_profile and GAMESTATE:GetCurrentSong() then
+					self:settext("Times Song Attempted: "..commify(new_profile:GetSongNumTimesPlayed(GAMESTATE:GetCurrentSong())))
+				end
 			end
 		end,
 	},
@@ -457,45 +560,18 @@ if GAMESTATE:GetNumPlayersEnabled() == 1 then return Def.ActorFrame{
 			Text = "LifetimeGameplayValue",
 			InitCommand = function(self)
 				local Lifetime = profile:GetTotalGameplaySeconds()
-				local TotalDays = math.floor(Lifetime/86400)
-				local TotalHours = math.floor(math.fmod(Lifetime, 86400)/3600)
-				local TotalMinutes = math.floor(math.fmod(Lifetime,3600)/60)
 				self:horizalign(center)
 				self:xy(-51,116)
 				self:zoom(0.7)
-				--lots of rules here to handle the gramatically correct way of displaying time data (in English)
-				--I geniunely think that the format DDD:HH:MM is less optimal to English-speaking players
-				--FIXME:there should probably be a check for English vs other languages and just display DDD:HH:MM instead, but until there is a need for other regions, I'm keeping things as-is
-
-				--to sum up the rules: show [ days + hours /or/ hours + minutes /or/ minutes ]
-				--unfortunately, displaying [days + hours + minutes] takes up an unreasonable amount of space in this iteration of the UI
-
-				--I highly doubt there will be many people who play with profiles with a large number of days worth of playtime to make the jump to "weeks + days + hours" make sense
-				--a large number of days takes up less space than jumping to weeks/years calculations to the point that it's unreasonable for a player to have played long engough where displaying "weeks/years" will save space and/or make more sense
-				--my hope is that once a player has achieved years worth of ingame playtime this game will have moved to a better way to display this sort of information
-
-				if TotalDays > 1 and TotalHours == 1 then
-					self:settext(TotalDays .. " days, " .. TotalHours .. " hr")
-				elseif TotalDays > 1 and TotalHours ~= 1 then
-					self:settext(TotalDays .. " days, " .. TotalHours .. " hrs")
-				elseif TotalDays == 1 and TotalHours == 1 then
-					self:settext(TotalDays .. " day, " .. TotalHours .. " hr")
-				elseif TotalDays == 1 and TotalHours ~= 1 then
-					self:settext(TotalDays .. " day, " .. TotalHours .. " hrs")
-				elseif TotalDays <= 0 and TotalHours > 1 and TotalMinutes > 1 then
-					self:settext(TotalHours .. " hrs, " .. TotalMinutes .. " mins")
-				elseif TotalDays <= 0 and TotalHours > 1 and TotalMinutes == 0 then
-					self:settext(TotalHours .. " hrs, " .. TotalMinutes .. " mins")
-				elseif TotalDays <= 0 and TotalHours > 1 and TotalMinutes == 1 then
-					self:settext(TotalHours .. " hrs, " .. TotalMinutes .. " min")
-				elseif TotalDays <= 0 and TotalHours == 1 and TotalMinutes == 1 then
-					self:settext(TotalHours .. " hr, " .. TotalMinutes .. " min")
-				elseif TotalDays <= 0 and TotalHours == 1 and TotalMinutes ~= 1 then
-					self:settext(TotalHours .. " hr, " .. TotalMinutes .. " mins")
-				elseif TotalDays <= 0 and TotalHours <= 0 and TotalMinutes ~= 1 then
-					self:settext(TotalMinutes .. " mins")
-				elseif TotalDays <= 0 and TotalHours <= 0 and TotalMinutes == 1 then
-					self:settext(TotalMinutes .. " min")
+				self:settext(FormatLifetimeText(Lifetime))
+			end,
+			NewProfileSelectedMessageCommand = function(self, params)
+				if params and params.PlayerNumber == player and params.NewProfileGUID then
+					local new_profile = GetProfileByGUID(params.NewProfileGUID)
+					if new_profile then
+						local Lifetime = new_profile:GetTotalGameplaySeconds()
+						self:settext(FormatLifetimeText(Lifetime))
+					end
 				end
 			end,
 		},
@@ -519,6 +595,14 @@ if GAMESTATE:GetNumPlayersEnabled() == 1 then return Def.ActorFrame{
 				self:xy(51,116)
 				self:zoom(0.7)
 				self:settext(commify(profile:GetTotalTapsAndHolds()))
+			end,
+			NewProfileSelectedMessageCommand = function(self, params)
+				if params and params.PlayerNumber == player and params.NewProfileGUID then
+					local new_profile = GetProfileByGUID(params.NewProfileGUID)
+					if new_profile then
+						self:settext(commify(new_profile:GetTotalTapsAndHolds()))
+					end
+				end
 			end,
 	    },
 	},
@@ -702,6 +786,14 @@ if GAMESTATE:GetNumPlayersEnabled() == 2 then return Def.ActorFrame{
 			self:zoom(0.7)
 			self:settext(profile_name)
     	end,
+		NewProfileSelectedMessageCommand = function(self, params)
+			if params and params.PlayerNumber == player and params.NewProfileGUID then
+				local new_profile = GetProfileByGUID(params.NewProfileGUID)
+				if new_profile then
+					self:settext(new_profile:GetDisplayName())
+				end
+			end
+		end,
 	},
 
 	-- Profile photo
@@ -773,6 +865,17 @@ if GAMESTATE:GetNumPlayersEnabled() == 2 then return Def.ActorFrame{
 			else end
 			self:zoom(0.55):maxwidth(40)
 		end,
+		NewProfileSelectedMessageCommand = function(self, params)
+			if params and params.PlayerNumber == player and params.NewProfileGUID then
+				local new_profile = GetProfileByGUID(params.NewProfileGUID)
+				if new_profile then
+					local quads = new_profile.GetTotalScoresWithGrade and new_profile:GetTotalScoresWithGrade('Grade_Tier01') or -1
+					if quads >= 0 then
+						self:settext(commify(quads))
+					end
+				end
+			end
+		end,
 	},
 
 	-- Tri Star
@@ -794,6 +897,17 @@ if GAMESTATE:GetNumPlayersEnabled() == 2 then return Def.ActorFrame{
 				self:settext(commify(tristars))
 			else end
 			self:zoom(0.55)
+		end,
+		NewProfileSelectedMessageCommand = function(self, params)
+			if params and params.PlayerNumber == player and params.NewProfileGUID then
+				local new_profile = GetProfileByGUID(params.NewProfileGUID)
+				if new_profile then
+					local tristars = new_profile.GetTotalScoresWithGrade and new_profile:GetTotalScoresWithGrade('Grade_Tier02') or -1
+					if tristars >= 0 then
+						self:settext(commify(tristars))
+					end
+				end
+			end
 		end,
 	},
 
@@ -817,6 +931,17 @@ if GAMESTATE:GetNumPlayersEnabled() == 2 then return Def.ActorFrame{
 			else end
 			self:zoom(0.55)
 		end,
+		NewProfileSelectedMessageCommand = function(self, params)
+			if params and params.PlayerNumber == player and params.NewProfileGUID then
+				local new_profile = GetProfileByGUID(params.NewProfileGUID)
+				if new_profile then
+					local doublestars = new_profile.GetTotalScoresWithGrade and new_profile:GetTotalScoresWithGrade('Grade_Tier03') or -1
+					if doublestars >= 0 then
+						self:settext(commify(doublestars))
+					end
+				end
+			end
+		end,
 	},
 
 	-- Single Star
@@ -838,6 +963,17 @@ if GAMESTATE:GetNumPlayersEnabled() == 2 then return Def.ActorFrame{
 				self:settext(commify(singlestars))
 			else end
 			self:zoom(0.55)
+		end,
+		NewProfileSelectedMessageCommand = function(self, params)
+			if params and params.PlayerNumber == player and params.NewProfileGUID then
+				local new_profile = GetProfileByGUID(params.NewProfileGUID)
+				if new_profile then
+					local singlestars = new_profile.GetTotalScoresWithGrade and new_profile:GetTotalScoresWithGrade('Grade_Tier04') or -1
+					if singlestars >= 0 then
+						self:settext(commify(singlestars))
+					end
+				end
+			end
 		end,
 	},
 
@@ -872,6 +1008,14 @@ if GAMESTATE:GetNumPlayersEnabled() == 2 then return Def.ActorFrame{
 			self:zoom(0.55)
 			self:settext("Total Songs Completed: ".. commify(profile:GetNumTotalSongsPlayed()))
     	end,
+		NewProfileSelectedMessageCommand = function(self, params)
+			if params and params.PlayerNumber == player and params.NewProfileGUID then
+				local new_profile = GetProfileByGUID(params.NewProfileGUID)
+				if new_profile then
+					self:settext("Total Songs Completed: ".. commify(new_profile:GetNumTotalSongsPlayed()))
+				end
+			end
+		end,
 	},
 
 	-- thin white line separating stats from mods
@@ -895,6 +1039,14 @@ if GAMESTATE:GetNumPlayersEnabled() == 2 then return Def.ActorFrame{
 				self:settext("")
 			else
 				self:settext("Times Song Attempted: "..commify(PROFILEMAN:GetSongNumTimesPlayed(GAMESTATE:GetCurrentSong(),p)))
+			end
+		end,
+		NewProfileSelectedMessageCommand = function(self, params)
+			if params and params.PlayerNumber == player and params.NewProfileGUID then
+				local new_profile = GetProfileByGUID(params.NewProfileGUID)
+				if new_profile and GAMESTATE:GetCurrentSong() then
+					self:settext("Times Song Attempted: "..commify(new_profile:GetSongNumTimesPlayed(GAMESTATE:GetCurrentSong())))
+				end
 			end
 		end,
 	},
@@ -1062,45 +1214,18 @@ if GAMESTATE:GetNumPlayersEnabled() == 2 then return Def.ActorFrame{
 		Text = "LifetimeGameplayValue",
 		InitCommand = function(self)
 			local Lifetime = profile:GetTotalGameplaySeconds()
-			local TotalDays = math.floor(Lifetime/86400)
-			local TotalHours = math.floor(math.fmod(Lifetime, 86400)/3600)
-			local TotalMinutes = math.floor(math.fmod(Lifetime,3600)/60)
 			self:horizalign(center)
 			self:xy(-40,178)
 			self:zoom(0.55)
-			--lots of rules here to handle the gramatically correct way of displaying time data (in English)
-			--I geniunely think that the format DDD:HH:MM is less optimal to English-speaking players
-			--FIXME:there should probably be a check for English vs other languages and just display DDD:HH:MM instead, but until there is a need for other regions, I'm keeping things as-is
-
-			--to sum up the rules: show [ days + hours /or/ hours + minutes /or/ minutes ]
-			--unfortunately, displaying [days + hours + minutes] takes up an unreasonable amount of space in this iteration of the UI
-
-			--I highly doubt there will be many people who play with profiles with a large number of days worth of playtime to make the jump to "weeks + days + hours" make sense
-			--a large number of days takes up less space than jumping to weeks/years calculations to the point that it's unreasonable for a player to have played long engough where displaying "weeks/years" will save space and/or make more sense
-			--my hope is that once a player has achieved years worth of ingame playtime this game will have moved to a better way to display this sort of information
-
-			if TotalDays > 1 and TotalHours == 1 then
-				self:settext(TotalDays .. " days, " .. TotalHours .. " hr")
-			elseif TotalDays > 1 and TotalHours ~= 1 then
-				self:settext(TotalDays .. " days, " .. TotalHours .. " hrs")
-			elseif TotalDays == 1 and TotalHours == 1 then
-				self:settext(TotalDays .. " day, " .. TotalHours .. " hr")
-			elseif TotalDays == 1 and TotalHours ~= 1 then
-				self:settext(TotalDays .. " day, " .. TotalHours .. " hrs")
-			elseif TotalDays <= 0 and TotalHours > 1 and TotalMinutes > 1 then
-				self:settext(TotalHours .. " hrs, " .. TotalMinutes .. " mins")
-			elseif TotalDays <= 0 and TotalHours > 1 and TotalMinutes == 0 then
-				self:settext(TotalHours .. " hrs, " .. TotalMinutes .. " mins")
-			elseif TotalDays <= 0 and TotalHours > 1 and TotalMinutes == 1 then
-				self:settext(TotalHours .. " hrs, " .. TotalMinutes .. " min")
-			elseif TotalDays <= 0 and TotalHours == 1 and TotalMinutes == 1 then
-				self:settext(TotalHours .. " hr, " .. TotalMinutes .. " min")
-			elseif TotalDays <= 0 and TotalHours == 1 and TotalMinutes ~= 1 then
-				self:settext(TotalHours .. " hr, " .. TotalMinutes .. " mins")
-			elseif TotalDays <= 0 and TotalHours <= 0 and TotalMinutes ~= 1 then
-				self:settext(TotalMinutes .. " mins")
-			elseif TotalDays <= 0 and TotalHours <= 0 and TotalMinutes == 1 then
-				self:settext(TotalMinutes .. " min")
+			self:settext(FormatLifetimeText(Lifetime))
+		end,
+		NewProfileSelectedMessageCommand = function(self, params)
+			if params and params.PlayerNumber == player and params.NewProfileGUID then
+				local new_profile = GetProfileByGUID(params.NewProfileGUID)
+				if new_profile then
+					local Lifetime = new_profile:GetTotalGameplaySeconds()
+					self:settext(FormatLifetimeText(Lifetime))
+				end
 			end
 		end,
 	},
@@ -1124,6 +1249,14 @@ if GAMESTATE:GetNumPlayersEnabled() == 2 then return Def.ActorFrame{
 			self:xy(40,178)
 			self:zoom(0.55)
 			self:settext(commify(profile:GetTotalTapsAndHolds()))
+		end,
+		NewProfileSelectedMessageCommand = function(self, params)
+			if params and params.PlayerNumber == player and params.NewProfileGUID then
+				local new_profile = GetProfileByGUID(params.NewProfileGUID)
+				if new_profile then
+					self:settext(commify(new_profile:GetTotalTapsAndHolds()))
+				end
+			end
 		end,
 	},
 }

@@ -109,7 +109,28 @@ Handle.Start = function(event)
 			return
 		end
 		readyPlayers[ToEnumShortString(event.PlayerNumber)] = true
-		MESSAGEMAN:Broadcast("SelectedProfile", {PlayerNumber=event.PlayerNumber})
+
+		MESSAGEMAN:Broadcast("SelectedProfile", {PlayerNumber=event.PlayerNumber}) -- let's keep the old broadcast and create a new one specific for the stats refresh
+
+		-- Get the GUID of the currently selected profile
+		local current_profile = PROFILEMAN:GetProfile(event.PlayerNumber)
+		local current_guid = current_profile and current_profile.GetGUID and current_profile:GetGUID() or ""
+
+		-- Get the GUID of the profile at the current scroller position
+		local info = scrollers[event.PlayerNumber]:get_info_at_focus_pos()
+		local index = type(info)=="table" and info.index or 0
+		local new_guid = ""
+		for _, pdata in ipairs(profile_data) do
+			if pdata.index == index then
+				new_guid = pdata.guid or ""
+				break
+			end
+		end
+
+		-- Broadcast only when the profile really changes
+		if current_guid ~= new_guid then
+			MESSAGEMAN:Broadcast("NewProfileSelected", {PlayerNumber=event.PlayerNumber, NewProfileGUID=new_guid})
+		end
 
 		if readyPlayers["P1"] and readyPlayers["P2"] then
 			-- Set finished to true so that we don't process any more input
