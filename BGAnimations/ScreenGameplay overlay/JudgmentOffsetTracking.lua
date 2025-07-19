@@ -55,10 +55,10 @@ return Def.Actor{
 					local tns = ToEnumShortString(params.TapNoteScore)
 					arrow = arrow + col
 					
-					if tnt ~= "Lift" and tns == "Miss" and tapnote:GetTapNoteResult():GetHeld() then
+					if tnt ~= "Lift" and tns == "Miss" and (tapnote:GetTapNoteResult().GetHeld and tapnote:GetTapNoteResult():GetHeld()) then
 						heldMiss = true
 					end
-					
+
 					if arrow == 1 then
 						foot=true
 					elseif arrow == 4 then
