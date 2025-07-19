@@ -3,8 +3,9 @@ local pn = ToEnumShortString(player)
 
 local mods = SL[pn].ActiveModifiers or {}
 
-if mods.BPMLines ~= "On" then
-	return Def.Actor{}
+-- Skip drawing if option disabled or player is using CMod (constant speed)
+if mods.BPMLines ~= "On" or (mods.SpeedModType and mods.SpeedModType:upper() == "C") then
+    return Def.Actor{}
 end
 
 local LINE_HEIGHT = 6
