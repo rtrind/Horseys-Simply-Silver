@@ -4,14 +4,14 @@ local pn = ToEnumShortString(player)
 local mods = SL[pn].ActiveModifiers or {}
 
 -- Skip drawing if option disabled or player is using CMod (constant speed)
-if mods.BPMLines ~= "On" or (mods.SpeedModType and mods.SpeedModType:upper() == "C") then
-    return Def.Actor{}
+if mods.BPMLines == "Off" or (mods.SpeedModType and mods.SpeedModType:upper() == "C") then
+    return
 end
 
 local LINE_HEIGHT = 6
 
 -- If a BPM change is less than this ratio, it will not be drawn.
-local RATIO_TO_IGNORE = 0.10
+local RATIO_TO_IGNORE = 0.00 --TODO: DEBUG
 
 -- Vertical offset (in pixels) that positions the horizontal line close to the
 -- first upcoming arrow when playing with a normal (non-reverse) scroll
@@ -38,9 +38,15 @@ local function BeatToPixels(beat)
 	return yPos
 end
 
+local show_symbol = (mods.BPMLines == "Symbol")
+
 -- Build an ActorFrame that draws and animates a single BPM-indicator line for
--- the given target beat.
-local function CreateLineActor(target_beat)
+-- the given BPM-change entry (beat + info).
+local function CreateLineActor(entry)
+    local target_beat = entry.beat
+    local is_up       = entry.is_up
+    local new_bpm     = entry.bpm
+	
 	return Def.ActorFrame{
 		InitCommand=function(self)
 			self:x( GetNotefieldX(player) )
@@ -75,7 +81,23 @@ local function CreateLineActor(target_beat)
 				self:zoomto(full_width, LINE_HEIGHT)
 				self:diffuse(color("1,0,0,0.6"))
 			end
-		}
+		},
+
+		-- Optional arrow symbol indicating speed up / down.
+		(show_symbol and Def.BitmapText{
+			Font="Wendy/_wendy small",
+			InitCommand=function(self)
+				self:settext( is_up and "▲" or "▼" )
+				self:zoom(0.8)
+				self:diffusealpha(0.6)
+				if is_up then
+					self:diffuse(0,1,0,0.6) -- green
+				else
+					self:diffuse(1,0,0,0.6) -- red
+				end
+				self:x(-140):y(-9)
+			end
+		}) or nil,
 	}
 end
 
@@ -99,7 +121,7 @@ if song and song:GetTimingData() and song:GetTimingData().GetBPMsAndTimes then
                 else
 					local ratio = math.abs(bpm - prev_bpm) / prev_bpm
 					if ratio >= RATIO_TO_IGNORE then
-						table.insert(beats_to_draw, beat)
+						table.insert(beats_to_draw, {beat=beat, is_up=(bpm>prev_bpm), bpm=bpm})
 					end
                     prev_bpm = bpm
                 end
@@ -111,8 +133,8 @@ end
 if #beats_to_draw == 0 then return Def.Actor{} end
 
 local children = {}
-for _, beat in ipairs(beats_to_draw) do
-    table.insert(children, CreateLineActor(beat))
+for _, entry in ipairs(beats_to_draw) do
+    table.insert(children, CreateLineActor(entry))
 end
 
 return Def.ActorFrame(children)

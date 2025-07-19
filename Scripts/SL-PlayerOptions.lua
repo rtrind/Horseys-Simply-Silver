@@ -769,9 +769,12 @@ local Overrides = {
 	},
 	-------------------------------------------------------------------------
 	BPMLines = {
-		Values = { "Off", "On" },
+		-- New modes: Lines (previously "On"), Symbol, Number
+		Values = { "Off", "Lines", "Symbol", "Number" },
 		LoadSelections = function(self, list, pn)
+			-- Map legacy "On" value to "Lines"
 			local val = SL[ToEnumShortString(pn)].ActiveModifiers.BPMLines or "Off"
+			if val == "On" then val = "Lines" end
 			for i,v in ipairs(self.Values) do
 				if v == val then
 					list[i] = true
