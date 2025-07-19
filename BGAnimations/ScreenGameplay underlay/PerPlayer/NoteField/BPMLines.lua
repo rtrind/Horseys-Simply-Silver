@@ -10,8 +10,8 @@ end
 
 local LINE_HEIGHT = 6
 
--- If a BPM change is less than this ratio, it will not be drawn.
-local RATIO_TO_IGNORE = 0.00 --TODO: DEBUG
+-- If a BPM change is less than this ratio, it will not be drawn. DeltaMax was the song used to calibrate this value and not show any lines, since they are gradual.
+local RATIO_TO_IGNORE = 0.0741
 
 -- Vertical offset (in pixels) that positions the horizontal line close to the
 -- first upcoming arrow when playing with a normal (non-reverse) scroll
@@ -39,6 +39,7 @@ local function BeatToPixels(beat)
 end
 
 local show_symbol = (mods.BPMLines == "Symbol")
+local show_number = (mods.BPMLines == "Number")
 
 -- Build an ActorFrame that draws and animates a single BPM-indicator line for
 -- the given BPM-change entry (beat + info).
@@ -83,19 +84,26 @@ local function CreateLineActor(entry)
 			end
 		},
 
-		-- Optional arrow symbol indicating speed up / down.
-		(show_symbol and Def.BitmapText{
+		-- Optional arrow symbol/text indicating speed up / down.
+		((show_symbol or show_number) and Def.BitmapText{
 			Font="Wendy/_wendy small",
 			InitCommand=function(self)
-				self:settext( is_up and "▲" or "▼" )
-				self:zoom(0.8)
-				self:diffusealpha(0.6)
-				if is_up then
-					self:diffuse(0,1,0,0.6) -- green
-				else
-					self:diffuse(1,0,0,0.6) -- red
+				self:x(-145)
+
+				if show_symbol then
+					self:zoom(0.8):shadowlength(1):y(-9)
+					self:settext( is_up and "▲" or "▼" )
+				else -- show_number
+					new_bpm = math.round(new_bpm)
+					self:zoom(0.25):shadowlength(1):y(0)
+					self:settext(new_bpm)
 				end
-				self:x(-140):y(-9)
+
+				if is_up then
+					self:diffuse(0,1,0,0.9) -- green
+				else
+					self:diffuse(1,0,0,0.9) -- red
+				end
 			end
 		}) or nil,
 	}
