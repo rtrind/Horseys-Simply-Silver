@@ -307,7 +307,7 @@ local wheel_options = {
 			{{"SortBy", "Group"} },
 			{ {"SortBy", "Title"} },
 			{ {"SortBy", "Artist"} },
-			{ {"SortBy", "Genre"} },
+			-- { {"SortBy", "Genre"} },
 			{ {"SortBy", "BPM"} },
 			{ {"SortBy", "Length"} },
 			{ {"SortBy", "Meter"} },
