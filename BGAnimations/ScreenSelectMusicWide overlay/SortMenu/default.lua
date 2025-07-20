@@ -271,6 +271,12 @@ local function GetChangeableStyles(style)
 	end
 end
 local style = GAMESTATE:GetCurrentStyle():GetName():gsub("8", "")
+
+local isStyleSingle = function()	
+	local currentStyle = GAMESTATE:GetCurrentStyle():GetName():gsub("8", "")
+	return currentStyle == "single" or currentStyle == "solo"
+end
+
 local wheel_options = {
 	-- This is the master table that controls the SortMenu's choices
 	-- The structure is as follows:
@@ -304,18 +310,26 @@ local wheel_options = {
 	{ 
 		{"", "CategorySorts"}, 
 		{
-			{{"SortBy", "Group"} },
+			{ {"SortBy", "Group"} },
 			{ {"SortBy", "Title"} },
 			{ {"SortBy", "Artist"} },
-			{ {"SortBy", "Genre"} },
+			-- { {"SortBy", "Genre"} },
 			{ {"SortBy", "BPM"} },
 			{ {"SortBy", "Length"} },
-			{ {"SortBy", "Meter"} },
+			{ {"SortBy", "BeginnerMeter"}, function() return isStyleSingle() end },
+			{ {"SortBy", "EasyMeter"}, function() return isStyleSingle() end },
+			{ {"SortBy", "MediumMeter"}, function() return isStyleSingle() end },
+			{ {"SortBy", "HardMeter"}, function() return isStyleSingle() end },
+			{ {"SortBy", "ChallengeMeter"}, function() return isStyleSingle() end },
+			{ {"SortBy", "DoubleEasyMeter"}, function() return not isStyleSingle() end },
+			{ {"SortBy", "DoubleMediumMeter"}, function() return not isStyleSingle() end },
+			{ {"SortBy", "DoubleHardMeter"}, function() return not isStyleSingle() end },
+			{ {"SortBy", "DoubleChallengeMeter"}, function() return not isStyleSingle() end },
 			{ {"SortBy", "Popularity"} },
 			{ {"SortBy", "Recent"} },
 			{ {"SortBy", "TopGrades"} },
-			{ {"SortBy", "TopP1Grades"}, PROFILEMAN:IsPersistentProfile(PLAYER_1) },
-			{ {"SortBy", "TopP2Grades"}, PROFILEMAN:IsPersistentProfile(PLAYER_2) },
+			-- { {"SortBy", "TopP1Grades"}, PROFILEMAN:IsPersistentProfile(PLAYER_1) },
+			-- { {"SortBy", "TopP2Grades"}, PROFILEMAN:IsPersistentProfile(PLAYER_2) },
 		}
 	},
 	{
