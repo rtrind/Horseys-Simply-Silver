@@ -38,8 +38,8 @@ local function BeatToPixels(beat)
 	return yPos
 end
 
-local show_symbol = (mods.BPMLines == "Symbol")
 local show_number = (mods.BPMLines == "Number")
+local show_colored_lines = (mods.BPMLines == "ColoredLines")
 
 -- Build an ActorFrame that draws and animates a single BPM-indicator line for
 -- the given BPM-change entry (beat + info).
@@ -80,24 +80,28 @@ local function CreateLineActor(entry)
 				local full_width = width + width * 2 * spacing
 
 				self:zoomto(full_width, LINE_HEIGHT)
-				self:diffuse(color("1,0,0,0.6"))
+
+				if show_colored_lines or show_number then
+					if is_up then
+						self:diffuse(0,1,0,0.6) -- green
+					else
+						self:diffuse(1,0,0,0.6) -- red
+					end
+				else -- show_lines
+					self:diffuse(1,1,0,0.6) -- yellow
+				end
 			end
 		},
 
-		-- Optional arrow symbol/text indicating speed up / down.
-		((show_symbol or show_number) and Def.BitmapText{
+		-- Optional bpm number display
+		(show_number and Def.BitmapText{
 			Font="Wendy/_wendy small",
 			InitCommand=function(self)
 				self:x(-145)
 
-				if show_symbol then
-					self:zoom(0.8):shadowlength(1):y(-9)
-					self:settext( is_up and "▲" or "▼" )
-				else -- show_number
-					new_bpm = math.round(new_bpm)
-					self:zoom(0.25):shadowlength(1):y(0)
-					self:settext(new_bpm)
-				end
+				new_bpm = math.round(new_bpm)
+				self:zoom(0.25):shadowlength(1):y(0)
+				self:settext(new_bpm)
 
 				if is_up then
 					self:diffuse(0,1,0,0.9) -- green
