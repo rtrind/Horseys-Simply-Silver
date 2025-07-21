@@ -274,7 +274,7 @@ local style = GAMESTATE:GetCurrentStyle():GetName():gsub("8", "")
 
 local isStyleSingle = function()	
 	local currentStyle = GAMESTATE:GetCurrentStyle():GetName():gsub("8", "")
-	return currentStyle == "single" or currentStyle == "solo"
+	return currentStyle == "single" or currentStyle == "solo" or currentStyle == "versus"
 end
 
 local wheel_options = {
