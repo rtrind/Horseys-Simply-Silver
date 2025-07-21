@@ -119,30 +119,61 @@ local beats_to_draw = {}
 local song = GAMESTATE:GetCurrentSong()
 if song and song:GetTimingData() and song:GetTimingData().GetBPMsAndTimes then
     local bpm_table = song:GetTimingData():GetBPMsAndTimes()
-    if bpm_table and #bpm_table > 0 then
-        local prev_bpm = nil
-        for _,entry in ipairs(bpm_table) do
-            -- OutFox returns strings like "36.000000=196.007004"
-            local beat_str, bpm_str = tostring(entry):match("([^=]+)=([^=]+)")
-            local beat = tonumber(beat_str)
-            local bpm  = tonumber(bpm_str)
-            if beat and bpm then
-                if not prev_bpm then
-                    -- Initialize previous bpm using first entry (usually beat 0).
-                    prev_bpm = bpm
-                else
+	local prev_bpm = nil
+	if bpm_table and #bpm_table > 1 then
+		for _,entry in ipairs(bpm_table) do
+			-- OutFox returns strings like "36.000000=196.007004"
+			local beat_str, bpm_str = tostring(entry):match("([^=]+)=([^=]+)")
+			local beat = tonumber(beat_str)
+			local bpm  = tonumber(bpm_str)
+			if beat and bpm then
+				if not prev_bpm then
+					prev_bpm = bpm
+				else
 					local ratio = math.abs(bpm - prev_bpm) / prev_bpm
 					if ratio >= RATIO_TO_IGNORE then
 						table.insert(beats_to_draw, {beat=beat, is_up=(bpm>prev_bpm), bpm=bpm})
 					end
-                    prev_bpm = bpm
-                end
-            end
-        end
-    end
+					prev_bpm = bpm
+				end
+			end
+		end
+	end
+end
+
+-- Now do the same thing but with scrolls
+if song and song:GetTimingData() and song:GetTimingData().GetScrolls then
+	local scroll_table = song:GetTimingData():GetScrolls()
+	if scroll_table and #scroll_table >= 1 then -- Single scroll, try backup method		
+		local steps = GAMESTATE:GetCurrentSteps(pn) -- current Steps (chart) for the player
+		if steps and steps:GetTimingData() then
+			scroll_table = steps:GetTimingData():GetScrolls()
+		end
+	end
+
+	if scroll_table and #scroll_table > 1 then
+		local prev_scroll = nil
+		for _,entry in ipairs(scroll_table) do
+			local beat_str, scroll_str = tostring(entry):match("([^=]+)=([^=]+)")
+			local beat = tonumber(beat_str)
+			local scroll_value = tonumber(scroll_str)
+			if beat and scroll_value then
+				if not prev_scroll then
+					prev_scroll = scroll_value
+				else
+					local ratio = math.abs(scroll_value - prev_scroll) -- Already a ratio
+					if ratio >= RATIO_TO_IGNORE then
+						table.insert(beats_to_draw, {beat=beat, is_up=(scroll_value>prev_scroll), bpm=(song:GetTimingData():GetBPMAtBeat(beat) * scroll_value)})
+					end
+					prev_scroll = scroll_value
+				end
+			end
+		end
+	end
 end
 
 if #beats_to_draw == 0 then return Def.Actor{} end
+-- SM("BPMs and scrolls: " .. #beats_to_draw)
 
 local children = {}
 for _, entry in ipairs(beats_to_draw) do
