@@ -92,7 +92,7 @@ local num_icons = 5
  				local player = "PlayerNumber_P"..i
  				if not GAMESTATE:IsPlayerEnabled(player) then self:visible(false) end
  				local steps = GAMESTATE:GetCurrentSteps(player)
- 				self:visible(steps == params.Steps)
+ 				self:visible(steps:GetDifficulty() == params.Steps:GetDifficulty())
  			end,
  			UnsetCommand = function(self)
  				self:visible(false)
