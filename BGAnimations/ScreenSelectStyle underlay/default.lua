@@ -73,6 +73,10 @@ local EnableChoices = function()
 		for i, child in ipairs( af:GetChild("") ) do
 			child:aux(1)
 		end
+		-- if exactly one profile is joined, hide versus
+		if #GAMESTATE:GetHumanPlayers() == 1 then
+			af:GetChild("")[2]:aux(0)
+		end
 		return
 	end
 
@@ -267,6 +271,12 @@ local t = Def.ActorFrame{
 		end
 	end,
 	OnCommand=function(self)
+		-- If both players are already joined (both profiles selected), skip this screen and use versus.
+		if GAMESTATE:GetNumSidesJoined() == 2 then
+			current_index = 2
+			self:playcommand("Finish")
+			return
+		end
 		if PREFSMAN:GetPreference("MenuTimer") then
 			self:queuecommand("Listen")
 		end
@@ -312,6 +322,12 @@ local t = Def.ActorFrame{
 		-- set this now, but keep in mind that the style can change during a game session in a number
 		-- of ways, like latejoin (when available) and using SSM's SortMenu to change styles mid-game
 		GAMESTATE:SetCurrentStyle(style)
+
+		-- when both sides are joined, force versus regardless of index
+		if GAMESTATE:GetNumSidesJoined() == 2 then
+			style = "versus"
+			GAMESTATE:SetCurrentStyle(style)
+		end
 
 		for i=1, #choices do
 			if i ~= current_index then
