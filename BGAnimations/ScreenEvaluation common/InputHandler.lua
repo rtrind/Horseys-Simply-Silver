@@ -110,15 +110,20 @@ end
 -- -----------------------------------------------------------------------
 -- input handling function
 
-local OtherController = {
-	GameController_1 = "GameController_2",
-	GameController_2 = "GameController_1"
-}
+-- Normalize controller identifiers across OutFox versions (a31 used 1/2; a39+ uses Left/Right)
+local function GetControllerIndex(controller)
+	local short = ToEnumShortString(controller)
+	-- a39+
+	if short == "Left" then return 1 end
+	if short == "Right" then return 2 end
+	-- fallback
+	return tonumber(short)
+end
 
 return function(event)
 
 
-	if not (event and event.PlayerNumber and event.button) then return false end
+	if not (event and event.PlayerNumber and event.button and event.controller) then return false end
 
 	-- get a "controller number" and an "other controller number"
 	-- if the input event came from GameController_1, cn will be 1 and ocn will be 2
@@ -126,8 +131,8 @@ return function(event)
 	--
 	-- we'll use these integers to index the active_pane table, which keeps track
 	-- of which pane is currently showing on each side
-	local  cn = tonumber(ToEnumShortString(event.controller))
-	local ocn = tonumber(ToEnumShortString(OtherController[event.controller]))
+	local  cn = GetControllerIndex(event.controller)
+	local ocn = (cn == 1) and 2 or 1
 
 	if event.type == "InputEventType_FirstPress" and panes[cn] then
 
