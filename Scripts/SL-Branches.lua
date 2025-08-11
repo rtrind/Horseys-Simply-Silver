@@ -100,7 +100,7 @@ Branch.AfterScreenSelectColor = function()
 		-- the engine, but I guess we're doing it here, in SL-Branches.lua, for now.
 		GAMESTATE:SetCurrentStyle( preferred_style )
 
-		return "ScreenSelectPlayMode"
+		return "ScreenSelectPlayMode2"
 	end
 
 	return "ScreenSelectStyle"
