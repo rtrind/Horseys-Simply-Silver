@@ -60,11 +60,7 @@ SelectMusicOrCourse = function()
 end
 
 Branch.AllowScreenSelectProfile = function()
-	if ThemePrefs.Get("AllowScreenSelectProfile") then
-		return "ScreenSelectProfile"
-	else
-		return Branch.AllowScreenSelectColor()
-	end
+	return "ScreenSelectProfile"
 end
 
 Branch.AllowScreenSelectColor = function()
