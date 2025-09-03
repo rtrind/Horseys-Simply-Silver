@@ -310,12 +310,13 @@ local wheel_options = {
 			-- { {"SortBy", "Genre"} },
 			{ {"SortBy", "BPM"} },
 			{ {"SortBy", "Length"} },
-			{ {"SortBy", "Meter"} },
 			{ {"SortBy", "Popularity"} },
 			{ {"SortBy", "Recent"} },
 			{ {"SortBy", "TopGrades"} },
-			{ {"SortBy", "TopP1Grades"}, PROFILEMAN:IsPersistentProfile(PLAYER_1) },
-			{ {"SortBy", "TopP2Grades"}, PROFILEMAN:IsPersistentProfile(PLAYER_2) },
+			-- these sort methods are not supported by OutFox
+			{ {"SortBy", "Meter"}, not IsOutFox() },
+			{ {"SortBy", "TopP1Grades"}, PROFILEMAN:IsPersistentProfile(PLAYER_1) and not IsOutFox() },
+			{ {"SortBy", "TopP2Grades"}, PROFILEMAN:IsPersistentProfile(PLAYER_2) and not IsOutFox() },
 		}
 	},
 	{
