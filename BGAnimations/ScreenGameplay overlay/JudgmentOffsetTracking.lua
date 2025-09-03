@@ -55,8 +55,11 @@ return Def.Actor{
 					local tns = ToEnumShortString(params.TapNoteScore)
 					arrow = arrow + col
 					
-					if tnt ~= "Lift" and tns == "Miss" and (tapnote:GetTapNoteResult().GetHeld and tapnote:GetTapNoteResult():GetHeld()) then
-						heldMiss = true
+					--OutFox doesn't yet support the GetHeld() function because of performance issues 
+					if not IsOutFox() then
+						if tnt ~= "Lift" and tns == "Miss" and tapnote:GetTapNoteResult():GetHeld() then
+							heldMiss = true
+						end
 					end
 
 					if arrow == 1 then
