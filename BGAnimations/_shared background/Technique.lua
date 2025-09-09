@@ -179,5 +179,21 @@ for i=11,18 do
     }
 end
 
+--[=====[
+Summary: the models used in the "Technique" visual style (Simply Love Options > Visual Style > select "🌀") overlap with the notefield preview on SSMw.
+We need to flush the z-buffer after drawing the Technique background models, regardless of the default, implied, or specified layering using draworder()
+
+Jousway: I noticed that wiht fast note rendering on the def.notefields on the music wheel are broken, there is a way to fix this and @Mr. ThatKid does it in modifles, want him to show you how?
+MrThatKid: Basically, you need a quad that clears the zbuffer.
+So far, you've only got one BG that really needs this: Technique.lua (in _shared background)
+And that should make your notefields not be cut into by that background. (And it did work on my end when I tried this) (the x(-1) is so you don't have a white pixel in the top left corner)
+The reason this is needed is because many of the things in here are models, and they write to the zbuffer by default, so clearing it before we draw other things that can write to the zbuffer (eg: notefields with 3d noteskins) is a good idea
+--]=====]
+
+t[#t+1] = Def.Quad {
+    InitCommand= function(self)
+        self:x(-1):clearzbuffer(true)
+    end
+}
 
 return t
