@@ -157,8 +157,43 @@ LoadGuest = function(player)
 	GAMESTATE:ResetPlayerOptions(player)
 	local pn = ToEnumShortString(player)
 	local stages = SL[pn].Stages
+	if type(SM) == "function" then SM("LoadGuest called for "..pn) end
+	-- Reinitialize SL state to defaults for Guest and preserve session history only
 	SL[pn]:initialize()
+	-- Ensure any previously latched PlayerOptionsString is cleared for Guest
+	SL[pn].PlayerOptionsString = ""
+	-- Also clear engine-side preferred mods and enforce default FailSetting
+	local ps = GAMESTATE:GetPlayerState(player)
+	if ps and ps.SetPlayerOptions then
+		ps:SetPlayerOptions("ModsLevel_Preferred", "")
+		ps:SetPlayerOptions("ModsLevel_Song", "")
+		-- Explicitly disable common remove-type engine mods that persist across songs
+		local poPref = ps:GetPlayerOptions("ModsLevel_Preferred")
+		if poPref then
+			poPref:NoMines(false)
+			poPref:NoHolds(false)
+			poPref:NoJumps(false)
+			poPref:NoHands(false)
+			poPref:NoQuads(false)
+			poPref:NoLifts(false)
+			poPref:NoFakes(false)
+			poPref:Little(false)
+			poPref:FailSetting( GetDefaultFailType() )
+		end
+		local poStage = ps:GetPlayerOptions("ModsLevel_Stage")
+		if poStage then
+			poStage:NoMines(false)
+			poStage:NoHolds(false)
+			poStage:NoJumps(false)
+			poStage:NoHands(false)
+			poStage:NoQuads(false)
+			poStage:NoLifts(false)
+			poStage:NoFakes(false)
+			poStage:Little(false)
+		end
+	end
 	SL[pn].Stages = stages
+	if type(SM) == "function" then SM("LoadGuest finished reset for "..pn) end
 end
 
 

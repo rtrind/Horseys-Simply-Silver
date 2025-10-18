@@ -159,6 +159,17 @@ if GAMESTATE:GetNumPlayersEnabled() == 1 then return Def.ActorFrame{
 		end
 	end,
 
+    -- When a new profile is selected from ScreenSelectProfile, reset to Guest defaults if needed
+    NewProfileSelectedMessageCommand=function(self, params)
+        if params and params.PlayerNumber == player then
+            if (not params.NewProfileGUID) or params.NewProfileGUID == "" then
+                if type(SM) == "function" then SM("NewProfileSelected: Guest for "..pn) end
+                LoadGuest(player)
+                ApplyMods(player)
+            end
+        end
+    end,
+
 	-- depending on the value of pn, this will either become
 	-- an AppearP1Command or an AppearP2Command when the screen initializes
 	["Appear"..pn.."Command"]=function(self)
@@ -726,6 +737,17 @@ if GAMESTATE:GetNumPlayersEnabled() == 2 then return Def.ActorFrame{
 			self:queuecommand("Appear" .. pn)
 		end
 	end,
+
+    -- When a new profile is selected from ScreenSelectProfile, reset to Guest defaults if needed
+    NewProfileSelectedMessageCommand=function(self, params)
+        if params and params.PlayerNumber == player then
+            if (not params.NewProfileGUID) or params.NewProfileGUID == "" then
+                if type(SM) == "function" then SM("NewProfileSelected: Guest for "..pn) end
+                LoadGuest(player)
+                ApplyMods(player)
+            end
+        end
+    end,
 
 	-- depending on the value of pn, this will either become
 	-- an AppearP1Command or an AppearP2Command when the screen initializes

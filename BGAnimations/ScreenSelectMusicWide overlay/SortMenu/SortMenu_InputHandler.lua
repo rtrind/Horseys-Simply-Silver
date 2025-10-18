@@ -3,8 +3,6 @@ local sort_wheel = ...
 -- Guard state to prevent duplicate profile prompt openings and debounce rapid input
 local lastProfilePromptAt = -1
 local function canOpenProfilePrompt()
-    -- If a fast switch/profile prompt is already in progress, block re-entry
-    if SL and SL.Global and SL.Global.FastProfileSwitchInProgress then return false end
     if type(GetTimeSinceStart) == "function" then
         local now = GetTimeSinceStart()
         if lastProfilePromptAt > 0 and (now - lastProfilePromptAt) < 0.25 then
@@ -118,15 +116,10 @@ local input = function(event)
 					SCREENMAN:SetNewScreen("ScreenViewDownloads")
                 elseif focus.new_overlay == "SwitchProfile" then
                     -- Prevent duplicate prompt openings and debounce rapid Start presses
-                    if not canOpenProfilePrompt() then
-                        -- consume and ignore this duplicate trigger
-                        if type(SM) == "function" then SM("SwitchProfile suppressed (guard/debounce)") end
-                        return true
-                    end
+                    if not canOpenProfilePrompt() then return true end
                     -- Mark guard before proceeding
                     SL.Global.FastProfileSwitchInProgress = true
                     markProfilePromptOpened()
-                    if type(SM) == "function" then SM("Opening ScreenSelectProfile") end
 
                     -- Make sure we save any currently active profiles before potentially switching
                     -- to different ones.

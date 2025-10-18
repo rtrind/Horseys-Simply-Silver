@@ -21,24 +21,16 @@ local af = Def.ActorFrame{
 		SetPreferredSong()
 	end,
 
-	PlayerProfileSetMessageCommand=function(self, params)
-		if not PROFILEMAN:IsPersistentProfile(params.Player) then
-			LoadGuest(params.Player)
-		end
-		generateFavoritesForMusicWheel()
-		ApplyMods(params.Player)
-	end,
+    PlayerProfileSetMessageCommand=function(self, params)
+        generateFavoritesForMusicWheel()
+    end,
 
-	PlayerJoinedMessageCommand=function(self, params)
-		if not PROFILEMAN:IsPersistentProfile(params.Player) then
-			LoadGuest(params.Player)
-		end
-		ApplyMods(params.Player)
-		--Joining a new player to ScreenSelectMusicWide is going to be janky because the best way to go about it would be to fade out the first joined player's UI
-		--We'll have to then deal with the performance hit associated with having the UI be duplicated but not visible (because hidden elements are still loaded?)
-		--The best option, I think, is to reload the screen entirely
-		SCREENMAN:GetTopScreen():SetNextScreenName("ScreenSelectMusicWide"):StartTransitioningScreen("SM_GoToNextScreen")		
-	end,
+    PlayerJoinedMessageCommand=function(self, params)
+        --Joining a new player to ScreenSelectMusicWide is going to be janky because the best way to go about it would be to fade out the first joined player's UI
+        --We'll have to then deal with the performance hit associated with having the UI be duplicated but not visible (because hidden elements are still loaded?)
+        --The best option, I think, is to reload the screen entirely
+        SCREENMAN:GetTopScreen():SetNextScreenName("ScreenSelectMusicWide"):StartTransitioningScreen("SM_GoToNextScreen")        
+    end,
 
 	-- ---------------------------------------------------
 	--  first, load files that contain no visual elements, just code that needs to run
