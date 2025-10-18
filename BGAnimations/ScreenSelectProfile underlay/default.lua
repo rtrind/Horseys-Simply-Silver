@@ -69,6 +69,9 @@ local invalid_count = 0
 local t = Def.ActorFrame {
 
 	InitCommand=function(self) self:queuecommand("Stall") end,
+	OnCommand=function(self)
+		if type(SM) == "function" then SM("ScreenSelectProfile: OnCommand") end
+	end,
 	StallCommand=function(self)
 		-- FIXME: Stall for 0.5 seconds so that the Lua InputCallback doesn't get immediately added to the screen.
 		-- It's otherwise possible to enter the screen with MenuLeft/MenuRight already held and firing off events,
@@ -116,9 +119,11 @@ local t = Def.ActorFrame {
 	-- sleep for 0.5 seconds to give the PlayerFrames time to tween out
 	-- and queue a call to Finish() so that the engine can wrap things up
 	OffCommand=function(self)
+		if type(SM) == "function" then SM("ScreenSelectProfile: OffCommand queued") end
 		self:sleep(0.5):queuecommand("Finish")
 	end,
 	FinishCommand=function(self)
+		if type(SM) == "function" then SM("ScreenSelectProfile: FinishCommand -> Finish()") end
 		-- Loop through the enum for PlayerNumber that the engine has exposed to Lua.
 		for player in ivalues( PlayerNumber ) do
 			-- check if this player is joined in
