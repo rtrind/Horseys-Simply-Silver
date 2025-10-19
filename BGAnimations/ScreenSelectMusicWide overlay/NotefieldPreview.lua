@@ -28,11 +28,11 @@ for i, pn in ipairs(GAMESTATE:GetEnabledPlayers()) do
       if GAMESTATE:GetCurrentStyle():GetStyleType() == "StyleType_OnePlayerTwoSides" then
         return 815
       else
-        if PROFILEMAN:IsPersistentProfile(pnNoteField) then
+        -- if PROFILEMAN:IsPersistentProfile(pnNoteField) then
           return 1080
-        else
-          return 430
-        end
+        -- else
+        --   return 430
+        -- end
       end
     end
 
@@ -42,21 +42,21 @@ for i, pn in ipairs(GAMESTATE:GetEnabledPlayers()) do
         --player 1
         if pnNoteField == 0 then
           --with profile
-          if PROFILEMAN:IsPersistentProfile(pn) then
+          -- if PROFILEMAN:IsPersistentProfile(pn) then
             return _screen.cx-213
           --without profile
-          else
-            return _screen.cx-293
-          end
+          -- else
+          --   return _screen.cx-293
+          -- end
         --player 2
         elseif pnNoteField == 1 then
           --with profile
-          if PROFILEMAN:IsPersistentProfile(pn) then
+          -- if PROFILEMAN:IsPersistentProfile(pn) then
             return _screen.cx+213
           --without profile
-          else
-            return _screen.cx+293
-          end
+          -- else
+          --   return _screen.cx+293
+          -- end
         end
       -- single player UI (won't differ based on whether a profile is loaded)
       else
@@ -74,12 +74,12 @@ for i, pn in ipairs(GAMESTATE:GetEnabledPlayers()) do
       --2 players
       if GAMESTATE:GetNumPlayersEnabled() == 2 then
         --with profiles
-        if PROFILEMAN:IsPersistentProfile(pn) then
+        -- if PROFILEMAN:IsPersistentProfile(pn) then
           return 0.4
         --without profiles
-        else
-          return 1
-        end
+        -- else
+        --   return 1
+        -- end
       --1 player
       else
         --doubles mode
@@ -95,12 +95,12 @@ for i, pn in ipairs(GAMESTATE:GetEnabledPlayers()) do
       --2 players
       if GAMESTATE:GetNumPlayersEnabled() == 2 then
         --with profiles
-        if PROFILEMAN:IsPersistentProfile(pn) then
+        -- if PROFILEMAN:IsPersistentProfile(pn) then
           return _screen.cy-115
         --without profiles
-        else
-          return _screen.cy-170
-        end
+        -- else
+        --   return _screen.cy-170
+        -- end
       --1 player
       else
         --doubles mode
@@ -116,12 +116,12 @@ for i, pn in ipairs(GAMESTATE:GetEnabledPlayers()) do
       --2 players
       if GAMESTATE:GetNumPlayersEnabled() == 2 then
         --with profiles
-        if PROFILEMAN:IsPersistentProfile(pn) then
+        -- if PROFILEMAN:IsPersistentProfile(pn) then
           return _screen.cy+492
         --without profiles
-        else
-          return _screen.cy+35
-        end
+        -- else
+        --   return _screen.cy+35
+        -- end
       --1 player
       else
         --doubles mode
