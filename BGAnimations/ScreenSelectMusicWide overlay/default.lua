@@ -26,10 +26,8 @@ local af = Def.ActorFrame{
     end,
 
     PlayerJoinedMessageCommand=function(self, params)
-        --Joining a new player to ScreenSelectMusicWide is going to be janky because the best way to go about it would be to fade out the first joined player's UI
-        --We'll have to then deal with the performance hit associated with having the UI be duplicated but not visible (because hidden elements are still loaded?)
-        --The best option, I think, is to reload the screen entirely
-        SCREENMAN:GetTopScreen():SetNextScreenName("ScreenSelectMusicWide"):StartTransitioningScreen("SM_GoToNextScreen")        
+        -- Instead of reloading abruptly, open the profile selection screen
+        MESSAGEMAN:Broadcast("OpenProfileSelectFromJoin")
     end,
 
 	SSM_RequestReloadMessageCommand=function(self, params)

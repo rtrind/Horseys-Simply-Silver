@@ -485,6 +485,19 @@ local t = Def.ActorFrame {
 		SCREENMAN:AddNewScreenToTop("ScreenSelectProfile")
 	end,
 
+	-- When a player joins from SSM without a profile flow, open the profile selector
+	OpenProfileSelectFromJoinMessageCommand=function(self)
+		local screen = SCREENMAN:GetTopScreen()
+		if not screen then return end
+		-- Only handle if we're actually on ScreenSelectMusicWide
+		if screen:GetName() == "ScreenSelectMusicWide" then
+			-- Mark as fast profile switch so finish flow triggers reload
+			SL.Global.FastProfileSwitchInProgress = true
+			SL.Global.ReloadAfterProfileSSM = true
+			self:playcommand("DirectInputToEngineForSelectProfile")
+		end
+	end,
+
 	AssessAvailableChoicesCommand=function(self)
 
 		local filtered_wheel_options = {}
