@@ -21,14 +21,18 @@ local af = Def.ActorFrame{
 		SetPreferredSong()
 	end,
 
-    PlayerProfileSetMessageCommand=function(self, params)
-        generateFavoritesForMusicWheel()
-    end,
+	PlayerProfileSetMessageCommand=function(self, params)
+		if not PROFILEMAN:IsPersistentProfile(params.Player) then
+			LoadGuest(params.Player)
+		end
+		generateFavoritesForMusicWheel()
+		ApplyMods(params.Player)
+	end,
 
-    PlayerJoinedMessageCommand=function(self, params)
+	PlayerJoinedMessageCommand=function(self, params)
         -- Instead of reloading abruptly, open the profile selection screen
-        MESSAGEMAN:Broadcast("OpenProfileSelectFromJoin")
-    end,
+		MESSAGEMAN:Broadcast("OpenProfileSelectFromJoin")	
+	end,
 
 	SSM_RequestReloadMessageCommand=function(self, params)
         -- Defer one frame to ensure we're still on the profile screen as top

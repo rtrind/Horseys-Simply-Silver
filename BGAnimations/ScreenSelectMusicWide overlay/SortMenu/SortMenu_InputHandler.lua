@@ -3,6 +3,8 @@ local sort_wheel = ...
 -- Guard state to prevent duplicate profile prompt openings and debounce rapid input
 local lastProfilePromptAt = -1
 local function canOpenProfilePrompt()
+    -- If a fast switch/profile prompt is already in progress, block re-entry
+    if SL and SL.Global and SL.Global.FastProfileSwitchInProgress then return false end
     if type(GetTimeSinceStart) == "function" then
         local now = GetTimeSinceStart()
         if lastProfilePromptAt > 0 and (now - lastProfilePromptAt) < 0.25 then
