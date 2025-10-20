@@ -32,6 +32,23 @@ local af = Def.ActorFrame{
         SCREENMAN:GetTopScreen():SetNextScreenName("ScreenSelectMusicWide"):StartTransitioningScreen("SM_GoToNextScreen")        
     end,
 
+	SSM_RequestReloadMessageCommand=function(self, params)
+        -- Defer one frame to ensure we're still on the profile screen as top
+        self:sleep(0.01):queuecommand("DoReload")
+    end,
+
+    DoReloadCommand=function(self, params)
+		-- For some reason we cannot reload the screen after a profile switch,
+		-- so we have to wait until ScreenSelectMusicWide is the top screen and
+		-- no other screen is on top of it. Then reload the entire screen...
+        local s = SCREENMAN:GetTopScreen()
+        if s then
+			SM("Reloading screen...")
+            s:SetNextScreenName("ScreenReloadSSM")
+            s:StartTransitioningScreen("SM_GoToNextScreen")
+        end
+    end,
+
 	-- ---------------------------------------------------
 	--  first, load files that contain no visual elements, just code that needs to run
 

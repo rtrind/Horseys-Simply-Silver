@@ -162,8 +162,10 @@ local t = Def.ActorFrame {
 			end
 		end
 
+		-- if this profile flow was initiated from SelectMusic, request a reload of SSM
 		if SL.Global.FastProfileSwitchInProgress then
 			SL.Global.FastProfileSwitchInProgress = false
+			MESSAGEMAN:Broadcast("SSM_RequestReload")
 		end
 		SCREENMAN:GetTopScreen():Finish()
 	end,
