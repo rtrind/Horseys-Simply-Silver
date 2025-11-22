@@ -6,7 +6,7 @@ af[#af+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Header")..{
 	Name="GameModeText",
 	Text=THEME:GetString("ScreenSelectPlayMode", SL.Global.GameMode),
 	InitCommand=function(self)
-		self:diffusealpha(0):zoom( WideScale(0.5,0.6)):halign(1):y(15)
+		self:diffusealpha(0):zoom( 0.6 ):halign(1):y(15)
 
 		-- move the GameMode text further left if MenuTimer is enabled
 		if PREFSMAN:GetPreference("MenuTimer") then

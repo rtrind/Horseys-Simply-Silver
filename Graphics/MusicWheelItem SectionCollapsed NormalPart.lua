@@ -7,7 +7,7 @@ local item_width = _screen.w / 2.125
 
 local af = Def.ActorFrame{
 	-- the MusicWheel is centered via metrics under [ScreenSelectMusic]; offset by a slight amount to the right here
-	InitCommand=function(self) self:x(WideScale(28,33)) end,
+	InitCommand=function(self) self:x(33) end,
 
 	Def.Quad{
 		InitCommand=function(self) 

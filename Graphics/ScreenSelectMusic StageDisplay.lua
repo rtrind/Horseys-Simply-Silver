@@ -7,8 +7,8 @@ if not PREFSMAN:GetPreference("EventMode") then
 	t[#t+1] = Def.ActorFrame {
 		LoadFont(ThemePrefs.Get("ThemeFont") .. " Header")..{
 			InitCommand=function(self)
-				self:zoom( SL_WideScale(0.5, 0.6) )
-				self:y( SL_WideScale(7.5, 9) / self:GetZoom() )
+				self:zoom( 0.6 )
+				self:y( 9 / self:GetZoom() )
 				self:diffusealpha(0):x(_screen.cx)
 			end,
 			OnCommand=function(self)

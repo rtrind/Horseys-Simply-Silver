@@ -8,7 +8,7 @@ local HighScoreRow = Def.ActorFrame{
 	},
 
 	Def.Banner{
-		InitCommand=function(self) self:x(WideScale(-280,-320)):horizalign(left):scaletoclipped(102,40):diffusealpha(0.2) end,
+		InitCommand=function(self) self:x(-320):horizalign(left):scaletoclipped(102,40):diffusealpha(0.2) end,
 		SetCommand=function(self, params)
 			if params.Song and params.Song:GetBannerPath() then
 				self:LoadFromCachedBanner( params.Song:GetBannerPath() )
@@ -18,7 +18,7 @@ local HighScoreRow = Def.ActorFrame{
 
 	--the name of the song, on top of the graphical banner
 	LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
-		InitCommand=function(self) self:x(WideScale(-220,-280)):horizalign(left):shadowlength(1):_wrapwidthpixels(264):maxheight(58):maxwidth(280) end,
+		InitCommand=function(self) self:x(-280):horizalign(left):shadowlength(1):_wrapwidthpixels(264):maxheight(58):maxwidth(280) end,
 		SetCommand=function(self, params)
 			if params.Song then
 				self:settext( params.Song:GetDisplayFullTitle() )
@@ -78,7 +78,7 @@ for key, difficulty in ipairs(DifficultiesToShow) do
 	HighScore[#HighScore+1] = Def.BitmapText{
 		Font=ThemePrefs.Get("ThemeFont") .. " Normal",
 		Name="HighScore_"..difficulty,
-		InitCommand=function(self) self:x(WideScale(140,40) + (key-1)*100):zoom(0.8):horizalign(center) end
+		InitCommand=function(self) self:x(40 + (key-1)*100):zoom(0.8):horizalign(center) end
 	}
 
 end

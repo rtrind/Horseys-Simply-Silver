@@ -1,12 +1,12 @@
-local title_bg_width = SL_WideScale(115, 128)
+local title_bg_width = 128
 local row_height = 30
 local row_width = {
-	active   = WideScale(304, 460),
-	inactive = WideScale(300, 456)
+	active   = 460,
+	inactive = 456
 }
 
 local t = Def.ActorFrame{}
-t.InitCommand=function(self) self:x(WideScale(12, 30)) end
+t.InitCommand=function(self) self:x(30) end
 
 -- a row
 t[#t+1] = Def.Quad {

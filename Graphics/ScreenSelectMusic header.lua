@@ -89,8 +89,8 @@ if PREFSMAN:GetPreference("EventMode") then
 		Name="Session Timer",
 		InitCommand=function(self)
 			bmt_actor = self
-			self:zoom( SL_WideScale(0.3, 0.36) )
-			self:y( SL_WideScale(3.15, 3.5) / self:GetZoom() )
+			self:zoom( 0.36 )
+			self:y( 3.5 / self:GetZoom() )
 			self:diffusealpha(0):x(_screen.cx)
 		end,
 		OnCommand=function(self)
@@ -102,9 +102,9 @@ if PREFSMAN:GetPreference("EventMode") then
 		Name="Play Timer",
 		InitCommand=function(self)
 			ses_actor = self
-			self:zoom( SL_WideScale(0.3, 0.36) )
-			self:y( SL_WideScale(3.15, 3.5) / self:GetZoom() )
-			self:diffusealpha(0):x(_screen.cx + SL_WideScale(150, 200))
+			self:zoom( 0.36 )
+			self:y( 3.5 / self:GetZoom() )
+			self:diffusealpha(0):x(_screen.cx + 200)
 		end,
 		OnCommand=function(self)
 			self:sleep(0.1):decelerate(0.33):diffusealpha(1)
@@ -191,13 +191,13 @@ af[#af+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Header")..{
 	Text=THEME:GetString("ScreenSelectPlayMode", SL.Global.GameMode),
 	InitCommand=function(self)
 		self:diffusealpha(0):halign(1):y(15)
-		self:zoom( SL_WideScale(0.5, 0.6) )
+		self:zoom( 0.6 )
 
 		-- move the GameMode text further left if MenuTimer is enabled
 		if PREFSMAN:GetPreference("MenuTimer") then
-			self:x(_screen.w - SL_WideScale(110, 125))
+			self:x(_screen.w - 125)
 		else
-			self:x(_screen.w - SL_WideScale(55, 62))
+			self:x(_screen.w - 62)
 		end
 	end,
 	OnCommand=function(self)
@@ -211,8 +211,8 @@ af[#af+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Header")..{
 -- P1 pad
 af[#af+1] = LoadActor( THEME:GetPathB("ScreenSelectStyle", "underlay/pad.lua"), {nil, nil, 1, nil} )..{
 	InitCommand=function(self)
-		self:x(_screen.w - (PREFSMAN:GetPreference("MenuTimer") and SL_WideScale(90, 105) or SL_WideScale(35, 41)))
-		self:y( SL_WideScale(22, 23.5) ):zoom(0.24)
+		self:x(_screen.w - (PREFSMAN:GetPreference("MenuTimer") and 105 or 41))
+		self:y( 23.5 ):zoom(0.24)
 		self:playcommand("Set", {Player=PLAYER_1})
 	end,
 	PlayerJoinedMessageCommand=function(self, params)
@@ -225,8 +225,8 @@ af[#af+1] = LoadActor( THEME:GetPathB("ScreenSelectStyle", "underlay/pad.lua"), 
 -- P2 pad
 af[#af+1] = LoadActor( THEME:GetPathB("ScreenSelectStyle", "underlay/pad.lua"), {nil, nil, 2, nil} )..{
 	InitCommand=function(self)
-		self:x(_screen.w - (PREFSMAN:GetPreference("MenuTimer") and SL_WideScale(70, 81) or SL_WideScale(15, 17)))
-		self:y( SL_WideScale(22, 23.5) ):zoom(0.24)
+		self:x(_screen.w - (PREFSMAN:GetPreference("MenuTimer") and 81 or 17))
+		self:y( 23.5 ):zoom(0.24)
 		self:playcommand("Set", {Player=PLAYER_2})
 	end,
 	PlayerJoinedMessageCommand=function(self, params)

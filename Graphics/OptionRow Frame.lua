@@ -1,14 +1,14 @@
 -- left/right padding from screen edges
-local padding = WideScale(12, 28)
+local padding = 28
 
 -- OptionRow height and width
 local row_height = 30
-local row_width  = WideScale(582, 776) - (padding * 2)
+local row_width  = 776 - (padding * 2)
 
 -- width of OptionRow area to the left that contains the row title
 local title_bg_width = 115
 
-local proxy_offset = _screen.cx - WideScale(30,40)
+local proxy_offset = _screen.cx - 40
 
 -- -----------------------------------------------------------------------
 
@@ -126,7 +126,7 @@ for player in ivalues( GAMESTATE:GetHumanPlayers() ) do
 
 			if FindInTable(optrow:GetName(), rows_with_proxies) then
 				-- if this OptionRow needs an ActorProxy for preview purposes, set the necessary parameters
-				self:x(proxy_offset + (player==PLAYER_1 and WideScale(29, 30) or WideScale(229, 270)))
+				self:x(proxy_offset + (player==PLAYER_1 and 30 or 270))
 				self:zoom(0.4)
 			else
 				-- if this OptionRow doesn't need an ActorProxy, don't draw it and save processor cycles

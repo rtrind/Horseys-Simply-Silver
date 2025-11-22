@@ -13,7 +13,7 @@
 return Def.Quad {
 	Name="RowBackgroundQuad",
 	InitCommand=function(self)
-		self:x(_screen.cx - WideScale(30,40))
-		self:setsize(WideScale(543,720), 30)
+		self:x(_screen.cx - 40)
+		self:setsize(720, 30)
 	end
 }
