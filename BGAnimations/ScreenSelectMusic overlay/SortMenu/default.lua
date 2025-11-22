@@ -271,6 +271,12 @@ local function GetChangeableStyles(style)
 	end
 end
 local style = GAMESTATE:GetCurrentStyle():GetName():gsub("8", "")
+
+local isStyleSingle = function()	
+	local currentStyle = GAMESTATE:GetCurrentStyle():GetName():gsub("8", "")
+	return currentStyle == "single" or currentStyle == "solo" or currentStyle == "versus"
+end
+
 local wheel_options = {
 	-- This is the master table that controls the SortMenu's choices
 	-- The structure is as follows:
@@ -304,12 +310,21 @@ local wheel_options = {
 	{ 
 		{"", "CategorySorts"}, 
 		{
-			{{"SortBy", "Group"} },
+			{ {"SortBy", "Group"} },
 			{ {"SortBy", "Title"} },
 			{ {"SortBy", "Artist"} },
 			-- { {"SortBy", "Genre"} },
 			{ {"SortBy", "BPM"} },
 			{ {"SortBy", "Length"} },
+			{ {"SortBy", "BeginnerMeter"}, function() return isStyleSingle() end },
+			{ {"SortBy", "EasyMeter"}, function() return isStyleSingle() end },
+			{ {"SortBy", "MediumMeter"}, function() return isStyleSingle() end },
+			{ {"SortBy", "HardMeter"}, function() return isStyleSingle() end },
+			{ {"SortBy", "ChallengeMeter"}, function() return isStyleSingle() end },
+			{ {"SortBy", "DoubleEasyMeter"}, function() return not isStyleSingle() end },
+			{ {"SortBy", "DoubleMediumMeter"}, function() return not isStyleSingle() end },
+			{ {"SortBy", "DoubleHardMeter"}, function() return not isStyleSingle() end },
+			{ {"SortBy", "DoubleChallengeMeter"}, function() return not isStyleSingle() end },
 			{ {"SortBy", "Popularity"} },
 			{ {"SortBy", "Recent"} },
 			{ {"SortBy", "TopGrades"} },
@@ -470,6 +485,19 @@ local t = Def.ActorFrame {
 		SCREENMAN:AddNewScreenToTop("ScreenSelectProfile")
 	end,
 
+	-- When a player joins from SSM without a profile flow, open the profile selector
+	OpenProfileSelectFromJoinMessageCommand=function(self)
+		local screen = SCREENMAN:GetTopScreen()
+		if not screen then return end
+		-- Only handle if we're actually on ScreenSelectMusicWide
+		if screen:GetName() == "ScreenSelectMusicWide" then
+			-- Mark as fast profile switch so finish flow triggers reload
+			SL.Global.FastProfileSwitchInProgress = true
+			SL.Global.ReloadAfterProfileSSM = true
+			self:playcommand("DirectInputToEngineForSelectProfile")
+		end
+	end,
+
 	AssessAvailableChoicesCommand=function(self)
 
 		local filtered_wheel_options = {}
@@ -516,7 +544,7 @@ local t = Def.ActorFrame {
 		if GAMESTATE:IsEventMode() then
 			-- Allow players to switch to a TestInput overlay if the current game has visual assets to support it.
 			local game = GAMESTATE:GetCurrentGame():GetName()
-			if (game=="dance" or game=="pump" or game=="smx" or game=="techno") and GAMESTATE:IsEventMode() then
+			if (game=="dance" or game=="pump" or game=="smx" or game=="techno") then
 				table.insert(wheel_options, {"FeelingSalty", "TestInput"})
 			end
 		end

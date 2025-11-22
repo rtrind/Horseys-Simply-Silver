@@ -15,7 +15,7 @@ local af = Def.ActorFrame{
 		-- the preselected music rate.
 		local songOptions = GAMESTATE:GetSongOptionsObject("ModsLevel_Preferred")
 		songOptions:MusicRate(SL.Global.ActiveModifiers.MusicRate)
-		
+
 		-- here we're going to set the preferred song of the music wheel when [no player profile is loaded] or [a player profile is loaded and does not have a preferred song]
 		-- see 06 SL-Utilities.lua for function definitions
 		SetPreferredSong()
@@ -30,11 +30,26 @@ local af = Def.ActorFrame{
 	end,
 
 	PlayerJoinedMessageCommand=function(self, params)
-		if not PROFILEMAN:IsPersistentProfile(params.Player) then
-			LoadGuest(params.Player)
-		end
-		ApplyMods(params.Player)
+        -- Instead of reloading abruptly, open the profile selection screen
+		MESSAGEMAN:Broadcast("OpenProfileSelectFromJoin")	
 	end,
+
+	SSM_RequestReloadMessageCommand=function(self, params)
+        -- Defer one frame to ensure we're still on the profile screen as top
+        self:sleep(0.01):queuecommand("DoReload")
+    end,
+
+    DoReloadCommand=function(self, params)
+		-- For some reason we cannot reload the screen after a profile switch,
+		-- so we have to wait until ScreenSelectMusicWide is the top screen and
+		-- no other screen is on top of it. Then reload the entire screen...
+        local s = SCREENMAN:GetTopScreen()
+        if s then
+			SM("Reloading screen...")
+            s:SetNextScreenName("ScreenReloadSSM")
+            s:StartTransitioningScreen("SM_GoToNextScreen")
+        end
+    end,
 
 	-- ---------------------------------------------------
 	--  first, load files that contain no visual elements, just code that needs to run
@@ -49,15 +64,10 @@ local af = Def.ActorFrame{
 	-- next, load visual elements; the order of these matters
 	-- i.e. content in PerPlayer/Over needs to draw on top of content from PerPlayer/Under
 
-	-- make the MusicWheel appear to cascade down; this should draw underneath P2's PaneDisplay
-	LoadActor("./MusicWheelAnimation.lua"),
+	LoadActor("./NotefieldPreview.lua"),
 
 	-- number of steps, jumps, holds, etc., and high scores associated with the current stepchart
 	LoadActor("./PaneDisplay.lua"),
-
-	--reorder StepsDisplayList here so that the tail for the stepartistbubble isn't covered in CourseMode
-	-- The grid for the difficulty picker (normal) or CourseContentsList (CourseMode)
-	LoadActor("./StepsDisplayList/default.lua"),
 
 	-- elements we need two of (one for each player) that draw underneath the StepsDisplayList
 	-- this includes the stepartist boxes, the density graph, and the cursors.
@@ -68,6 +78,9 @@ local af = Def.ActorFrame{
 
 	-- Banner Art
 	LoadActor("./Banner.lua"),
+
+	-- The grid for the difficulty picker
+	LoadActor("./StepsDisplayList/default.lua"),
 
 	-- ---------------------------------------------------
 	-- finally, load the overlay used for sorting the MusicWheel (and more), hidden by default
@@ -85,7 +98,9 @@ local af = Def.ActorFrame{
 
 	LoadActor("./SongSearch/default.lua"),
 
-	LoadActor("./ToggleFavorite.lua"),
+	LoadActor("../ScreenSelectMusic overlay/ToggleFavorite.lua"),
+
+	LoadActor("./footer.lua"),
 }
 
 return af

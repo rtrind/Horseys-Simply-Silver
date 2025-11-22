@@ -15,25 +15,15 @@ Border = function(width, height, bw)
 end
 
 -- -----------------------------------------------------------------------
--- SL_WideScale() is modified version of WideScale() from SM5.1's _fallback theme
+-- SL_WideScale() - Simplified for 16:9 only (4:3 support removed)
 --
--- _fallback's WideScale() is useful for scaling a number to accommodate both 4:3 and 16:9 aspect ratios
--- first arg is what will be returned if AspectRatio is 4:3
--- second arg is what will be returned if AspectRatio is 16:9
--- The number returned will be scaled proprotionately between if AspectRatio is, for example, 16:10
--- and likewise scaled futher up if AspectRatio is, for example, 21:9.
---
--- SL's UI was originally designed for 4:3 and later extended for 16:9, so WideScale() works great there.
--- I'm opting to accommodate ultrawide displays by clamping the scale at 16:9.
---
--- You may not want to adopt this strategy in your theme, but for here
--- it's easier than redesigning the UI again.
---
--- It's important to not override _fallback's WideScale() for the sake of scripted simfiles
--- that expect it to behave a particular way.
+-- This function now always returns the 16:9 value since 4:3 support has been removed.
+-- The function is kept for backwards compatibility with existing code that calls it.
+-- First arg (AR4_3) is ignored, second arg (AR16_9) is always returned.
 
 SL_WideScale = function(AR4_3, AR16_9)
-	return clamp(scale( SCREEN_WIDTH, 640, 854, AR4_3, AR16_9 ), AR4_3, AR16_9)
+	-- Always return the 16:9 value (4:3 support removed)
+	return AR16_9
 end
 
 

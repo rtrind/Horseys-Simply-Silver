@@ -1,5 +1,24 @@
 local sort_wheel = ...
 
+-- Guard state to prevent duplicate profile prompt openings and debounce rapid input
+local lastProfilePromptAt = -1
+local function canOpenProfilePrompt()
+    -- If a fast switch/profile prompt is already in progress, block re-entry
+    if SL and SL.Global and SL.Global.FastProfileSwitchInProgress then return false end
+    if type(GetTimeSinceStart) == "function" then
+        local now = GetTimeSinceStart()
+        if lastProfilePromptAt > 0 and (now - lastProfilePromptAt) < 0.25 then
+            return false
+        end
+    end
+    return true
+end
+local function markProfilePromptOpened()
+    if type(GetTimeSinceStart) == "function" then
+        lastProfilePromptAt = GetTimeSinceStart()
+    end
+end
+
 -- this handles user input while in the SortMenu
 local input = function(event)
 	if not (event and event.PlayerNumber and event.button) then
@@ -16,7 +35,7 @@ local input = function(event)
 		elseif event.GameButton == "MenuLeft" or event.GameButton == "MenuUp" then
 			sort_wheel:scroll_by_amount(-1)
 			sortmenu:GetChild("change_sound"):play()
-		elseif event.GameButton == "Start" then
+        elseif event.GameButton == "Start" then
 			sortmenu:GetChild("start_sound"):play()
 			local focus = sort_wheel:get_actor_item_at_focus_pos()
 			if focus.kind == "SortBy" then
@@ -69,7 +88,7 @@ local input = function(event)
 				-- finally, reload the screen
 				screen:SetNextScreenName("ScreenReloadSSM")
 				screen:StartTransitioningScreen("SM_GoToNextScreen")
-			elseif focus.new_overlay then
+            elseif focus.new_overlay then
 				if focus.new_overlay == "GoBack" then
 					sortmenu:playcommand("AssessAvailableChoices")
 				-- if the overlay starts with "Category"
@@ -97,15 +116,19 @@ local input = function(event)
 					overlay:GetChild("PaneDisplayMaster"):GetChild("GetScoresRequester"):playcommand("Cancel")
 					overlay:playcommand("DirectInputToEngine")
 					SCREENMAN:SetNewScreen("ScreenViewDownloads")
-				elseif focus.new_overlay == "SwitchProfile" then
-					SL.Global.FastProfileSwitchInProgress = true
+                elseif focus.new_overlay == "SwitchProfile" then
+                    -- Prevent duplicate prompt openings and debounce rapid Start presses
+                    if not canOpenProfilePrompt() then return true end
+                    -- Mark guard before proceeding
+                    SL.Global.FastProfileSwitchInProgress = true
+                    markProfilePromptOpened()
 
-					-- Make sure we save any currently active profiles before potentially switching
-					-- to different ones.
-					GAMESTATE:SaveProfiles()
-					PROFILEMAN:SaveMachineProfile()
+                    -- Make sure we save any currently active profiles before potentially switching
+                    -- to different ones.
+                    GAMESTATE:SaveProfiles()
+                    PROFILEMAN:SaveMachineProfile()
 
-					overlay:queuecommand("DirectInputToEngineForSelectProfile")
+                    overlay:queuecommand("DirectInputToEngineForSelectProfile")
 				elseif focus.new_overlay == "AddFavorite" then
 					addOrRemoveFavorite(event.PlayerNumber)
 					-- Nudge the wheel a bit so that that the icon is correctly updated.

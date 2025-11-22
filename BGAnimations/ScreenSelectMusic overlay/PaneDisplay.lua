@@ -3,12 +3,13 @@ local machine_profile = PROFILEMAN:GetMachineProfile()
 
 -- the height of the footer is defined in ./Graphics/_footer.lua, but we'll
 -- use it here when calculating where to position the PaneDisplay
-local footer_height = 32
+local footer_height = GAMESTATE:GetNumPlayersEnabled() == 2 and 0 or 32
 
 -- height of the PaneDisplay in pixels
-local pane_height = 60
+-- slight adjustment here for 2 Player view, coupled with DensityGraph height adjustment
+local pane_height = GAMESTATE:GetNumPlayersEnabled() == 2 and 59 or 60
 
-local text_zoom = WideScale(0.8, 0.9)
+local text_zoom = 0.7
 
 -- -----------------------------------------------------------------------
 -- Convenience function to return the SongOrCourse and StepsOrTrail for a
@@ -277,29 +278,31 @@ end
 -- -----------------------------------------------------------------------
 -- define the x positions of four columns, and the y positions of three rows of PaneItems
 local pos = {
-	col = { WideScale(-104,-133), WideScale(-36,-38), WideScale(54,76), WideScale(150, 190) },
-	row = { 13, 31, 49 }
+	col = { -100, -36, 54, 150 },
+  	row = {
+  		-24,
+  		-9,
+  		6,
+  		21,
+  		36,
+  		50,
+  	}
 }
 
-local num_rows = 3
+local num_rows = 6
 local num_cols = 2
 
 -- HighScores handled as special cases for now until further refactoring
 local PaneItems = {
-	-- first row
+	-- all in one row now
 	{ name=THEME:GetString("RadarCategory","Taps"),  rc='RadarCategory_TapsAndHolds'},
-	{ name=THEME:GetString("RadarCategory","Mines"), rc='RadarCategory_Mines'},
-	-- { name=THEME:GetString("ScreenSelectMusic","NPS") },
-
-	-- second row
-	{ name=THEME:GetString("RadarCategory","Jumps"), rc='RadarCategory_Jumps'},
-	{ name=THEME:GetString("RadarCategory","Hands"), rc='RadarCategory_Hands'},
-	-- { name=THEME:GetString("RadarCategory","Lifts"), rc='RadarCategory_Lifts'},
-
-	-- third row
 	{ name=THEME:GetString("RadarCategory","Holds"), rc='RadarCategory_Holds'},
 	{ name=THEME:GetString("RadarCategory","Rolls"), rc='RadarCategory_Rolls'},
-	-- { name=THEME:GetString("RadarCategory","Fakes"), rc='RadarCategory_Fakes'},
+	{ name=THEME:GetString("RadarCategory","Jumps"), rc='RadarCategory_Jumps'},
+ 	{ name=THEME:GetString("RadarCategory","Hands"), rc='RadarCategory_Hands'},
+ 	{ name=THEME:GetString("RadarCategory","Mines"), rc='RadarCategory_Mines'},
+ 	-- { name=THEME:GetString("RadarCategory","Fakes"), rc='RadarCategory_Fakes'},
+ 	-- { name=THEME:GetString("RadarCategory","Lifts"), rc='RadarCategory_Lifts'},
 }
 
 -- -----------------------------------------------------------------------
@@ -344,6 +347,7 @@ af[#af+1] = RequestResponseActor(17, 50)..{
 		-- This makes sure that the Hash in the ChartInfo cache exists.
 		local sendRequest = false
 		local headers = {}
+		-- hopefully maxLeaderboardResults doesn't cause issues in SM5 or OutFox? I don't know where this is defined, maybe it's an arg passed to GrooveStats?
 		local query = {
 			maxLeaderboardResults=NumEntries,
 		}
@@ -402,27 +406,27 @@ for player in ivalues(PlayerNumber) do
 		self:visible(GAMESTATE:IsHumanPlayer(player))
 
 		if player == PLAYER_1 then
-			self:x(_screen.w * 0.25 - 5)
+			self:x(_screen.w * 0.25 - 80)
 		elseif player == PLAYER_2 then
-			self:x(_screen.w * 0.75 + 5)
+			self:x(_screen.w * 0.75 + 80)
 		end
 
 		self:y(_screen.h - footer_height - pane_height)
 	end
 
-	af2.PlayerJoinedMessageCommand=function(self, params)
-		if player==params.Player then
-			-- ensure BackgroundQuad is colored before it is made visible
-			self:GetChild("BackgroundQuad"):playcommand("Set")
-			self:visible(true)
-				:zoom(0):croptop(0):bounceend(0.3):zoom(1)
-				:playcommand("Update")
-		end
-	end
+	-- since we're now resetting ScreenSelectMusicWide when a new player joins, we don't want this animation to play
+	-- af2.PlayerJoinedMessageCommand=function(self, params)
+	-- 	if player==params.Player then
+	-- 		-- ensure BackgroundQuad is colored before it is made visible
+	-- 		self:GetChild("BackgroundQuad"):playcommand("Set")
+	-- 		self:visible(true)
+	-- 			:playcommand("Update")
+	-- 	end
+	-- end
 
 	af2.PlayerUnjoinedMessageCommand=function(self, params)
 		if player==params.Player then
-			self:accelerate(0.3):croptop(1):sleep(0.01):zoom(0):queuecommand("Hide")
+			self:queuecommand("Hide")
 		end
 	end
 
@@ -447,8 +451,9 @@ for player in ivalues(PlayerNumber) do
 	af2[#af2+1] = Def.Quad{
 		Name="BackgroundQuad",
 		InitCommand=function(self)
-			self:zoomtowidth(_screen.w/2-10)
-			self:zoomtoheight(pane_height)
+			self:zoomtowidth(267)
+			self:zoomtoheight(pane_height*2)
+			self:addy(-pane_height)
 			self:vertalign(top)
 		end,
 		SetCommand=function(self)
@@ -460,6 +465,9 @@ for player in ivalues(PlayerNumber) do
 				else
 					self:diffuse( PlayerColor(player) )
 				end
+				if ThemePrefs.Get("VisualStyle") == "Technique" then
+					self:diffusealpha(0.5)
+				end
 			end
 		end
 	}
@@ -470,8 +478,8 @@ for player in ivalues(PlayerNumber) do
 
 	for i, item in ipairs(PaneItems) do
 
-		local col = ((i-1)%num_cols) + 1
-		local row = math.floor((i-1)/num_cols) + 1
+		local col = 1
+		local row = math.floor((i-1)/1) + 1
 
 		af2[#af2+1] = Def.ActorFrame{
 
@@ -480,9 +488,14 @@ for player in ivalues(PlayerNumber) do
 			-- numerical value
 			LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 				InitCommand=function(self)
-					self:zoom(text_zoom):diffuse(Color.Black):horizalign(right)
+					self:zoom(text_zoom):diffuse(Color.Black):horizalign(right):maxwidth(40)
 					self:x(pos.col[col])
 					self:y(pos.row[row])
+					if ThemePrefs.Get("VisualStyle") == "Technique" then
+						self:diffuse(Color.White)
+					else
+						self:diffuse(Color.Black)
+					end
 				end,
 
 				SetCommand=function(self)
@@ -505,6 +518,11 @@ for player in ivalues(PlayerNumber) do
 					self:zoom(text_zoom):diffuse(Color.Black):horizalign(left)
 					self:x(pos.col[col]+3)
 					self:y(pos.row[row])
+					if ThemePrefs.Get("VisualStyle") == "Technique" then
+						self:diffuse(Color.White)
+					else
+						self:diffuse(Color.Black)
+					end
 				end
 			},
 		}
@@ -515,14 +533,19 @@ for player in ivalues(PlayerNumber) do
 		Name="MachineHighScoreName",
 		InitCommand=function(self)
 			self:zoom(text_zoom):diffuse(Color.Black):maxwidth(30)
-			self:x(pos.col[3]-50*text_zoom)
+			self:x(pos.col[3]+25*text_zoom)
 			self:y(pos.row[1])
+			if ThemePrefs.Get("VisualStyle") == "Technique" then
+				self:diffuse(Color.White)
+			else
+				self:diffuse(Color.Black)
+			end
 		end,
 		SetCommand=function(self)
 			-- We overload this actor to work both for GrooveStats and also offline.
 			-- If we're connected, we let the ResponseProcessor set the text
 			if IsServiceAllowed(SL.GrooveStats.GetScores) and ThemePrefs.Get("MusicWheelGS") == "Pane" then
-				self:settext("----"):diffuse(Color.Black)
+				self:settext("----")
 			else
 				self:queuecommand("SetDefault")
 			end
@@ -530,7 +553,7 @@ for player in ivalues(PlayerNumber) do
 		SetDefaultCommand=function(self)
 			local SongOrCourse, StepsOrTrail = GetSongAndSteps(player)
 			local machineScore = GetScoreFromProfile(machine_profile, SongOrCourse, StepsOrTrail)
-			self:settext(machineScore and machineScore:GetName() or "----"):diffuse(Color.Black)
+			self:settext(machineScore and machineScore:GetName() or "----")
 			DiffuseEmojis(self:ClearAttributes())
 		end
 	}
@@ -539,15 +562,20 @@ for player in ivalues(PlayerNumber) do
 	af2[#af2+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 		Name="MachineHighScore",
 		InitCommand=function(self)
-			self:zoom(text_zoom):diffuse(Color.Black):horizalign(right)
-			self:x(pos.col[3]+25*text_zoom)
+			self:zoom(text_zoom):horizalign(right)
+			self:x(pos.col[3]+105*text_zoom)
 			self:y(pos.row[1])
+			if ThemePrefs.Get("VisualStyle") == "Technique" then
+				self:diffuse(Color.White)
+			else
+				self:diffuse(Color.Black)
+			end
 		end,
 		SetCommand=function(self)
 			-- We overload this actor to work both for GrooveStats and also offline.
 			-- If we're connected, we let the ResponseProcessor set the text
 			if IsServiceAllowed(SL.GrooveStats.GetScores) and ThemePrefs.Get("MusicWheelGS") == "Pane" then
-				self:settext("??.??%"):diffuse(Color.Black)
+				self:settext("??.??%")
 			else
 				self:queuecommand("SetDefault")
 			end
@@ -556,9 +584,9 @@ for player in ivalues(PlayerNumber) do
 			local SongOrCourse, StepsOrTrail = GetSongAndSteps(player)
 			local machineScore = GetScoreFromProfile(machine_profile, SongOrCourse, StepsOrTrail)
 			if machineScore ~= nil then
-				self:settext(FormatPercentScore(machineScore:GetPercentDP())):diffuse(Color.Black)
+				self:settext(FormatPercentScore(machineScore:GetPercentDP()))
 			else
-				self:settext("??.??%"):diffuse(Color.Black)
+				self:settext("??.??%")
 			end
 		end
 	}
@@ -567,9 +595,14 @@ for player in ivalues(PlayerNumber) do
 	af2[#af2+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 		Name="PlayerHighScoreName",
 		InitCommand=function(self)
-			self:zoom(text_zoom):diffuse(Color.Black):maxwidth(30)
-			self:x(pos.col[3]-50*text_zoom)
+			self:zoom(text_zoom):maxwidth(30)
+			self:x(pos.col[3]+25*text_zoom)
 			self:y(pos.row[2])
+			if ThemePrefs.Get("VisualStyle") == "Technique" then
+				self:diffuse(Color.White)
+			else
+				self:diffuse(Color.Black)
+			end
 		end,
 		SetCommand=function(self)
 			-- We overload this actor to work both for GrooveStats and also offline.
@@ -582,7 +615,7 @@ for player in ivalues(PlayerNumber) do
 		end,
 		SetDefaultCommand=function(self)
 			local playerScore = GetScoreForPlayer(player)
-			self:settext(playerScore and playerScore:GetName() or "----"):diffuse(Color.Black)
+			self:settext(playerScore and playerScore:GetName() or "----")
 			DiffuseEmojis(self:ClearAttributes())
 		end
 	}
@@ -592,8 +625,13 @@ for player in ivalues(PlayerNumber) do
 		Name="PlayerHighScore",
 		InitCommand=function(self)
 			self:zoom(text_zoom):diffuse(Color.Black):horizalign(right)
-			self:x(pos.col[3]+25*text_zoom)
+			self:x(pos.col[3]+105*text_zoom)
 			self:y(pos.row[2])
+			if ThemePrefs.Get("VisualStyle") == "Technique" then
+				self:diffuse(Color.White)
+			else
+				self:diffuse(Color.Black)
+			end
 		end,
 		SetCommand=function(self)
 			-- We overload this actor to work both for GrooveStats and also offline.
@@ -607,9 +645,9 @@ for player in ivalues(PlayerNumber) do
 		SetDefaultCommand=function(self)
 			local playerScore = GetScoreForPlayer(player)
 			if playerScore ~= nil then
-				self:settext(FormatPercentScore(playerScore:GetPercentDP())):diffuse(Color.Black)
+				self:settext(FormatPercentScore(playerScore:GetPercentDP()))
 			else
-				self:settext("??.??%"):diffuse(Color.Black)
+				self:settext("??.??%")
 			end
 		end
 	}
@@ -618,9 +656,14 @@ for player in ivalues(PlayerNumber) do
 		Name="Loading",
 		Text="Loading ... ",
 		InitCommand=function(self)
-			self:zoom(text_zoom):diffuse(Color.Black)
-			self:x(pos.col[3]-15)
+			self:zoom(text_zoom)
+			self:x(pos.col[3]+41)
 			self:y(pos.row[3])
+			if ThemePrefs.Get("VisualStyle") == "Technique" then
+				self:diffuse(Color.White)
+			else
+				self:diffuse(Color.Black)
+			end
 			self:visible(false)
 		end,
 		SetCommand=function(self)
@@ -633,9 +676,14 @@ for player in ivalues(PlayerNumber) do
 	af2[#af2+1] = LoadFont("Wendy/_wendy small")..{
 		Name="DifficultyMeter",
 		InitCommand=function(self)
-			self:horizalign(right):diffuse(Color.Black)
-			self:xy(pos.col[4], pos.row[2])
-			if not IsUsingWideScreen() then self:maxwidth(66) else self:maxwidth(45) end
+			self:horizalign(center)
+			self:xy(pos.col[3]+41, pos.row[5]-7)
+			self:maxwidth(45)
+			if ThemePrefs.Get("VisualStyle") == "Technique" then
+				self:diffuse(Color.White)
+			else
+				self:diffuse(Color.Black)
+			end
 			self:queuecommand("Set")
 		end,
 		SetCommand=function(self)
@@ -660,15 +708,20 @@ for player in ivalues(PlayerNumber) do
 			af2[#af2+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 				Name="Rival"..i.."Name",
 				InitCommand=function(self)
-					self:zoom(text_zoom):diffuse(Color.Black):maxwidth(30)
-					self:x(pos.col[3]+50*text_zoom)
-					self:y(pos.row[i])
+					self:zoom(text_zoom):maxwidth(30)
+					self:x(pos.col[3]+25*text_zoom)
+					self:y(pos.row[i+3])
+					if ThemePrefs.Get("VisualStyle") == "Technique" then
+						self:diffuse(Color.White)
+					else
+						self:diffuse(Color.Black)
+					end
 				end,
 				OnCommand=function(self)
 					self:visible(IsServiceAllowed(SL.GrooveStats.GetScores))
 				end,
 				SetCommand=function(self)
-					self:settext("----"):diffuse(Color.Black)
+					self:settext("----")
 				end
 			}
 	
@@ -676,15 +729,20 @@ for player in ivalues(PlayerNumber) do
 			af2[#af2+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 				Name="Rival"..i.."Score",
 				InitCommand=function(self)
-					self:zoom(text_zoom):diffuse(Color.Black):horizalign(right)
-					self:x(pos.col[3]+125*text_zoom)
-					self:y(pos.row[i])
+					self:zoom(text_zoom):horizalign(right)
+					self:x(pos.col[3]+105*text_zoom)
+					self:y(pos.row[i+3])
+					if ThemePrefs.Get("VisualStyle") == "Technique" then
+						self:diffuse(Color.White)
+					else
+						self:diffuse(Color.Black)
+					end
 				end,
 				OnCommand=function(self)
 					self:visible(IsServiceAllowed(SL.GrooveStats.GetScores))
 				end,
 				SetCommand=function(self)
-					self:settext("??.??%"):diffuse(Color.Black)
+					self:settext("??.??%")
 				end
 			}
 		end

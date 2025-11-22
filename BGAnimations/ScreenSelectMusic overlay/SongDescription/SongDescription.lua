@@ -2,11 +2,11 @@ local MusicWheel, SelectedType
 local group_durations = LoadActor("./GroupDurations.lua")
 
 -- width of background quad
-local _w = IsUsingWideScreen() and 320 or 310
+local _w = 320
 
 local af = Def.ActorFrame{
 	OnCommand=function(self)
-		self:xy(_screen.cx - (IsUsingWideScreen() and 170 or 165), _screen.cy - 56.5)
+		self:xy(_screen.cx, SCREEN_TOP+192)
 	end,
 
 	CurrentSongChangedMessageCommand=function(self)    self:playcommand("Set") end,
@@ -20,19 +20,14 @@ local af = Def.ActorFrame{
 -- background Quad for Artist, BPM, and Song Length
 af[#af+1] = Def.Quad{
 	InitCommand=function(self)
-		self:setsize( _w, 50 )
+		self:setsize( _w, 70 )
 		self:diffuse(color("#1e282f"))
-
-		if ThemePrefs.Get("RainbowMode") then self:diffusealpha(0.9) end
-		if ThemePrefs.Get("VisualStyle") == "Technique" then
-			self:diffusealpha(0.5)
-		end
 	end
 }
 
 -- ActorFrame for Folder/Group, Artist, BPM, and Song length
 af[#af+1] = Def.ActorFrame{
-	InitCommand=function(self) self:xy(-110,-6) end,
+	InitCommand=function(self) self:xy(-110,-16) end,
 
 	-- ----------------------------------------
 	-- Song Folder Label
@@ -78,7 +73,7 @@ af[#af+1] = Def.ActorFrame{
  			 else
  			--  This is a cleaner way to call the group name of a selected song, but I prefer the above method because it shows the actual songfolder directory, which sometimes has information in it. You can set your preference in Simply Love Options for which method you prefer.
  				 if song then
- 					 actor:settext(song:GetGroupName());
+ 					 actor:settext(string.gsub(song:GetGroupName(),"^%w%d%d%d%d%w? ?%- ?", ""));
  				 else
  					 actor:settext("")
  				 end
@@ -136,13 +131,10 @@ af[#af+1] = Def.ActorFrame{
 	LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 		Text=THEME:GetString("SongDescription", "BPM"):upper(),
 		InitCommand=function(self)
-			self:align(1,0)
-			self:diffuse(0.5,0.5,0.5,1)
-			if GAMESTATE:IsCourseMode() then
-				self:y(10)
-			else
-				self:y(17):zoom(0.8)
-			end
+			self:horizalign(center)
+ 			self:diffuse(0.5,0.5,0.5,1)
+ 			self:xy(-12,24)
+  			self:zoom(0.8)
 		end
 	},
 
@@ -151,11 +143,8 @@ af[#af+1] = Def.ActorFrame{
 		InitCommand=function(self)
 			-- vertical align has to be middle for BPM value in case of split BPMs having a line break
 			self:align(0, 0.5):diffuse(1,1,1,1):vertspacing(-8):x(5)
-			if GAMESTATE:IsCourseMode() then
-				self:y(17)
-			else
-				self:y(23)
-			end
+			self:horizalign(center):diffuse(1,1,1,1):vertspacing(-8):x(5):maxwidth(78)
+			self:xy(-12,40)
 		end,
 		SetCommand=function(self)
 
@@ -172,12 +161,7 @@ af[#af+1] = Def.ActorFrame{
 			-- if only one player is joined, stringify the DisplayBPMs and return early
 			if #GAMESTATE:GetHumanPlayers() == 1 then
 				-- StringifyDisplayBPMs() is defined in ./Scipts/SL-BPMDisplayHelpers.lua
-				self:settext(StringifyDisplayBPMs() or "")
-				if GAMESTATE:IsCourseMode() then
-					self:zoom(1)
-				else
-					self:zoom(0.8)
-				end
+				self:settext(StringifyDisplayBPMs() or ""):zoom(0.8)
 				return
 			end
 
@@ -188,22 +172,12 @@ af[#af+1] = Def.ActorFrame{
 			-- it's likely that BPM range is the same for both charts
 			-- no need to show BPM ranges for both players if so
 			if p1bpm == p2bpm then
-				self:settext(p1bpm)
-				if GAMESTATE:IsCourseMode() then
-					self:zoom(1)
-				else
-					self:zoom(0.8)
-				end
+				self:settext(p1bpm):zoom(0.8)
 
 			-- different BPM ranges for the two players
 			else
 				-- show the range for both P1 and P2 split by a newline character, shrunk slightly to fit the space
-				self:settext( "P1 ".. p1bpm .. "\n" .. "P2 " .. p2bpm )
-				if GAMESTATE:IsCourseMode() then
-					self:zoom(0.8)
-				else
-					self:zoom(0.5)
-				end
+				self:settext( "P1 ".. p1bpm .. "\n" .. "P2 " .. p2bpm ):zoom(0.5)
 
 				-- the "P1 " and "P2 " segments of the string should be grey
 				self:AddAttribute(0,             {Length=3, Diffuse={0.60,0.60,0.60,1}})
@@ -232,24 +206,14 @@ af[#af+1] = Def.ActorFrame{
 	LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 		Text=THEME:GetString("SongDescription", "Length"):upper(),
 		InitCommand=function(self)
-			if GAMESTATE:IsCourseMode() then
-				self:align(1,0):diffuse(0.5,0.5,0.5,1):x(_w-130):y(10)
-			else
-				self:align(1,0):diffuse(0.5,0.5,0.5,1):x(_w-130):y(17):zoom(0.8)
-			end
-
+			self:horizalign(center):diffuse(0.5,0.5,0.5,1):xy(233,24):zoom(0.8)
 		end
 	},
 
 	-- Song Duration Value
 	LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 		InitCommand=function(self)
-			self:align(0,0):x(_w-125)
-			if GAMESTATE:IsCourseMode() then
-				self:y(10)
-			else
-				self:y(17):zoom(0.8)
-			end
+			self:horizalign(center):xy(233,40):zoom(0.8)
 		end,
 		SetCommand=function(self)
 			if MusicWheel == nil then MusicWheel = SCREENMAN:GetTopScreen():GetMusicWheel() end
@@ -307,8 +271,8 @@ if not GAMESTATE:IsEventMode() then
 	-- long/marathon version bubble graphic and text
 	af[#af+1] = Def.ActorFrame{
 		InitCommand=function(self)
-			self:x( IsUsingWideScreen() and 98 or 92 )
-			self:y(1)
+			self:x(98)
+			self:y(-8)
 		end,
 		SetCommand=function(self)
 			local song = GAMESTATE:GetCurrentSong()
@@ -330,9 +294,9 @@ if not GAMESTATE:IsEventMode() then
 					{{-113, 16, 0}, {1,1,1,1}},
 					{{-113, -15, 0}, {1,1,1,1}},
 
-					{{ -96, 11, 0}, {1,1,1,1}},
-					{{ -76, 11, 0}, {1,1,1,1}},
-					{{ -86, 24, 0}, {1,1,1,1}},
+					{{ -98+134, 16-5, 0}, {1,1,1,1}},
+					{{ -78+134, 16-5, 0}, {1,1,1,1}},
+					{{ -88+134, 29-5, 0}, {1,1,1,1}},
 				}
 				self:SetDrawState({Mode="DrawMode_Triangles"}):SetVertices(verts)
 				self:diffuse(GetCurrentColor())

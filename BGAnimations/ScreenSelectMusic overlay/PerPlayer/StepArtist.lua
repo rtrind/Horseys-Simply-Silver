@@ -50,11 +50,12 @@ return Def.ActorFrame{
 	CurrentSongChangedMessageCommand=function(self) self:queuecommand("Reset") end,
 	CurrentCourseChangedMessageCommand=function(self) self:queuecommand("Reset") end,
 
-	PlayerJoinedMessageCommand=function(self, params)
-		if params.Player == player then
-			self:queuecommand("Appear" .. pn)
-		end
-	end,
+	--since we're now resetting ScreenSelectMusicWide when a new player joins, we don't want this animation to play
+	-- PlayerJoinedMessageCommand=function(self, params)
+	-- 	if params.Player == player then
+	-- 		self:queuecommand("Appear" .. pn)
+	-- 	end
+	-- end,
 
 	-- Simply Love doesn't support player unjoining (that I'm aware of!) but this
 	-- animation is left here as a reminder to a future me to maybe look into it.
@@ -70,24 +71,16 @@ return Def.ActorFrame{
 
 	InitCommand=function(self)
 		self:visible( false ):halign( p )
-
-		-- P1 and P2 actorframe coords differ because the background element gets rotated for P2
-		if GAMESTATE:IsCourseMode() then
-			if player == PLAYER_1 then
-				self:x( _screen.cx - (IsUsingWideScreen() and 356 or 346))
-				self:y(_screen.cy + 2)
-			else
-				self:x( _screen.cx - (IsUsingWideScreen() and 356 or 355))
-				self:y(_screen.cy + 122)
-			end
+		if GAMESTATE:GetNumPlayersEnabled() == 2 then
+			self:y(_screen.cy + 27)
 		else
-			if player == PLAYER_1 then
-				self:x( _screen.cx - (IsUsingWideScreen() and 356 or 347))
-				self:y(_screen.cy - 18)
-			else
-				self:x( _screen.cx - (IsUsingWideScreen() and 356 or 356))
-				self:y(_screen.cy + 70)
-			end
+			self:y(_screen.cy - 24)
+		end
+
+		if player == PLAYER_1 then
+			self:x(_screen.cx-452.5)
+		else
+			self:x(_screen.cx+114.5)
 		end
 
 		if GAMESTATE:IsHumanPlayer(player) then
@@ -115,16 +108,15 @@ return Def.ActorFrame{
 			-- these coordinates aren't neat and tidy, but they do create three triangles
 			-- that fit together to approximate hurtpiggypig's original png asset
 
-			-- use different sets of verts for each size variant of this element; this is far better than conditionally warping the element
-			-- maxtrix numerical coordinates differ in the different elements below
+			-- since ScreenSelectMusicWide doesn't necessitate different background elements, we're trimming the unused code
 
-			-- coordinates at matrix spot explanation: IsUsingWideScreen() addition adds length, -104 changes the height, and +14 moves the "carrot" to under "STEPS"
-			local SingleHumanPlayerVerts = {
+			-- coordinates at matrix spot explanation: +307.5 adds length, -104 changes the height, and +14 moves the "carrot" to under "STEPS"
+			local StepCreditBGVerts = {
 				--   x   y  z    r,g,b,a
 				{{-113, -104, 0}, {1,1,1,1}},
-				{{ (IsUsingWideScreen() and 113+346 or 113+328), -104, 0}, {1,1,1,1}},
-				{{ (IsUsingWideScreen() and 113+346 or 113+328), 16, 0}, {1,1,1,1}},
-				{{ (IsUsingWideScreen() and 113+346 or 113+328), 16, 0}, {1,1,1,1}},
+				{{113+307.5, -104, 0}, {1,1,1,1}},
+				{{113+307.5, 16, 0}, {1,1,1,1}},
+				{{113+307.5, 16, 0}, {1,1,1,1}},
 				{{-113, 16, 0}, {1,1,1,1}},
 				{{-113, -104, 0}, {1,1,1,1}},
 				{{ -98+14, 16, 0}, {1,1,1,1}},
@@ -132,93 +124,39 @@ return Def.ActorFrame{
 				{{ -88+14, 29, 0}, {1,1,1,1}},
 			}
 
-			local VersusModeVerts = {
-				--   x   y  z    r,g,b,a
-				{{-113, -26, 0}, {1,1,1,1}},
-				{{ (IsUsingWideScreen() and 113+346 or 113+328), -26, 0}, {1,1,1,1}},
-				{{ (IsUsingWideScreen() and 113+346 or 113+328), 16, 0}, {1,1,1,1}},
-				{{ (IsUsingWideScreen() and 113+346 or 113+328), 16, 0}, {1,1,1,1}},
-				{{-113, 16, 0}, {1,1,1,1}},
-				{{-113, -26, 0}, {1,1,1,1}},
-				{{ -98+18, 16, 0}, {1,1,1,1}},
-				{{ -78+18, 16, 0}, {1,1,1,1}},
-				{{ -88+18, 29, 0}, {1,1,1,1}},
-			}
+			self:SetDrawState({Mode="DrawMode_Triangles"}):SetVertices(StepCreditBGVerts)
 
-			local CourseModeVerts = {
-				--   x   y  z    r,g,b,a
-				{{-113, -15-17, 0}, {1,1,1,1}},
-				{{ (IsUsingWideScreen() and 113+414 or 113+394), -15-17, 0}, {1,1,1,1}},
-				{{ (IsUsingWideScreen() and 113+414 or 113+394), 16, 0}, {1,1,1,1}},
-				{{ (IsUsingWideScreen() and 113+414 or 113+394), 16, 0}, {1,1,1,1}},
-				{{-113, 16, 0}, {1,1,1,1}},
-				{{-113, -15-17, 0}, {1,1,1,1}},
-				{{ -98-15, 16, 0}, {1,1,1,1}},
-				{{ -78-15, 16, 0}, {1,1,1,1}},
-				{{ -88-15, 29, 0}, {1,1,1,1}},
-			}
-
-
-			if GAMESTATE:IsCourseMode() then
-				self:SetDrawState({Mode="DrawMode_Triangles"}):SetVertices(CourseModeVerts)
-				if player == PLAYER_1 then
-					self:xy(82,0)
-				else
-					-- something is wrong here... DensityGraph and PaneDisplay are off
-					-- since this UI will only be used in legacy 4:3 aspect ratio let's just be lazy and nudge things into the correct spot 
-					-- without rotating this element about the y axis, there is a single pixel difference between P1 and P2 locations
-					self:xy(289,-8)
-					self:rotationy(180):rotationx(180)
-				end
+			if player == PLAYER_1 then
+				self:xy(82,40)
 			else
-				if #GAMESTATE:GetHumanPlayers() == 1 then
-					self:SetDrawState({Mode="DrawMode_Triangles"}):SetVertices(SingleHumanPlayerVerts)
-					if player == PLAYER_1 then
-						self:xy(82,40)
-					else
-						-- something is wrong here... DensityGraph and PaneDisplay are off
-						-- since this UI will only be used in legacy 4:3 aspect ratio let's just be lazy and nudge things into the correct spot 
-						-- without rotating this element about the y axis, there is a single pixel difference between P1 and P2 locations
-						self:xy(256,40)
-						self:rotationy(180)
-					end
-				else
-					self:SetDrawState({Mode="DrawMode_Triangles"}):SetVertices(VersusModeVerts)
-					if player == PLAYER_1 then
-						self:xy(82,1)
-					else
-						-- same comment as above *shrug*
-						self:xy(256,1)
-						self:rotationy(180)
-					end
-				end
+				-- something is wrong here... DensityGraph and PaneDisplay are off
+				-- since this UI will only be used in legacy 4:3 aspect ratio let's just be lazy and nudge things into the correct spot 
+				-- without rotating this element about the y axis, there is a single pixel difference between P1 and P2 locations
+				self:xy(256,40)
+				self:rotationy(180)
+			end
+			if ThemePrefs.Get("VisualStyle") == "Technique" then
+				self:diffusealpha(0.5)
 			end
 		end
 	},
 
 	--STEPS label
 	LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
-		Text=GAMESTATE:IsCourseMode() and Screen.String("SongNumber"):format(1) or Screen.String("STEPS"),
+		Text=Screen.String("STEPS"),
 		InitCommand=function(self)
-			self:diffuse(0,0,0,1):maxwidth(40):zoom(0.8):y(-2)
-			if GAMESTATE:IsCourseMode() then
-				self:y(-4)
-				if player == PLAYER_1 then
-					self:horizalign(left):x(30)
-				else
-					self:horizalign(right):x(340)
-				end
+			self:maxwidth(40):zoom(0.8):y(-2)
+			if player == PLAYER_1 then
+				self:horizalign(left):x(30)
 			else
-				if player == PLAYER_1 then
-					self:horizalign(left):x(30)
-				else
-					self:horizalign(right):x(306)
-				end
+				self:horizalign(right):x(306)
+			end
+			if ThemePrefs.Get("VisualStyle") == "Technique" then
+				self:diffuse(Color.White)
+			else
+				self:diffuse(Color.Black)
 			end
 		end,
-		UpdateTrailTextMessageCommand=function(self, params)
-			self:settext( THEME:GetString("ScreenSelectCourse", "SongNumber"):format(params.index) )
-		end
 	},
 
 	--stepartist text
@@ -226,7 +164,12 @@ return Def.ActorFrame{
 		InitCommand=function(self)
 			-- if we don't set vertalign here, latejoining will cause the text to be center aligned until a ResetCommand is initiated (by changing the selected song)
 			-- there's nothing to lose here by just Top_Aligning all text and just changing the y-positions to match
-			self:zoom(0.8):diffuse(color("#000000")):vertalign("VertAlign_Top")
+			self:zoom(0.8):vertalign("VertAlign_Top")
+			if ThemePrefs.Get("VisualStyle") == "Technique" then
+				self:diffuse(Color.White)
+			else
+				self:diffuse(Color.Black)
+			end
 			self:queuecommand("Reset")
 		end,
 		ResetCommand=function(self)
@@ -237,20 +180,11 @@ return Def.ActorFrame{
 			-- always stop tweening when steps change in case a MarqueeCommand is queued
 			self:stoptweening()
 
-			self:maxwidth(WideScale(278,292)):y(-8)
-			if GAMESTATE:IsCourseMode() then
-				self:y(-10):maxwidth(350)
-				if player == PLAYER_1 then
-					self:horizalign(left):x(50)
-				else
-					self:horizalign(right):x(320)
-				end
+			self:maxwidth(272):y(-8)
+			if player == PLAYER_1 then
+				self:horizalign(left):x(70)
 			else
-				if player == PLAYER_1 then
-					self:horizalign(left):x(70)
-				else
-					self:horizalign(right):x(266)
-				end
+				self:horizalign(right):x(266)
 			end
 
 			if SongOrCourse and StepsOrTrail then
@@ -265,7 +199,6 @@ return Def.ActorFrame{
 					-- only queue a Marquee if there are things in the text_table to display
 
 					if #text_table > 0 then
-						if #GAMESTATE:GetHumanPlayers() > 1 and not GAMESTATE:GetCurrentSteps(player):IsAutogen() then self:queuecommand("Marquee") end
 						local fulldesc = ""
 						for i=1,#text_table do
 							local curText = text_table[i]
@@ -339,34 +272,6 @@ return Def.ActorFrame{
 					-- on a group title, which means we want to set the stepartist text to an empty string for now
 					self:settext("")
 				end
-			end
-		end,
-		-- MarqueeCommand doesn't get queued if the Current Song is Autogenerated
-		MarqueeCommand=function(self)
-			-- increment the marquee_index, and keep it in bounds
-			marquee_index = (marquee_index % #text_table) + 1
-			-- retrieve the text we want to display
-			local text = text_table[marquee_index]
-
-			-- set this BitmapText actor to display that text
-			self:settext( text )
-
-			-- check for emojis; they shouldn't be diffused to Color.Black
-			DiffuseEmojis(self, text)
-
-			if not GAMESTATE:IsCourseMode() then
-				-- sleep 2 seconds before queueing the next Marquee command to do this again
-				if #text_table > 1 then
-					self:sleep(2):queuecommand("Marquee")
-				end
-			else
-				self:sleep(0.5):queuecommand("m")
-			end
-		end,
-		UpdateTrailTextMessageCommand=function(self, params)
-			if text_table then
-				self:settext( text_table[params.index] or "" )
-				DiffuseEmojis(self, fulldesc)
 			end
 		end,
 		OffCommand=function(self) self:stoptweening() end
