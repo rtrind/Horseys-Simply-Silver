@@ -7,6 +7,7 @@
 - ✅ **Casual Mode Removed** - Only ITG and FA+ modes are supported
 - ✅ **4:3 Support Removed** - 16:9 widescreen only (no CRT support)
 - ✅ **Language Files Reduced** - English (en) and Portuguese-Brazil (pt-br) only
+- ✅ **Gameplay Modes Restricted** - ITG mode is forced, no casual, no marathon, no course mode is selectable
 - ✅ **OutFox Favorites Support** - Optimized for OutFox's native favorites system
 - 🚧 **FUTURE: Lua Wheel Implementation** - Planning to replace the engine wheel with a custom Lua wheel for better favorites handling and multi-player deduplication
 

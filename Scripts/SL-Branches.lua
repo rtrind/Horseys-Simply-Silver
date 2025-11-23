@@ -64,6 +64,12 @@ Branch.AllowScreenSelectColor = function()
 end
 
 Branch.AfterScreenSelectColor = function()
+	-- If 2 players are joined, default to Versus and skip ScreenSelectStyle
+	if GAMESTATE:GetNumSidesJoined() == 2 then
+		GAMESTATE:SetCurrentStyle("versus")
+		return "ScreenProfileLoad"
+	end
+
 	local preferred_style = ThemePrefs.Get("AutoStyle")
 
 	if preferred_style ~= "none"
