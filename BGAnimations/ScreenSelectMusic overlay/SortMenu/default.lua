@@ -345,7 +345,6 @@ local wheel_options = {
 		{
 			{ {"FeelingSalty", "TestInput"} },
 			{ {"HardTime", "PracticeMode"}, function() return GAMESTATE:IsEventMode() and GAMESTATE:GetCurrentSong() ~= nil and ThemePrefs.Get("KeyboardFeatures") end},
-			{ {"TakeABreather", "LoadNewSongs"}, GAMESTATE:IsEventMode() or GAMESTATE:GetCoinMode() == "CoinMode_Home"},
 			{ {"NeedMoreRam", "ViewDownloads"}, DownloadsExist },
 			{ {"NextPlease", "SwitchProfile"}, ThemePrefs.Get("AllowScreenSelectProfile") },
 		}
@@ -552,8 +551,6 @@ local t = Def.ActorFrame {
 				table.insert(wheel_options, {"FeelingSalty", "TestInput"})
 			end
 		end
-
-		table.insert(wheel_options, {"TakeABreather", "LoadNewSongs"})
 
 		-- Only display the View Downloads option if we're connected to
 		-- GrooveStats and Auto-Downloads are enabled.
