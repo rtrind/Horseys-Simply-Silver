@@ -10,8 +10,30 @@ end
 
 local t = Def.ActorFrame{Name="ScreenEval Common"}
 
+-- add a lua-based InputCallback to this screen so that we can navigate
+-- through multiple panes of information; pass a reference to this ActorFrame
+-- and the number of panes there are to InputHandler.lua
 t.OnCommand=function(self)
+	InputHandler = LoadActor("./InputHandler.lua", {self, NumPanes})
+	EventOverlayInputHandler = LoadActor("./Shared/EventInputHandler.lua")
+	SCREENMAN:GetTopScreen():AddInputCallback(InputHandler)
 	PROFILEMAN:SaveMachineProfile()
+end
+t.DirectInputToEngineCommand=function(self)
+	SCREENMAN:GetTopScreen():RemoveInputCallback(EventOverlayInputHandler)
+	SCREENMAN:GetTopScreen():AddInputCallback(InputHandler)
+
+	for player in ivalues(PlayerNumber) do
+		SCREENMAN:set_input_redirected(player, false)
+	end
+end
+t.DirectInputToEventOverlayHandlerCommand=function(self)
+	SCREENMAN:GetTopScreen():RemoveInputCallback(InputHandler)
+	SCREENMAN:GetTopScreen():AddInputCallback(EventOverlayInputHandler)
+
+	for player in ivalues(PlayerNumber) do
+		SCREENMAN:set_input_redirected(player, true)
+	end
 end
 
 -- -----------------------------------------------------------------------
