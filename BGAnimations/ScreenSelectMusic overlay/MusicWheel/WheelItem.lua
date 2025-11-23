@@ -135,7 +135,13 @@ function item_mt:transform(position, num_items, has_focus)
 		self.container:diffusealpha(1.0)
 		
 		if self.background then
-			self.background:diffuse(0, 0, 0, 0.5)
+			-- Use the stored default color (or fallback to black)
+			if self.default_color then
+				self.background:diffuse(self.default_color)
+				self.background:diffusealpha(0.5)
+			else
+				self.background:diffuse(0, 0, 0, 0.5)
+			end
 		end
 	end
 end
@@ -163,6 +169,13 @@ function item_mt:set_song(info)
 	local song = info.song
 	
 	if not song then return end
+	
+	-- Reset background to default song color (Dark Blue/Black)
+	if self.background then
+		self.default_color = color("#0A141B")
+		self.background:diffuse(self.default_color)
+		self.background:diffusealpha(1)
+	end
 	
 	-- Show song elements
 	if self.banner then
@@ -196,6 +209,11 @@ function item_mt:set_group_header(info)
 		self.title:visible(false)
 	end
 	
+	if self.background then
+		self.default_color = color("#4c565d")
+		self.background:diffuse(self.default_color)
+	end
+	
 	-- Show group elements
 	if self.group_name then
 		self.group_name:visible(true)
@@ -211,7 +229,7 @@ function item_mt:set_group_header(info)
 	
 	if self.song_count then
 		self.song_count:visible(true)
-		self.song_count:settext("(" .. info.song_count .. ")")
+		self.song_count:settext(info.song_count)
 	end
 end
 
