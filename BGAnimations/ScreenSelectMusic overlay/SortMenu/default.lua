@@ -503,12 +503,14 @@ local t = Def.ActorFrame {
 					local sub_options = {}
 					for j=1, #option[2] do
 						local sub_option = option[2][j]
-						if type(sub_option[2]) == "function" then
-							if sub_option[2]() then
+						if #sub_option > 0 then
+							if type(sub_option[2]) == "function" then
+								if sub_option[2]() then
+									table.insert(sub_options, sub_option)
+								end
+							elseif sub_option[2] == nil or sub_option[2] == true then
 								table.insert(sub_options, sub_option)
 							end
-						elseif sub_option[2] == nil or sub_option[2] == true then
-							table.insert(sub_options, sub_option)
 						end
 					end
 					if #sub_options > 0 then
