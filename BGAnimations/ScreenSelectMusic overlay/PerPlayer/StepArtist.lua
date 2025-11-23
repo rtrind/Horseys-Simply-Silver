@@ -50,7 +50,7 @@ return Def.ActorFrame{
 	CurrentSongChangedMessageCommand=function(self) self:queuecommand("Reset") end,
 	CurrentCourseChangedMessageCommand=function(self) self:queuecommand("Reset") end,
 
-	--since we're now resetting ScreenSelectMusicWide when a new player joins, we don't want this animation to play
+	--since we're now resetting ScreenSelectMusic when a new player joins, we don't want this animation to play
 	-- PlayerJoinedMessageCommand=function(self, params)
 	-- 	if params.Player == player then
 	-- 		self:queuecommand("Appear" .. pn)
@@ -108,7 +108,7 @@ return Def.ActorFrame{
 			-- these coordinates aren't neat and tidy, but they do create three triangles
 			-- that fit together to approximate hurtpiggypig's original png asset
 
-			-- since ScreenSelectMusicWide doesn't necessitate different background elements, we're trimming the unused code
+			-- since ScreenSelectMusic doesn't necessitate different background elements, we're trimming the unused code
 
 			-- coordinates at matrix spot explanation: +307.5 adds length, -104 changes the height, and +14 moves the "carrot" to under "STEPS"
 			local StepCreditBGVerts = {

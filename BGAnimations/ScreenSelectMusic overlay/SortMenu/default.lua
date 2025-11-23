@@ -489,8 +489,8 @@ local t = Def.ActorFrame {
 	OpenProfileSelectFromJoinMessageCommand=function(self)
 		local screen = SCREENMAN:GetTopScreen()
 		if not screen then return end
-		-- Only handle if we're actually on ScreenSelectMusicWide
-		if screen:GetName() == "ScreenSelectMusicWide" then
+		-- Only handle if we're actually on ScreenSelectMusic
+		if screen:GetName() == "ScreenSelectMusic" then
 			-- Mark as fast profile switch so finish flow triggers reload
 			SL.Global.FastProfileSwitchInProgress = true
 			SL.Global.ReloadAfterProfileSSM = true

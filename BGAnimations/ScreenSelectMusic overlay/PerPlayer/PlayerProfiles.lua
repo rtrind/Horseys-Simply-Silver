@@ -197,7 +197,7 @@ if GAMESTATE:GetNumPlayersEnabled() == 1 then return Def.ActorFrame{
 	end,
 
 	CodeMessageCommand=function(self, params)
-		-- on ScreenSelectMusicWide, this screen code is reused to instead toggle player profile views
+		-- on ScreenSelectMusic, this screen code is reused to instead toggle player profile views
 		if params.Name == "TogglePatternInfo" and params.PlayerNumber == player then
             if (ThemePrefs.Get("FolderStats")) or not (ThemePrefs.Get("MusicWheelGS") ~= "Scorebox") then
                 showPatternInfo = not showPatternInfo
@@ -765,7 +765,7 @@ if GAMESTATE:GetNumPlayersEnabled() == 2 then return Def.ActorFrame{
 	end,
 
 	CodeMessageCommand=function(self, params)
-		-- on ScreenSelectMusicWide, this screen code is reused to instead toggle player profile views
+		-- on ScreenSelectMusic, this screen code is reused to instead toggle player profile views
 		if params.Name == "TogglePatternInfo" and params.PlayerNumber == player then
             if (ThemePrefs.Get("FolderStats")) or not (ThemePrefs.Get("MusicWheelGS") ~= "Scorebox") then
                 showPatternInfo = not showPatternInfo

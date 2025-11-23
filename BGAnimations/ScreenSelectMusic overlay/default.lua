@@ -41,7 +41,7 @@ local af = Def.ActorFrame{
 
     DoReloadCommand=function(self, params)
 		-- For some reason we cannot reload the screen after a profile switch,
-		-- so we have to wait until ScreenSelectMusicWide is the top screen and
+		-- so we have to wait until ScreenSelectMusic is the top screen and
 		-- no other screen is on top of it. Then reload the entire screen...
         local s = SCREENMAN:GetTopScreen()
         if s then

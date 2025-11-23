@@ -414,7 +414,7 @@ for player in ivalues(PlayerNumber) do
 		self:y(_screen.h - footer_height - pane_height)
 	end
 
-	-- since we're now resetting ScreenSelectMusicWide when a new player joins, we don't want this animation to play
+	-- since we're now resetting ScreenSelectMusic when a new player joins, we don't want this animation to play
 	-- af2.PlayerJoinedMessageCommand=function(self, params)
 	-- 	if player==params.Player then
 	-- 		-- ensure BackgroundQuad is colored before it is made visible
