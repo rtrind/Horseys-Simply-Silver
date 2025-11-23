@@ -89,11 +89,12 @@ local num_icons = 5
  				:horizalign(i == 1 and "right" or "left")
  			end,
  			SetCommand = function(self, params)
- 				local player = "PlayerNumber_P"..i
+				local player = "PlayerNumber_P"..i
  				if not GAMESTATE:IsPlayerEnabled(player) then self:visible(false) end
- 				local steps = GAMESTATE:GetCurrentSteps(player)
- 				self:visible(steps:GetDifficulty() == params.Steps:GetDifficulty())
- 			end,
+				local steps = GAMESTATE:GetCurrentSteps(player)
+				if not steps or not params.Steps then self:visible(false) return end
+				self:visible(steps:GetDifficulty() == params.Steps:GetDifficulty())
+			end,
  			UnsetCommand = function(self)
  				self:visible(false)
  			end

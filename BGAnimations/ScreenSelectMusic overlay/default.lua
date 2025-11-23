@@ -68,6 +68,9 @@ local af = Def.ActorFrame{
 
 	LoadActor("./NotefieldPreview.lua"),
 
+	-- Custom Lua Music Wheel (Phase 1)
+	LoadActor("./MusicWheel/default.lua"),
+
 	-- number of steps, jumps, holds, etc., and high scores associated with the current stepchart
 	LoadActor("./PaneDisplay.lua"),
 
