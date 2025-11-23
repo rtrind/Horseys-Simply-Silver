@@ -104,7 +104,7 @@ Completely reworked ScreenSelectMusic; this screen is no longer very lopsided in
 
 - USB profiles are untested because I don't use them but probably work just fine.
 - </details>
- ✅ Define default songs in ITG Mode (the same way it's done in Casual Mode) via "~/Other/ITG-Mode-DefaultSongs.txt"
+ ✅ Define default songs in ITG Mode via "~/Other/ITG-Mode-DefaultSongs.txt"
 <details>
   <summary>Click to expand for details ⬇️</summary>
 

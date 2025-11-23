@@ -1,5 +1,3 @@
--- if we're in Casual mode, don't let players save screenshots at all
-if SL.Global.GameMode == "Casual" then return end
 -- -----------------------------------------------------------------------
 
 local player = nil

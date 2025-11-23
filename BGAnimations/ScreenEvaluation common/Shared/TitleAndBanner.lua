@@ -7,9 +7,7 @@ local banner = {
 	zoom = 0.7,
 }
 
--- the Quad containing the bpm and music rate doesn't appear in Casual mode
--- so nudge the song title and banner down a bit when in Casual
-local y_offset = SL.Global.GameMode=="Casual" and 60.5 or 46
+local y_offset = 46
 
 
 local af = Def.ActorFrame{ InitCommand=function(self) self:xy(_screen.cx, y_offset) end }
@@ -25,7 +23,7 @@ if SongOrCourse and SongOrCourse:HasBanner() then
 				self:LoadFromSong( GAMESTATE:GetCurrentSong() )
 			end
 			self:setsize(banner.width, 164)
-			if SL.Global.GameMode=="Casual" or GAMESTATE:IsCourseMode() then
+			if GAMESTATE:IsCourseMode() then
 				self:zoom(0.7)
 				self:y(66)
 			else
@@ -77,11 +75,7 @@ af[#af+1] = Def.Quad{
 		if ThemePrefs.Get("VisualStyle") == "Technique" then
 			self:diffusealpha(0.5)
 		end
-		if SL.Global.GameMode=="Casual" then
-			self:zoom(0.7)
-			self:setsize(banner.width,32)
-			self:y(-2)
-		elseif GAMESTATE:IsCourseMode() then
+		if GAMESTATE:IsCourseMode() then
 			self:zoom(0.7)
 			self:setsize(banner.width,32)
 			self:y(-3)
@@ -99,11 +93,7 @@ af[#af+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 		local songtitle = (GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentCourse():GetDisplayFullTitle()) or GAMESTATE:GetCurrentSong():GetDisplayFullTitle()
 		if songtitle then
 			self:settext(songtitle)
-			if SL.Global.GameMode=="Casual" then
-				self:maxwidth(banner.width*0.7)
-				self:y(-3)
-				self:zoom(0.9)
-			elseif GAMESTATE:IsCourseMode() then
+			if GAMESTATE:IsCourseMode() then
 				self:maxwidth(banner.width*0.7)
 				self:y(-5)
 				self:zoom(0.9)
@@ -117,10 +107,9 @@ af[#af+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 	--when using af[#af+1] = ... you must use a semicolon for this code to continue to the following actorframe, using a comma here will just cause the rest of the code not to work
  	};
 
- -- the song information in this ActorFrame is too advanced for Casual
 	af[#af+1] = Def.ActorFrame{
 		InitCommand=function(self)
-			if GAMESTATE:IsCourseMode() or SL.Global.GameMode=="Casual" then
+			if GAMESTATE:IsCourseMode() then
 				self:visible(false)
 			end
 		end,

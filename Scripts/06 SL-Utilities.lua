@@ -216,8 +216,7 @@ function GetGroupBanner()
   end
 
   ---------------------------------------------------------------------------
--- helper function used by GetGroups() and GetDefaultSong() for Casual Mode in 'Setup.lua'
--- also used to parse ITG-Mode-DefaultSongs.txt
+-- helper function used to parse ITG-Mode-DefaultSongs.txt
 -- returns the contents of a txt file as an indexed table, split on newline
 
 GetFileContents = function(path)

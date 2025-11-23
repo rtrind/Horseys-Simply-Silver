@@ -306,7 +306,6 @@ local wheel_options = {
 	{ {"WhereforeArtThou", "SongSearch"}, not GAMESTATE:IsCourseMode() and ThemePrefs.Get("KeyboardFeatures") },
 	{ {"GrooveStats", "Leaderboard"}, function() return IsServiceAllowed(SL.GrooveStats.Leaderboard) and GAMESTATE:GetCurrentSong() ~= nil end},
 	{ {"SetSummaryText", "SetSummary"}, SL.Global.Stages.PlayedThisGame > 0 },
-	{ {"ChangeMode", "Casual"}, SL.Global.Stages.PlayedThisGame == 0 and SL.Global.GameMode ~= "Casual" and GAMESTATE:GetCoinMode() ~= "CoinMode_Home"},
 	{ 
 		{"", "CategorySorts"}, 
 		{
@@ -357,10 +356,6 @@ local wheel_options = {
 	-- Allow players to switch out to a different SL GameMode if no stages have been played yet,
 	-- but don't add the current SL GameMode as a choice.
 	{ {"ChangeMode", "ITG"}, SL.Global.Stages.PlayedThisGame == 0 and SL.Global.GameMode ~= "ITG" },
-	-- Casual players often choose the wrong mode and an experienced player in the area may notice this
-	-- and offer to switch them back to casual mode. This allows them to do so again.
-	-- It's technically not possible to reach the sort menu in Casual Mode, but juuust in case let's still
-	-- include the check.
 
 	-- OutFox is not currently compatible with the Favorites system in this theme
 	{ {"ImLovinIt", "AddFavorite"}, function() return GAMESTATE:GetCurrentSong() ~= nil and not IsOutFox() end},
@@ -532,11 +527,6 @@ local t = Def.ActorFrame {
 		-- but don't add the current SL GameMode as a choice.
 		if SL.Global.Stages.PlayedThisGame == 0 then
 			if SL.Global.GameMode ~= "ITG"      then table.insert(wheel_options, {"ChangeMode", "ITG"}) end
-			-- Casual players often choose the wrong mode and an experienced player in the area may notice this
-			-- and offer to switch them back to casual mode. This allows them to do so again.
-			-- It's technically not possible to reach the sort menu in Casual Mode, but juuust in case let's still
-			-- include the check.
-			if SL.Global.GameMode ~= "Casual"   then table.insert(wheel_options, {"ChangeMode", "Casual"}) end
 		end
 
 		-- Add operator functions if in event mode. (Public arcades probably don't want random players

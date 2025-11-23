@@ -331,7 +331,7 @@ end
 -- -----------------------------------------------------------------------
 
 SetGameModePreferences = function()
-	-- apply the preferences associated with this SL GameMode (Casual, ITG, FA+)
+	-- apply the preferences associated with this SL GameMode (ITG, FA+)
 	for key,val in pairs(SL.Preferences[SL.Global.GameMode]) do
 		-- Should only check if the preferences actually exist before applying them.
 		if PREFSMAN:PreferenceExists(key) then
@@ -343,12 +343,6 @@ SetGameModePreferences = function()
 	-- loop through human players and apply whatever mods need to be set now
 	for player in ivalues(GAMESTATE:GetHumanPlayers()) do
 		local pn = ToEnumShortString(player)
-		-- If we're switching to Casual mode,
-		-- we want to reduce the number of judgments,
-		-- so turn Decents and WayOffs off now.
-		if SL.Global.GameMode == "Casual" then
-			SL[pn].ActiveModifiers.TimingWindows = {true,true,true,false,false}
-		end
 
 		-- Now that we've set the SL table for TimingWindows appropriately,
 		-- use it to apply TimingWindows.
@@ -374,7 +368,7 @@ SetGameModePreferences = function()
 	-- finally, load the Stats.xml file appropriate for this SL GameMode
 
 	-- these are the prefixes that are prepended to each custom Stats.xml, resulting in
-	-- Stats.xml, ECFA-Stats.xml, Casual-Stats.xml
+	-- Stats.xml, ECFA-Stats.xml
 	local prefix = {}
 
 	-- ITG has no prefix and scores go directly into the main Stats.xml
@@ -385,7 +379,6 @@ SetGameModePreferences = function()
 	-- and I don't want to deal with renaming relatively critical files from the theme.
 	-- Thus, scores from FA+ mode will continue to go into ECFA-Stats.xml.
 	prefix["FA+"] = "ECFA-"
-	prefix["Casual"] = "Casual-"
 
 	if PROFILEMAN:GetStatsPrefix() ~= prefix[SL.Global.GameMode] then
 		PROFILEMAN:SetStatsPrefix(prefix[SL.Global.GameMode])
@@ -397,7 +390,7 @@ end
 -- manages for you back to their stock SM5 values.
 --
 -- These "managed" Preferences are listed in ./Scripts/SL_Init.lua
--- per-gamemode (Casual, ITG, FA+), and actively applied (and reapplied)
+-- per-gamemode (ITG, FA+), and actively applied (and reapplied)
 -- for each new game using SetGameModePreferences()
 --
 -- SL normally calls ResetPreferencesToStockSM5() from
@@ -781,8 +774,6 @@ end
 -- The W0 weight may have been modified for Tournament mode purposes.
 -- Use the optional boolean argument use_actual_w0_weight to choose to fallback to the proper W0 weight.
 CalculateExScore = function(player, ex_counts, use_actual_w0_weight)
-	-- No EX scores in Casual mode, just return some dummy number early.
-	if SL.Global.GameMode == "Casual" then return 0 end
 	local StepsOrTrail = (GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentTrail(player)) or GAMESTATE:GetCurrentSteps(player)
 
 	local totalSteps = StepsOrTrail:GetRadarValues(player):GetValue( "RadarCategory_TapsAndHolds" )

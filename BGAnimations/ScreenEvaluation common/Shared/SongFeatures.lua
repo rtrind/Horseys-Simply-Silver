@@ -1,6 +1,3 @@
--- don't bother showing the bpm and music rate in Casual mode
-if SL.Global.GameMode == "Casual" then return end
-
 -- don't bother showing this UI in non-CourseMode because we display this information in a card below the banner in non-CourseMode
 if not GAMESTATE:IsCourseMode() then return end
 

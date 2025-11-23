@@ -20,9 +20,6 @@ return Def.ActorFrame{
 		end,
 		ScreenChangedMessageCommand=function(self)
 			local topscreen = SCREENMAN:GetTopScreen():GetName()
-			if SL.Global.GameMode == "Casual" and (topscreen == "ScreenEvaluationStage" or topscreen == "ScreenEvaluationSummary") then
-				self:diffuse(dark)
-			end
 			if ThemePrefs.Get("VisualStyle") == "SRPG8" then
 				self:diffuse(GetCurrentColor(true))
 			end
