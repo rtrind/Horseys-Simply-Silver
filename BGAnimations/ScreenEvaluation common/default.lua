@@ -1,5 +1,5 @@
 local Players = GAMESTATE:GetHumanPlayers()
-local NumPanes = 10
+local NumPanes = 6
 
 local InputHandler = nil
 local EventOverlayInputHandler = nil
