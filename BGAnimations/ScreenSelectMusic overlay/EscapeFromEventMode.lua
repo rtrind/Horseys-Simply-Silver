@@ -47,7 +47,7 @@ local af = Def.ActorFrame{
 
 			-- prevent the MusicWheel from continually scrolling in the background because the last
 			-- input event before disabling the engine's input handling was a MenuRight
-			topscreen:GetMusicWheel():Move(0)
+			-- topscreen:GetMusicWheel():Move(0)  -- Disabled: no engine wheel in ScreenWithMenuElements
 
 			-- activate our Lua InputHandler
 			topscreen:AddInputCallback(InputHandler)
