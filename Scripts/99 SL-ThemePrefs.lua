@@ -160,12 +160,6 @@ SL_CustomPrefs.Get = function()
 			Choices = map(SecondsToMSS, range(60, 450, 15)),
 			Values  = range(60, 450, 15),
 		},
-		ScreenSelectMusicCasualMenuTimer =
-		{
-			Default = 300,
-			Choices = map(SecondsToMSS, range(60, 450, 15)),
-			Values  = range(60, 450, 15),
-		},
 		ScreenPlayerOptionsMenuTimer =
 		{
 			Default = 90,

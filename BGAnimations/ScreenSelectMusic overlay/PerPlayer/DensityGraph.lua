@@ -53,10 +53,7 @@ local af = Def.ActorFrame{
 		if player == PLAYER_2 then
 			self:addy(height+24)
 		end
-
-		if IsUsingWideScreen() then
-			self:addx(-5)
-		end
+		self:addx(-5)
 		if params.Player == player then
 			self:visible(false)
 		end

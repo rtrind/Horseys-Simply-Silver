@@ -18,9 +18,7 @@ return Def.Quad{
 	end,
 	ScreenChangedMessageCommand=function(self)
 		local topscreen = SCREENMAN:GetTopScreen():GetName()
-		if topscreen == "ScreenSelectMusicCasual" then
-			self:diffuse(dark)
-		end
+		-- Casual mode removed (16:9 only)
 		if ThemePrefs.Get("VisualStyle") == "SRPG8" then
 			self:diffuse(GetCurrentColor(true))
 		end

@@ -1,5 +1,5 @@
 -- ----------------------------------------------------------------------------------------
--- functions used by ScreenSelectMusicCasual
+-- functions used by old ScreenSelectMusicCasual, may be useful on the future for the custom lua, since we may use similar functions 
 
 -- used by SSMCasual to play preview music of the current song
 -- this is invoked each time the custom MusicWheel changes focus

@@ -5,7 +5,7 @@ local wheel = setmetatable({}, sick_wheel_mt)
 -- AND a player pressing start
 local ColorSelected = false
 
-local NumHeartsToDraw = IsUsingWideScreen() and 11 or 7
+local NumHeartsToDraw = 11  -- 16:9 only
 
 local style = ThemePrefs.Get("VisualStyle")
 local colorTable = (style == "SRPG8") and SL.SRPG8.Colors or SL.DecorativeColors
@@ -111,11 +111,12 @@ local wheel_item_mt = {
 			self.container:linear(0.2)
 			self.index=item_index
 
-			local X_SpaceBetweenHearts = IsUsingWideScreen() and (_screen.w / (num_items-1)) or (_screen.w / (num_items))
+			-- 16:9 only
+			local X_SpaceBetweenHearts = _screen.w / (num_items-1)
 			local OffsetFromCenter = (item_index - math.floor(num_items/2))-1
 			local x = X_SpaceBetweenHearts * OffsetFromCenter
 			local z = -1 * math.abs(OffsetFromCenter)
-			local zoom = IsUsingWideScreen() and (z + math.floor(num_items/2))/4 or (z + math.floor(num_items/2) + 1)/4
+			local zoom = (z + math.floor(num_items/2))/4
 
 			if item_index <= 1 or item_index >= num_items then
 				self.container:diffusealpha(0)
@@ -127,18 +128,13 @@ local wheel_item_mt = {
 			self.container:z(z)
 			self.heart:diffuse( color(self.color) )
 
-			if IsUsingWideScreen() then
-				local y = (12 * math.pow(OffsetFromCenter,2)) - 20
-				self.container:rotationz( OffsetFromCenter * 15 )
-				self.container:zoom( zoom )
-				self.container:y( y )
+			-- 16:9 only
+			local y = (12 * math.pow(OffsetFromCenter,2)) - 20
+			self.container:rotationz( OffsetFromCenter * 15 )
+			self.container:zoom( zoom )
+			self.container:y( y )
 
-			else
-				self.container:y( -20 )
-				self.container:zoom( zoom )
-			end
-
-			if style=="Gay" and item_index == (IsUsingWideScreen() and 6 or 4) then
+			if style=="Gay" and item_index == 6 then
 				self.container:effectmagnitude(0,4,0)
 			else
 				self.container:effectmagnitude(0,0,0)
