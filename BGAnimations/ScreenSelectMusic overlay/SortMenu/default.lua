@@ -161,12 +161,19 @@ local DirectInputToEngine = function(self)
 	screen:RemoveInputCallback(testinput_input)
 	screen:RemoveInputCallback(leaderboard_input)
 
-	for player in ivalues(PlayerNumber) do
-		SCREENMAN:set_input_redirected(player, false)
-	end
 	self:playcommand("HideSortMenu")
 	overlay:playcommand("HideTestInput")
 	overlay:playcommand("HideLeaderboard")
+	
+	-- Add a small delay before re-enabling input to prevent the Back button
+	-- from bubbling through to the main input handler
+	self:sleep(0.2):queuecommand("UnlockInput")
+end
+
+local UnlockInput = function()
+	for player in ivalues(PlayerNumber) do
+		SCREENMAN:set_input_redirected(player, false)
+	end
 end
 
 ------------------------------------------------------------
@@ -467,6 +474,9 @@ local t = Def.ActorFrame {
 	-- this returns input back to the engine and its ScreenSelectMusic
 	DirectInputToEngineCommand=function(self)
 		DirectInputToEngine(self)
+	end,
+	UnlockInputCommand=function(self)
+		UnlockInput()
 	end,
 	DirectInputToEngineForSongSearchCommand=function(self)
 		DirectInputToEngine(self)

@@ -56,24 +56,33 @@ local input = function(event)
 		
 		-- Check for Sort Menu codes FIRST (before handling individual buttons)
 		-- These are chords like "MenuLeft-MenuRight" or "Left-Right"
-		for i = 1, 2 do
-			local codeName = i == 1 and "SortList" or ("SortList" .. i)
-			local code = GetCode(codeName)
-			
-			if code and code ~= "" and code ~= "false" then
-				-- Check if this is a chord and if it's currently pressed
-				if IsChordPressed(code, pn) then
-					overlay:queuecommand("DirectInputToSortMenu")
-					return true
+		-- Only open if input is not already redirected (menu not already open)
+		if not SCREENMAN:get_input_redirected(pn) then
+			for i = 1, 2 do
+				local codeName = i == 1 and "SortList" or ("SortList" .. i)
+				local code = GetCode(codeName)
+				
+				if code and code ~= "" and code ~= "false" then
+					-- Check if this is a chord and if it's currently pressed
+					if IsChordPressed(code, pn) then
+						overlay:queuecommand("DirectInputToSortMenu")
+						return true
+					end
 				end
 			end
 		end
 		
 		-- Handle Back button
 		if button == "Back" then
+			-- Do not handle Back button if input is redirected (e.g. SortMenu is open or closing)
+			if SCREENMAN:get_input_redirected(pn) then
+				-- Trace("[InputHandler] Back ignored because input is redirected")
+				return false
+			end
+			
 			-- If Event Mode is ON, Back triggers the Exit Prompt
 			if PREFSMAN:GetPreference("EventMode") then
-				BroadcastMessage("EscapeFromEventMode2", pn)
+				MESSAGEMAN:Broadcast("ShowExitPrompt", {PlayerNumber=pn})
 				return true
 			else
 				-- Normal navigation

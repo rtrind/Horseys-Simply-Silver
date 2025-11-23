@@ -34,6 +34,11 @@ local af = Def.ActorFrame{
 		end
 	end,
 
+	-- Listen for custom message from InputHandler
+	ShowExitPromptMessageCommand=function(self)
+		self:queuecommand("Show")
+	end,
+
 	-- show the overlay
 	ShowCommand=function(self)
 		local topscreen = SCREENMAN:GetTopScreen()
