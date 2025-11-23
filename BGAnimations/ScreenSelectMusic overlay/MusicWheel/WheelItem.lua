@@ -110,38 +110,14 @@ function item_mt:transform(position, num_items, has_focus)
 	self.container:decelerate(0.15)
 	self.container:y(y_pos)
 	
-	-- Keep same size, adjust alpha based on focus
+	-- Scale and alpha based on focus
 	if has_focus then
+		self.container:zoom(1.0)
 		self.container:diffusealpha(1.0)
 		
-		-- Pulsing glow effect on focused item
+		-- Highlight background
 		if self.background then
-			self.background:stoptweening()
-			self.background:diffuse(0.3, 0.6, 0.9, 0.8)  -- Bright blue
-			self.background:loop()
-			self.background:linear(0.8)
-			self.background:diffuse(1.0, 1.0, 1.0, 0.9)  -- White glow
-			self.background:linear(0.8)
-			self.background:diffuse(0.3, 0.6, 0.9, 0.8)  -- Back to blue
-		end
-		
-		-- -- Pulse text color too
-		-- if self.title then
-		-- 	self.title:stoptweening()
-		-- 	self.title:loop()
-		-- 	self.title:linear(0.8)
-		-- 	self.title:diffuse(1.0, 1.0, 1.0, 1.0)  -- White
-		-- 	self.title:linear(0.8)
-		-- 	self.title:diffuse(0.9, 0.9, 1.0, 1.0)  -- Slight blue tint
-		-- end
-		
-		if self.group_name then
-			self.group_name:stoptweening()
-			self.group_name:loop()
-			self.group_name:linear(0.8)
-			self.group_name:diffuse(1.0, 1.0, 1.0, 1.0)  -- White
-			self.group_name:linear(0.8)
-			self.group_name:diffuse(0.9, 0.9, 1.0, 1.0)  -- Slight blue tint
+			self.background:diffuse(0.2, 0.4, 0.6, 0.7)
 		end
 	else
 		-- Fade items further from center
@@ -149,22 +125,11 @@ function item_mt:transform(position, num_items, has_focus)
 		local alpha = 1.0 - (distance * 0.15)
 		alpha = math.max(0.3, alpha)
 		
+		self.container:zoom(1.0)
 		self.container:diffusealpha(alpha)
 		
-		-- Stop pulsing and reset to normal
 		if self.background then
-			self.background:stoptweening()
 			self.background:diffuse(0, 0, 0, 0.5)
-		end
-		
-		-- if self.title then
-		-- 	self.title:stoptweening()
-		-- 	self.title:diffuse(Color.White)
-		-- end
-		
-		if self.group_name then
-			self.group_name:stoptweening()
-			self.group_name:diffuse(Color.White)
 		end
 	end
 end
