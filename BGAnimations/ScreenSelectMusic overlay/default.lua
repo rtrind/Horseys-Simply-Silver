@@ -59,6 +59,8 @@ local af = Def.ActorFrame{
 	LoadActor("./PreserveMenuTimer.lua"),
 	-- Apply player modifiers from profile
 	LoadActor("./PlayerModifiers.lua"),
+	-- Custom Input Handler for ScreenWithMenuElements
+	LoadActor("./InputHandler.lua"),
 
 	-- ---------------------------------------------------
 	-- next, load visual elements; the order of these matters
