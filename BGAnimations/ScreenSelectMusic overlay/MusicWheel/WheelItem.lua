@@ -125,9 +125,9 @@ function item_mt:transform(position, num_items, has_focus)
 		self.container:zoom(1.0)
 		self.container:diffusealpha(1.0)
 		
-		-- Highlight background
+		-- Highlight background with lighter gray
 		if self.background then
-			self.background:diffuse(0.2, 0.4, 0.6, 0.7)
+			self.background:diffuse(0.7, 0.7, 0.7, 0.3)  -- Light gray,Slightly less transparent than regular
 		end
 	else
 		-- No fade effect - keep all items at full opacity
