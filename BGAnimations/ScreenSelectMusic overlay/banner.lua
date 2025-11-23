@@ -57,8 +57,14 @@ if PREFSMAN:GetPreference("ShowBanners") then
 		Name="BannerProxy",
 		OnCommand=cmd(setsize,418,164),
 		BeginCommand=function(self)
-			local banner = SCREENMAN:GetTopScreen():GetChild('Banner')
-			self:SetTarget(banner)
+			local screen = SCREENMAN:GetTopScreen()
+			if screen then
+				local banner = screen:GetChild('Banner')
+				-- Only set target if Banner exists (ScreenWithMenuElements doesn't have one)
+				if banner then
+					self:SetTarget(banner)
+				end
+			end
 		end
 	}
 end

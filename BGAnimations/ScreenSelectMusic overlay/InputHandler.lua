@@ -60,15 +60,9 @@ local input = function(event)
 			local codeName = i == 1 and "SortList" or ("SortList" .. i)
 			local code = GetCode(codeName)
 			
-			-- Debug: Log what code we got
-			if code then
-				Trace("[InputHandler] " .. codeName .. " = '" .. tostring(code) .. "'")
-			end
-			
 			if code and code ~= "" and code ~= "false" then
 				-- Check if this is a chord and if it's currently pressed
 				if IsChordPressed(code, pn) then
-					Trace("[InputHandler] Chord detected! Opening sort menu.")
 					overlay:queuecommand("DirectInputToSortMenu")
 					return true
 				end

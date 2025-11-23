@@ -159,6 +159,7 @@ local input = function(event)
 
 		elseif event.GameButton == "Back" or event.GameButton == "Select" then
 			overlay:queuecommand("DirectInputToEngine")
+			return true  -- Consume the event to prevent it from bubbling to other handlers
 		end
 	end
 	return false

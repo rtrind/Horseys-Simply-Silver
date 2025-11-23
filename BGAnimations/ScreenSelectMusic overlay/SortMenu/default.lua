@@ -411,7 +411,9 @@ local t = Def.ActorFrame {
 		-- in this particular usage.  Thus, set the focus to the wheel's current 4th Actor.
 		sort_wheel.focus_pos = 4
 		-- get the currently active SortOrder and truncate the "SortOrder_" from the beginning
-		local current_sort_order = ToEnumShortString(GAMESTATE:GetSortOrder())
+		-- Handle case where there's no music wheel (returns nil)
+		local sortOrder = GAMESTATE:GetSortOrder()
+		local current_sort_order = sortOrder and ToEnumShortString(sortOrder) or "Group"
 		local current_sort_order_index = 1
 		--SM(filtered_wheel_options)
 		-- find the sick_wheel index of the item we want to display first when the player activates this SortMenu
@@ -589,7 +591,9 @@ local t = Def.ActorFrame {
 		-- in this particular usage.  Thus, set the focus to the wheel's current 4th Actor.
 		sort_wheel.focus_pos = 4
 		-- get the currently active SortOrder and truncate the "SortOrder_" from the beginning
-		local current_sort_order = ToEnumShortString(GAMESTATE:GetSortOrder())
+		-- Handle case where there's no music wheel (returns nil)
+		local sortOrder = GAMESTATE:GetSortOrder()
+		local current_sort_order = sortOrder and ToEnumShortString(sortOrder) or "Group"
 		local current_sort_order_index = 1
 		-- find the sick_wheel index of the item we want to display first when the player activates this SortMenu
 		if lastCategory == "" then
