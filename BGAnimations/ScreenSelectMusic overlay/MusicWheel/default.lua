@@ -19,14 +19,48 @@ local wheel_y = SCREEN_CENTER_Y + 197
 -- Input Handler
 -- ============================================================================
 
+-- Track which buttons are currently held down per player
+local heldButtons = {
+	[PLAYER_1] = {},
+	[PLAYER_2] = {}
+}
+
 local function input(event)
 	if not event or not event.PlayerNumber or not event.button then
 		return false
 	end
 	
+	local pn = event.PlayerNumber
+	local button = event.GameButton
+	
+	-- Track button state for chord detection
+	if event.type == "InputEventType_FirstPress" then
+		heldButtons[pn][button] = true
+	elseif event.type == "InputEventType_Release" then
+		heldButtons[pn][button] = nil
+	end
+	
 	-- Only handle if wheel is active
 	if not wheel or not wheel.container then
 		return false
+	end
+	
+	-- Don't handle input if SortMenu is visible
+	local screen = SCREENMAN:GetTopScreen()
+	if screen then
+		local sort_menu = screen:GetChild("Overlay"):GetChild("SortMenu")
+		if sort_menu and sort_menu:GetVisible() then
+			return false
+		end
+	end
+	
+	-- Don't consume MenuLeft/MenuRight if both are pressed (SortMenu chord)
+	if event.type == "InputEventType_FirstPress" then
+		if (button == "MenuLeft" or button == "MenuRight") and 
+		   heldButtons[pn]["MenuLeft"] and heldButtons[pn]["MenuRight"] then
+			-- Both buttons pressed - let it pass through to open SortMenu
+			return false
+		end
 	end
 	
 	-- Handle both FirstPress and Repeat for continuous scrolling
@@ -123,13 +157,6 @@ local t = Def.ActorFrame{
 		if focused_song then
 			GAMESTATE:SetCurrentSong(focused_song)
 			MESSAGEMAN:Broadcast("CurrentSongChanged")
-		end
-	end,
-	
-	-- Debug: Print wheel state on Select+Start
-	CodeMessageCommand = function(self, params)
-		if params.Name == "SortList" then
-			SL.MusicWheel.DebugPrintState()
 		end
 	end,
 	
