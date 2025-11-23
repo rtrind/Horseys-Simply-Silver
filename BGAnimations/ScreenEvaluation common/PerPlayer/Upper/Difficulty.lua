@@ -47,9 +47,9 @@ return Def.ActorFrame{
 			self:halign(pn)
 
 			if player==PLAYER_1 then
- 				if SL.Global.GameMode == "Casual" then self:x(-130.5) else self:x(-130) end
+ 				self:x(-130)
  			elseif player==PLAYER_2 then
- 				if SL.Global.GameMode == "Casual" then self:x(129.5) else self:x(130) end
+ 				self:x(130)
  			end
  			self:horizalign(center):zoom(0.6)
  			self:diffuse(Color.Black)

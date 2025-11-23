@@ -42,7 +42,7 @@ else
  			end,
  			OnCommand=function(self)
  				self:setsize(banner.width, 164)
- 				if SL.Global.GameMode=="Casual" or GAMESTATE:IsCourseMode() then
+ 				if GAMESTATE:IsCourseMode() then
  					self:zoom(0.7)
  					self:y(66)
  				else
@@ -56,7 +56,7 @@ else
  		af[#af+1] = LoadActor(banner.directory .. "/banner" .. SL.Global.ActiveColorIndex .. " (doubleres).png")..{
  			InitCommand=function(self)
  				self:setsize(banner.width, 164)
- 				if SL.Global.GameMode=="Casual" or GAMESTATE:IsCourseMode() then
+ 				if GAMESTATE:IsCourseMode() then
  					self:zoom(0.7)
  					self:y(66)
  				else

@@ -159,16 +159,12 @@ local t = Def.ActorFrame{
 		OffCommand=function(self) self:sleep(0.4):linear(0.2):diffusealpha(0) end,
 		UpdateCommand=function(self)
 			if ScreenName == "ScreenSelectPlayMode" then
-				if choices[cursor.index+1] == "Casual" then
-					self:stoptweening():linear(0.25):diffusealpha(0)
+				if choices[cursor.index+1] == "FA+" then
+					self:settext("99.50")
 				else
-					if choices[cursor.index+1] == "FA+" then
-						self:settext("99.50")
-					else
-						self:settext("77.41")
-					end
-					self:stoptweening():linear(0.25):diffusealpha(1)
+					self:settext("77.41")
 				end
+				self:stoptweening():linear(0.25):diffusealpha(1)
 			else
 				self:diffusealpha(1)
 				if SL.Global.GameMode == "FA+" then

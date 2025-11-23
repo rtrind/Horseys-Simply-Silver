@@ -44,7 +44,6 @@ Branch.AfterScreenRankingDouble = function()
 end
 
 SelectMusicOrCourse = function()
-	-- 16:9 widescreen only (4:3 and Casual mode support removed)
 	if GAMESTATE:IsCourseMode() then
 		return "ScreenSelectCourse"
 	else

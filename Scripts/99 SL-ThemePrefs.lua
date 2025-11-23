@@ -213,7 +213,7 @@ SL_CustomPrefs.Get = function()
 			Values  = { true, false }
 		},
 		-- - - - - - - - - - - - - - - - - - - -
-		-- SM5.1's ImageCache System (used in CasualMode)
+		-- SM5.1's ImageCache System
 		UseImageCache = {
 			Default = false,
 			Choices =  { THEME:GetString("ThemePrefs","Yes"), THEME:GetString("ThemePrefs", "No") },

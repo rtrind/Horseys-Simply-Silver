@@ -19,8 +19,7 @@ end
 local style = GAMESTATE:GetCurrentStyle()
 local game = GAMESTATE:GetCurrentGame()
 
-if (SL.Global.GameMode == "Casual" or
-		GAMESTATE:IsCourseMode() or
+if (GAMESTATE:IsCourseMode() or
 		--not IsEventActive() or -- This event lasts forever it seems, lol
 		game:GetName() ~= "dance" or
 		(style:GetName() ~= "single" and style:GetName() ~= "versus")) then

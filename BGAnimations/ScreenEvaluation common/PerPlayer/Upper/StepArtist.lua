@@ -24,10 +24,7 @@ return Def.ActorFrame{
 	-- coloured box behind Stepartist text
   	Def.Quad{
 		InitCommand=function(self)
-			if SL.Global.GameMode == "Casual" then
-				self:zoomto(120,40)
-				self:x(51)
-			elseif GAMESTATE:IsCourseMode() then
+			if GAMESTATE:IsCourseMode() then
 				self:zoomto(118,40)
 				self:x(50.5)
 			else
@@ -61,10 +58,7 @@ return Def.ActorFrame{
 			self:y(_screen.cy-77)
 		   self:horizalign(center)
 		   if ThemePrefs.Get("RainbowMode") then self:diffuse(Color.Black) end
-			if SL.Global.GameMode == "Casual" then
-				self:x(50)
-				self:maxwidth(155)
-			elseif GAMESTATE:IsCourseMode() then
+			if GAMESTATE:IsCourseMode() then
 				self:x(55.5)
 				self:maxwidth(165)
 			else
