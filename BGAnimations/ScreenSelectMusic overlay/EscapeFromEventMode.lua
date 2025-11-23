@@ -78,12 +78,17 @@ local af = Def.ActorFrame{
 			sfx.start:play()
 			-- deactivate the Lua InputHandler
 			topscreen:RemoveInputCallback(InputHandler)
-			-- return input handling to the SM5 engine so players can continune choosing a song
-			for player in ivalues(PlayerNumber) do
-				SCREENMAN:set_input_redirected(player, false)
-			end
 			-- hide this overlay
 			self:visible(false)
+			-- return input handling to the SM5 engine so players can continune choosing a song
+			-- use a small sleep delay to prevent the "Back" press that triggered this CancelCommand
+			-- from bubbling through to the engine and immediately triggering the prompt again
+			self:sleep(0.5):queuecommand("UnlockInput")
+		end
+	end,
+	UnlockInputCommand=function(self)
+		for player in ivalues(PlayerNumber) do
+			SCREENMAN:set_input_redirected(player, false)
 		end
 	end,
 	-- my finished?
