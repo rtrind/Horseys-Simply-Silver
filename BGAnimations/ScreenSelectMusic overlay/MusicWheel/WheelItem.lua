@@ -9,11 +9,12 @@ item_mt.__index = item_mt
 -- Configuration
 -- ============================================================================
 
-local item_width = 400
-local item_height = 70
-local banner_width = 100
-local banner_height = 60
-local text_x = 110  -- X position for text (after banner)
+-- Match original engine wheel dimensions
+local item_width = SCREEN_WIDTH / 2.125  -- Same as engine wheel
+local item_height = 32
+local banner_width = 80  -- Slightly smaller banner
+local banner_height = 38  -- Proportional to new item height
+local text_x = 90  -- X position for text (after banner)
 
 -- ============================================================================
 -- create_actors - Returns Def.ActorFrame with visual elements
@@ -101,9 +102,8 @@ function item_mt:transform(position, num_items, has_focus)
 	local focus_pos = math.floor(num_items / 2) + 1
 	local offset = position - focus_pos
 	
-	-- Vertical spacing
-	local spacing = 72
-	local y_pos = offset * spacing
+	-- Vertical spacing (match original engine wheel)
+	local y_pos = offset * (item_height + 0.5)
 	
 	-- Apply position
 	self.container:stoptweening()

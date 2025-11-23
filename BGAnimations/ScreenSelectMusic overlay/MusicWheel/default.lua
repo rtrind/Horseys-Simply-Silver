@@ -10,9 +10,8 @@ local wheel = setmetatable({}, sick_wheel_mt)
 
 -- Wheel configuration
 local num_items = 11  -- 9 visible + 1 above + 1 below
--- Position wheel on left side of screen, vertically centered
-local wheel_x = SCREEN_CENTER_X - 200  -- Slightly more left
-local wheel_y = SCREEN_CENTER_Y - 20   -- Slightly higher, more centered
+local wheel_x = SCREEN_CENTER_X + 109
+local wheel_y = SCREEN_CENTER_Y + 228
 
 -- ============================================================================
 -- Input Handler
@@ -75,6 +74,10 @@ local t = Def.ActorFrame{
 	Name = "MusicWheel",
 	
 	InitCommand = function(self)
+		-- Apply same zoom as original engine wheel FIRST (before positioning)
+		self:zoom(0.797)
+		self:zoomy(0.772)
+		
 		-- Safety check: ensure SL.MusicWheel exists
 		if not SL.MusicWheel then
 			SM("ERROR: SL.MusicWheel not loaded! Check Scripts/SL_MusicWheel.lua")
