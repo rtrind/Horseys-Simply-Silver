@@ -11,7 +11,7 @@ item_mt.__index = item_mt
 
 -- Match original engine wheel dimensions
 local item_width = SCREEN_WIDTH / 2.125  -- Same as engine wheel
-local item_height = 32
+local item_height = 31
 local banner_width = 80  -- Slightly smaller banner
 local banner_height = 38  -- Proportional to new item height
 local text_x = 90  -- X position for text (after banner)
@@ -99,11 +99,21 @@ function item_mt:transform(position, num_items, has_focus)
 	if not self.container then return end
 	
 	-- Calculate offset from center
-	local focus_pos = math.floor(num_items / 2) + 1
+	local focus_pos = math.ceil(num_items / 2)
 	local offset = position - focus_pos
 	
 	-- Vertical spacing (match original engine wheel)
-	local y_pos = offset * (item_height + 0.5)
+	local y_pos = offset * (item_height + 1)
+	
+	-- Hide first and last items (offscreen buffers)
+	-- Also hide items that are too far from center (beyond visible range)
+	if position == 1 or position == num_items or math.abs(offset) > 5 then
+		self.container:visible(false)
+		self.container:y(y_pos)
+		return
+	else
+		self.container:visible(true)
+	end
 	
 	-- Apply position
 	self.container:stoptweening()

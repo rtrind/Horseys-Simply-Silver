@@ -41,7 +41,7 @@ function sick_wheel:create_actors(name, num_items, item_metatable, mx, my)
 	self.num_items= num_items
 	assert(item_metatable, "A metatable for items to be put in the wheel must be provided.")
 	check_metatable(item_metatable)
-	self.focus_pos= math.floor(num_items / 2)
+	self.focus_pos= math.ceil(num_items / 2)
 	mx= mx or SCREEN_CENTER_X
 	my= my or SCREEN_TOP
 	self.items= {}

@@ -9,10 +9,12 @@ local WheelItem = LoadActor("WheelItem.lua")
 local wheel = setmetatable({}, sick_wheel_mt)
 
 -- Wheel configuration
-local num_items = 11  -- 9 visible + 1 above + 1 below
+local num_items = 13  -- 9 visible + 2 above + 2 below
 local wheel_x = SCREEN_CENTER_X + 109
-local wheel_y = SCREEN_CENTER_Y + 228
-
+local wheel_y = SCREEN_CENTER_Y + 197
+-- Debug
+-- local wheel_x = SCREEN_CENTER_X + 309
+-- local wheel_y = SCREEN_CENTER_Y + 28
 -- ============================================================================
 -- Input Handler
 -- ============================================================================
