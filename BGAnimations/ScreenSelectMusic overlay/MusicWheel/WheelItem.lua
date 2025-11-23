@@ -81,10 +81,10 @@ function item_mt:create_actors(name)
 			Name = "SongCount",
 			InitCommand = function(subself)
 				self.song_count = subself
-				subself:x(item_width/2 - 10)
+				subself:x(item_width/2 - 18)
 				subself:halign(1)
-				subself:zoom(0.6)
-				subself:diffuse(0.7, 0.7, 0.7, 1)
+				subself:zoom(0.7)
+				subself:diffuse(Color.White)
 				subself:visible(false)
 			end
 		}
