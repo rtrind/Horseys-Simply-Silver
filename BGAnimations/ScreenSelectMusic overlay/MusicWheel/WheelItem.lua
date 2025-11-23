@@ -120,13 +120,9 @@ function item_mt:transform(position, num_items, has_focus)
 			self.background:diffuse(0.2, 0.4, 0.6, 0.7)
 		end
 	else
-		-- Fade items further from center
-		local distance = math.abs(offset)
-		local alpha = 1.0 - (distance * 0.15)
-		alpha = math.max(0.3, alpha)
-		
+		-- No fade effect - keep all items at full opacity
 		self.container:zoom(1.0)
-		self.container:diffusealpha(alpha)
+		self.container:diffusealpha(1.0)
 		
 		if self.background then
 			self.background:diffuse(0, 0, 0, 0.5)
