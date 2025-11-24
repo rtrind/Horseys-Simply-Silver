@@ -14,6 +14,9 @@ local item_width = SCREEN_WIDTH / 2.125  -- Same as engine wheel
 local item_height = 31
 local item_title_x = 78
 
+local song_color = color("#0A141B")
+local group_color = color("#4c565d")
+
 -- ============================================================================
 -- create_actors - Returns Def.ActorFrame with visual elements
 -- ============================================================================
@@ -34,6 +37,20 @@ function item_mt:create_actors(name)
 				self.background = subself
 				subself:zoomto(item_width, item_height)
 				subself:diffuse(0, 0, 0, 0.5)
+			end,
+			UpdateCommand = function(subself)
+				-- Pulsing glow effect for focused song items only
+				if self.info and self.info.type == "song" and self.is_focused then
+					-- Pulse between song color and group color every second
+					subself:stoptweening()
+					subself:linear(1)
+					subself:diffuse(group_color)
+					subself:diffusealpha(0.5)
+					subself:linear(1)
+					subself:diffuse(song_color)
+					subself:diffusealpha(0.5)
+					subself:queuecommand("Update")
+				end
 			end
 		},
 		
@@ -110,20 +127,31 @@ function item_mt:transform(position, num_items, has_focus)
 	
 	-- Scale and alpha based on focus
 	if has_focus then
+		self.is_focused = true
 		self.container:zoom(1.0)
 		self.container:diffusealpha(1.0)
 		
-		-- Highlight background
+		-- Highlight background and start pulsing for songs
 		if self.background then
-			self.background:diffuse(0.2, 0.2, 0.2, 0.8)
+			if self.info and self.info.type == "song" then
+				-- Start pulsing for focused songs
+				self.background:queuecommand("Update")
+			else
+				-- Static highlight for groups
+				self.background:stoptweening()
+				self.background:diffuse(group_color)
+				self.background:diffusealpha(0.8)
+			end
 		end
 	else
+		self.is_focused = false
 		-- No fade effect - keep all items at full opacity
 		self.container:zoom(1.0)
 		self.container:diffusealpha(1.0)
 		
 		if self.background then
-			-- Use the stored default color (or fallback to black)
+			-- Stop pulsing and use default color
+			self.background:stoptweening()
 			if self.default_color then
 				self.background:diffuse(self.default_color)
 				self.background:diffusealpha(0.5)
@@ -160,7 +188,7 @@ function item_mt:set_song(info)
 	
 	-- Reset background to default song color (Dark Blue/Black)
 	if self.background then
-		self.default_color = color("#0A141B")
+		self.default_color = song_color
 		self.background:diffuse(self.default_color)
 		self.background:diffusealpha(1)
 	end
@@ -190,8 +218,9 @@ function item_mt:set_group_header(info)
 	
 	-- Reset background to default group color (Dark Gray)
 	if self.background then
-		self.default_color = color("#4c565d")
+		self.default_color = group_color
 		self.background:diffuse(self.default_color)
+		self.background:diffusealpha(1)
 	end
 	
 	-- Show group elements
