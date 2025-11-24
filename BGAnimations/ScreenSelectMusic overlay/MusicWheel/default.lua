@@ -45,7 +45,12 @@ local function input(event)
 		return false
 	end
 	
-	-- Don't handle input if SortMenu is visible
+	-- Don't handle input if input is redirected (e.g. SortMenu, QuitPrompt)
+	if SCREENMAN:get_input_redirected(pn) then
+		return false
+	end
+	
+	-- Don't handle input if SortMenu is visible (legacy check, kept for safety)
 	local screen = SCREENMAN:GetTopScreen()
 	if screen then
 		local sort_menu = screen:GetChild("Overlay"):GetChild("SortMenu")
