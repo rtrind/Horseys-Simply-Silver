@@ -68,6 +68,7 @@ if PREFSMAN:GetPreference("ShowBanners") then
 			SongOrCourse = GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentCourse() or GAMESTATE:GetCurrentSong()
 			if SongOrCourse and SongOrCourse:HasBanner() then
 				self:LoadFromSong(SongOrCourse)
+				self:setsize(bannerWidth, bannerHeight)
 				self:visible(true)
 			else
 				self:visible(false)
