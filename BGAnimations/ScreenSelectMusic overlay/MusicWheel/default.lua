@@ -242,6 +242,9 @@ local function input(event)
 						-- No steps available for this song/style
 						GAMESTATE:SetCurrentSteps(player, nil)
 					end
+					
+					-- Broadcast steps changed for NoteField preview
+					MESSAGEMAN:Broadcast("CurrentStepsP" .. (player == PLAYER_1 and "1" or "2") .. "Changed")
 				end
 				
 				MESSAGEMAN:Broadcast("CurrentSongChanged")
@@ -320,6 +323,9 @@ local t = Def.ActorFrame{
 				else
 					GAMESTATE:SetCurrentSteps(player, nil)
 				end
+				
+				-- Broadcast steps changed for NoteField preview
+				MESSAGEMAN:Broadcast("CurrentStepsP" .. (player == PLAYER_1 and "1" or "2") .. "Changed")
 			end
 			
 			MESSAGEMAN:Broadcast("CurrentSongChanged")
