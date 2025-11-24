@@ -12,6 +12,7 @@ item_mt.__index = item_mt
 -- Match original engine wheel dimensions
 local item_width = SCREEN_WIDTH / 2.125  -- Same as engine wheel
 local item_height = 31
+local item_title_x = 78
 
 -- ============================================================================
 -- create_actors - Returns Def.ActorFrame with visual elements
@@ -41,7 +42,7 @@ function item_mt:create_actors(name)
 			Name = "Title",
 			InitCommand = function(subself)
 				self.title = subself
-				subself:x(-item_width/2 + 10)  -- Left-aligned with small margin
+				subself:x(-item_width/2 + item_title_x)
 				subself:halign(0)
 				subself:zoom(0.8)
 				subself:maxwidth(item_width - 20)  -- Full width minus margins
