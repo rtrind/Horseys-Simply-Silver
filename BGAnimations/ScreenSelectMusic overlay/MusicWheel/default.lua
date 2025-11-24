@@ -105,10 +105,31 @@ local function input(event)
 			
 			if focused_song then
 				GAMESTATE:SetCurrentSong(focused_song)
+				
+				-- Set steps for each player based on their difficulty preference
+				for player in ivalues(GAMESTATE:GetHumanPlayers()) do
+					-- Always update steps for the new song
+					local stepsType = GAMESTATE:GetCurrentStyle():GetStepsType()
+					local allSteps = focused_song:GetStepsByStepsType(stepsType)
+					if #allSteps > 0 then
+						-- Use first available steps (could be improved to match difficulty preference)
+						GAMESTATE:SetCurrentSteps(player, allSteps[1])
+					else
+						-- No steps available for this song/style
+						GAMESTATE:SetCurrentSteps(player, nil)
+					end
+				end
+				
 				MESSAGEMAN:Broadcast("CurrentSongChanged")
 			elseif focused_group then
 				-- Clear current song when on group header
 				GAMESTATE:SetCurrentSong(nil)
+				
+				-- Clear steps for each player
+				for player in ivalues(GAMESTATE:GetHumanPlayers()) do
+					GAMESTATE:SetCurrentSteps(player, nil)
+				end
+				
 				MESSAGEMAN:Broadcast("CurrentSongChanged")
 				-- Broadcast group focus for banner display
 				MESSAGEMAN:Broadcast("FocusedGroupChanged", {group = focused_group})
@@ -159,9 +180,28 @@ local t = Def.ActorFrame{
 		
 		if focused_song then
 			GAMESTATE:SetCurrentSong(focused_song)
+			
+			-- Set steps for each player
+			for player in ivalues(GAMESTATE:GetHumanPlayers()) do
+				-- Always set steps for the song
+				local stepsType = GAMESTATE:GetCurrentStyle():GetStepsType()
+				local allSteps = focused_song:GetStepsByStepsType(stepsType)
+				if #allSteps > 0 then
+					GAMESTATE:SetCurrentSteps(player, allSteps[1])
+				else
+					GAMESTATE:SetCurrentSteps(player, nil)
+				end
+			end
+			
 			MESSAGEMAN:Broadcast("CurrentSongChanged")
 		elseif focused_group then
 			GAMESTATE:SetCurrentSong(nil)
+			
+			-- Clear steps for each player
+			for player in ivalues(GAMESTATE:GetHumanPlayers()) do
+				GAMESTATE:SetCurrentSteps(player, nil)
+			end
+			
 			MESSAGEMAN:Broadcast("CurrentSongChanged")
 			MESSAGEMAN:Broadcast("FocusedGroupChanged", {group = focused_group})
 		end
