@@ -45,6 +45,16 @@ local function input(event)
 		return false
 	end
 	
+	-- Check for SortMenu chord FIRST (before redirect check)
+	-- Don't consume MenuLeft/MenuRight if both are pressed (SortMenu chord)
+	if event.type == "InputEventType_FirstPress" then
+		if (button == "MenuLeft" or button == "MenuRight") and 
+		   heldButtons[pn]["MenuLeft"] and heldButtons[pn]["MenuRight"] then
+			-- Both buttons pressed - let it pass through to open SortMenu
+			return false
+		end
+	end
+	
 	-- Don't handle input if input is redirected (e.g. SortMenu, QuitPrompt)
 	if SCREENMAN:get_input_redirected(pn) then
 		return false
@@ -55,15 +65,6 @@ local function input(event)
 	if screen then
 		local sort_menu = screen:GetChild("Overlay"):GetChild("SortMenu")
 		if sort_menu and sort_menu:GetVisible() then
-			return false
-		end
-	end
-	
-	-- Don't consume MenuLeft/MenuRight if both are pressed (SortMenu chord)
-	if event.type == "InputEventType_FirstPress" then
-		if (button == "MenuLeft" or button == "MenuRight") and 
-		   heldButtons[pn]["MenuLeft"] and heldButtons[pn]["MenuRight"] then
-			-- Both buttons pressed - let it pass through to open SortMenu
 			return false
 		end
 	end
@@ -112,7 +113,7 @@ local function input(event)
 				-- Broadcast group focus for banner display
 				MESSAGEMAN:Broadcast("FocusedGroupChanged", {group = focused_group})
 			end
-			return true
+			return false -- Return false to let InputHandler see the event (for chord detection)
 		end
 	end
 	
