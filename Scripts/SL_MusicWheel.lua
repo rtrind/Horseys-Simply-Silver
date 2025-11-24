@@ -357,6 +357,9 @@ end
 
 -- Initialize wheel on screen entry
 function SL.MusicWheel.Initialize()
+	-- Clear any previously open groups
+	SL.MusicWheel.State.open_groups = {}
+	
 	-- Open first group by default
 	local groups = GetAllGroups()
 	if #groups > 0 then
