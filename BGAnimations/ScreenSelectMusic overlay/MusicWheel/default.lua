@@ -32,6 +32,61 @@ local buttonSequence = {
 }
 local sequenceTimeout = 0.5  -- Time window for sequence detection (seconds)
 
+-- Track each player's preferred difficulty (by difficulty enum, not steps object)
+-- This persists across song changes
+local preferredDifficulty = {
+	[PLAYER_1] = nil,  -- Will be set to Difficulty enum (e.g., "Difficulty_Easy")
+	[PLAYER_2] = nil
+}
+
+-- Helper function to find the best matching steps for a preferred difficulty
+-- Returns the steps object that best matches the preference
+local function FindBestSteps(song, stepsType, preferredDiff)
+	local allSteps = song:GetStepsByStepsType(stepsType)
+	if #allSteps == 0 then return nil end
+	
+	-- If no preference, return first available
+	if not preferredDiff then
+		return allSteps[1]
+	end
+	
+	-- Try exact match first
+	for _, steps in ipairs(allSteps) do
+		if steps:GetDifficulty() == preferredDiff then
+			return steps
+		end
+	end
+	
+	-- No exact match - find closest, preferring easier
+	-- Difficulty order: Beginner < Easy < Medium < Hard < Challenge < Edit
+	local difficultyOrder = {
+		Difficulty_Beginner = 1,
+		Difficulty_Easy = 2,
+		Difficulty_Medium = 3,
+		Difficulty_Hard = 4,
+		Difficulty_Challenge = 5,
+		Difficulty_Edit = 6
+	}
+	
+	local preferredValue = difficultyOrder[preferredDiff] or 3
+	local bestSteps = allSteps[1]
+	local bestDistance = 999
+	
+	for _, steps in ipairs(allSteps) do
+		local stepsDiff = steps:GetDifficulty()
+		local stepsValue = difficultyOrder[stepsDiff] or 3
+		local distance = math.abs(stepsValue - preferredValue)
+		
+		-- If same distance, prefer easier (lower value)
+		if distance < bestDistance or (distance == bestDistance and stepsValue < difficultyOrder[bestSteps:GetDifficulty()]) then
+			bestSteps = steps
+			bestDistance = distance
+		end
+	end
+	
+	return bestSteps
+end
+
 local function input(event)
 	if not event or not event.PlayerNumber or not event.button then
 		return false
@@ -132,7 +187,10 @@ local function input(event)
 						end
 						
 						if newIndex ~= currentIndex then
-							GAMESTATE:SetCurrentSteps(pn, allSteps[newIndex])
+							local newSteps = allSteps[newIndex]
+							GAMESTATE:SetCurrentSteps(pn, newSteps)
+							-- Save this as the player's preferred difficulty
+							preferredDifficulty[pn] = newSteps:GetDifficulty()
 							MESSAGEMAN:Broadcast("CurrentStepsP" .. (pn == PLAYER_1 and "1" or "2") .. "Changed")
 						end
 					end
@@ -170,12 +228,16 @@ local function input(event)
 				
 				-- Set steps for each player based on their difficulty preference
 				for player in ivalues(GAMESTATE:GetHumanPlayers()) do
-					-- Always update steps for the new song
 					local stepsType = GAMESTATE:GetCurrentStyle():GetStepsType()
-					local allSteps = focused_song:GetStepsByStepsType(stepsType)
-					if #allSteps > 0 then
-						-- Use first available steps (could be improved to match difficulty preference)
-						GAMESTATE:SetCurrentSteps(player, allSteps[1])
+					-- Find best matching steps for player's preferred difficulty
+					local bestSteps = FindBestSteps(focused_song, stepsType, preferredDifficulty[player])
+					
+					if bestSteps then
+						GAMESTATE:SetCurrentSteps(player, bestSteps)
+						-- If no preference set yet, initialize it with the first steps
+						if not preferredDifficulty[player] then
+							preferredDifficulty[player] = bestSteps:GetDifficulty()
+						end
 					else
 						-- No steps available for this song/style
 						GAMESTATE:SetCurrentSteps(player, nil)
@@ -243,13 +305,18 @@ local t = Def.ActorFrame{
 		if focused_song then
 			GAMESTATE:SetCurrentSong(focused_song)
 			
-			-- Set steps for each player
+			-- Set steps for each player based on their difficulty preference
 			for player in ivalues(GAMESTATE:GetHumanPlayers()) do
-				-- Always set steps for the song
 				local stepsType = GAMESTATE:GetCurrentStyle():GetStepsType()
-				local allSteps = focused_song:GetStepsByStepsType(stepsType)
-				if #allSteps > 0 then
-					GAMESTATE:SetCurrentSteps(player, allSteps[1])
+				-- Find best matching steps for player's preferred difficulty
+				local bestSteps = FindBestSteps(focused_song, stepsType, preferredDifficulty[player])
+				
+				if bestSteps then
+					GAMESTATE:SetCurrentSteps(player, bestSteps)
+					-- If no preference set yet, initialize it with the first steps
+					if not preferredDifficulty[player] then
+						preferredDifficulty[player] = bestSteps:GetDifficulty()
+					end
 				else
 					GAMESTATE:SetCurrentSteps(player, nil)
 				end
