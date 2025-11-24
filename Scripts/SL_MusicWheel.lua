@@ -146,12 +146,15 @@ function SL.MusicWheel.BuildWheelData_Group()
 		return a:lower() < b:lower()
 	end)
 	
+	local group_index_counter = 0
+	
 	-- Add each group as a header, and songs if open
 	for _, group_name in ipairs(groups) do
 		local songs = GetSongsInGroup(group_name)
 		
 		-- Only add groups that have songs
 		if #songs > 0 then
+			group_index_counter = group_index_counter + 1
 			local is_open = SL.MusicWheel.State.open_groups[group_name] or false
 			
 			-- Add group header
@@ -159,7 +162,8 @@ function SL.MusicWheel.BuildWheelData_Group()
 				type = "group_header",
 				group_name = group_name,
 				song_count = #songs,
-				is_open = is_open
+				is_open = is_open,
+				index = group_index_counter
 			})
 			
 			-- If group is open, add all songs in the group

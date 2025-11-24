@@ -113,9 +113,9 @@ function item_mt:transform(position, num_items, has_focus)
 		self.container:zoom(1.0)
 		self.container:diffusealpha(1.0)
 		
-		-- Highlight background with lighter gray
+		-- Highlight background
 		if self.background then
-			self.background:diffuse(0.7, 0.7, 0.7, 0.3)  -- Light gray,Slightly less transparent than regular
+			self.background:diffuse(0.7, 0.7, 0.7, 0.3)  -- Light gray highlight for all items
 		end
 	else
 		-- No fade effect - keep all items at full opacity
@@ -188,6 +188,7 @@ function item_mt:set_group_header(info)
 		self.title:visible(false)
 	end
 	
+	-- Reset background to default group color (Dark Gray)
 	if self.background then
 		self.default_color = color("#4c565d")
 		self.background:diffuse(self.default_color)
@@ -198,11 +199,14 @@ function item_mt:set_group_header(info)
 		self.group_name:visible(true)
 		self.group_name:settext(info.group_name)
 		
-		-- Different color for group headers
-		if info.is_open then
-			self.group_name:diffuse(0.3, 0.8, 1.0, 1)  -- Cyan for open
+		-- Rainbow color on text for Group sort
+		if SL.MusicWheel.State.sort_order == "SortOrder_Group" and info.index then
+			local hue = ((info.index - 1) * 30 + 30) % 360
+			-- High Saturation/Value for readable colored text
+			local rainbow_color = HSV(hue, 0.8, 1)
+			self.group_name:diffuse(rainbow_color)
 		else
-			self.group_name:diffuse(1.0, 1.0, 0.3, 1)  -- Yellow for closed
+			self.group_name:diffuse(Color.White)
 		end
 	end
 	
