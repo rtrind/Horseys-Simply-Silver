@@ -336,6 +336,15 @@ function SL.MusicWheel.GetFocusedSong()
 	return nil
 end
 
+-- Get currently focused group (if focused item is a group header)
+function SL.MusicWheel.GetFocusedGroup()
+	local item = SL.MusicWheel.GetFocusedItem()
+	if item and item.type == "group_header" then
+		return item.group_name
+	end
+	return nil
+end
+
 -- ============================================================================
 -- Initialization
 -- ============================================================================

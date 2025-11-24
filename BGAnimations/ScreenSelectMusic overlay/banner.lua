@@ -21,6 +21,7 @@ t[#t+1] = Def.Sprite{
 
 	CurrentSongChangedMessageCommand=function(self) self:playcommand("Set") end,
 	CurrentCourseChangedMessageCommand=function(self) self:playcommand("Set") end,
+	FocusedGroupChangedMessageCommand=function(self) self:visible(false) end,
 
 	SetCommand=function(self)
 		-- if ShowBanners preference is false, always just show the fallback banner
@@ -37,17 +38,48 @@ t[#t+1] = Def.Sprite{
 
 t[#t+1] = Def.Sprite{
 	Name="GroupBanner",
-	OnCommand=function(self) self:setsize(418,164):visible(false):playcommand("Set") end,
-	CurrentSongChangedMessageCommand=function(self) self:playcommand("Set") end,
-	CurrentCourseChangedMessageCommand=function(self) self:playcommand("Set") end,
-	SetCommand=function(self)
-		SongOrCourse = GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentCourse() or GAMESTATE:GetCurrentSong();
-		if SongOrCourse and not SongOrCourse:HasBanner() and HasGroupBanner() then
-			self:Load(GetGroupBanner());
-			self:setsize(418,164);
-			self:visible(true);
+	InitCommand=function(self)
+		self:setsize(bannerWidth, bannerHeight)
+		self:visible(false)
+	end,
+	OnCommand=function(self)
+		self:playcommand("Set")
+	end,
+	CurrentSongChangedMessageCommand=function(self)
+		self:playcommand("Set")
+	end,
+	CurrentCourseChangedMessageCommand=function(self)
+		self:playcommand("Set")
+	end,
+	FocusedGroupChangedMessageCommand=function(self, params)
+		-- Show group banner when group is focused
+		if params and params.group then
+			local group_banner_path = SONGMAN:GetSongGroupBannerPath(params.group)
+			if group_banner_path and group_banner_path ~= "" then
+				self:Load(group_banner_path)
+				self:setsize(bannerWidth, bannerHeight)
+				self:visible(true)
+			else
+				self:visible(false)
+			end
 		else
-			self:visible(false);
+			self:visible(false)
+		end
+	end,
+	SetCommand=function(self)
+		-- Show group banner as fallback if song has no banner
+		SongOrCourse = GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentCourse() or GAMESTATE:GetCurrentSong()
+		if SongOrCourse and not SongOrCourse:HasBanner() then
+			local group_banner_path = SONGMAN:GetSongGroupBannerPath(SongOrCourse:GetGroupName())
+			if group_banner_path and group_banner_path ~= "" then
+				self:Load(group_banner_path)
+				self:setsize(bannerWidth, bannerHeight)
+				self:visible(true)
+			else
+				self:visible(false)
+			end
+		else
+			self:visible(false)
 		end
 	end,
 }

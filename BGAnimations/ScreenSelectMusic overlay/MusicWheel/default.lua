@@ -84,36 +84,34 @@ local function input(event)
 	
 	-- Handle both FirstPress and Repeat for continuous scrolling
 	if event.type == "InputEventType_FirstPress" or event.type == "InputEventType_Repeat" then
-		-- MenuLeft - Scroll up (previous song)
-		if event.GameButton == "MenuLeft" then
-			SL.MusicWheel.Scroll(-1)
+		if event.GameButton == "MenuLeft" or event.GameButton == "MenuRight" then
+			local scrollDirection = 0
+			if event.GameButton == "MenuLeft" then
+				scrollDirection = -1
+			else
+				scrollDirection = 1
+			end
+
+			-- MenuLeft - Scroll up (previous song)
+			SL.MusicWheel.Scroll(scrollDirection)
 			
 			-- Update wheel display
-			wheel:scroll_by_amount(-1)
+			wheel:scroll_by_amount(scrollDirection)
 			
-			-- Update GAMESTATE with focused song
+			-- Update GAMESTATE with focused song or group
 			local focused_song = SL.MusicWheel.GetFocusedSong()
+			local focused_group = SL.MusicWheel.GetFocusedGroup()
+			
 			if focused_song then
 				GAMESTATE:SetCurrentSong(focused_song)
 				MESSAGEMAN:Broadcast("CurrentSongChanged")
-			end
-			
-			return true
-		
-		-- MenuRight - Scroll down (next song)
-		elseif event.GameButton == "MenuRight" then
-			SL.MusicWheel.Scroll(1)
-			
-			-- Update wheel display
-			wheel:scroll_by_amount(1)
-			
-			-- Update GAMESTATE with focused song
-			local focused_song = SL.MusicWheel.GetFocusedSong()
-			if focused_song then
-				GAMESTATE:SetCurrentSong(focused_song)
+			elseif focused_group then
+				-- Clear current song when on group header
+				GAMESTATE:SetCurrentSong(nil)
 				MESSAGEMAN:Broadcast("CurrentSongChanged")
+				-- Broadcast group focus for banner display
+				MESSAGEMAN:Broadcast("FocusedGroupChanged", {group = focused_group})
 			end
-			
 			return true
 		end
 	end
