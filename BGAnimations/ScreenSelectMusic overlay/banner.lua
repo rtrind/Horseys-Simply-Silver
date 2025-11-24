@@ -21,7 +21,19 @@ t[#t+1] = Def.Sprite{
 
 	CurrentSongChangedMessageCommand=function(self) self:playcommand("Set") end,
 	CurrentCourseChangedMessageCommand=function(self) self:playcommand("Set") end,
-	FocusedGroupChangedMessageCommand=function(self) self:visible(false) end,
+	FocusedGroupChangedMessageCommand=function(self, params)
+		-- Show fallback if group has no banner
+		if params and params.group then
+			local group_banner_path = SONGMAN:GetSongGroupBannerPath(params.group)
+			if not group_banner_path or group_banner_path == "" then
+				self:visible(true)
+			else
+				self:visible(false)
+			end
+		else
+			self:visible(false)
+		end
+	end,
 
 	SetCommand=function(self)
 		-- if ShowBanners preference is false, always just show the fallback banner
