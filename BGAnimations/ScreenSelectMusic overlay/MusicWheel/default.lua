@@ -151,6 +151,20 @@ local t = Def.ActorFrame{
 			screen:AddInputCallback(input)
 		end
 		
+		-- Ensure initial selection is broadcast to UI (Banner, etc.)
+		-- We do this in OnCommand because InitCommand messages might be missed
+		local focused_song = SL.MusicWheel.GetFocusedSong()
+		local focused_group = SL.MusicWheel.GetFocusedGroup()
+		
+		if focused_song then
+			GAMESTATE:SetCurrentSong(focused_song)
+			MESSAGEMAN:Broadcast("CurrentSongChanged")
+		elseif focused_group then
+			GAMESTATE:SetCurrentSong(nil)
+			MESSAGEMAN:Broadcast("CurrentSongChanged")
+			MESSAGEMAN:Broadcast("FocusedGroupChanged", {group = focused_group})
+		end
+		
 		-- Fade in
 		self:diffusealpha(0)
 		self:sleep(0.2)
