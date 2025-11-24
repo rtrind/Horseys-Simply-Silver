@@ -18,6 +18,10 @@
 - [x] Test scrolling with MenuLeft/MenuRight - WORKING
 - [x] Verify song selection updates GAMESTATE correctly - WORKING
 - [x] Test group headers display properly - WORKING
+- [x] **VISUAL ENHANCEMENTS** - Pulsing highlight for focused songs
+- [x] **RAINBOW COLORS** - Group headers have rainbow colors based on index
+- [x] **MESSAGE BROADCASTING** - CurrentStepsP1/P2Changed messages broadcast on song change
+- [x] **API MIGRATION** - SongDescription.lua updated to use SL.MusicWheel API
 
 ### Files Created
 1. **Scripts/SL_MusicWheel.lua** (340 lines) - RENAMED from SL-MusicWheel.lua to load after SL_Init.lua
@@ -27,18 +31,22 @@
    - Scroll() - Navigation with wrapping
    - Initialize() - Setup on screen entry
 
-2. **BGAnimations/ScreenSelectMusic overlay/MusicWheel/WheelItem.lua** (180 lines)
-   - create_actors() - Banner, title, group name, song count
-   - transform() - Positioning with focus effects
+2. **BGAnimations/ScreenSelectMusic overlay/MusicWheel/WheelItem.lua** (220 lines)
+   - create_actors() - Banner, title, group name, song count, pulsing background
+   - transform() - Positioning with focus effects, pulsing animation control
    - set() - Updates display for songs and groups
-   - set_song() - Song-specific display
-   - set_group_header() - Group-specific display
+   - set_song() - Song-specific display with pulsing effect
+   - set_group_header() - Group-specific display with rainbow colors
+   - Rainbow color calculation based on group_index (HSV color wheel)
 
-3. **BGAnimations/ScreenSelectMusic overlay/MusicWheel/default.lua** (120 lines)
+3. **BGAnimations/ScreenSelectMusic overlay/MusicWheel/default.lua** (390 lines)
    - sick_wheel instance creation
-   - Input handler for MenuUp/MenuDown
+   - Input handler for MenuLeft/MenuRight
    - Message handlers for rebuild
    - Integration with GAMESTATE
+   - Broadcasts CurrentStepsP1/P2Changed on song change and wheel rebuild
+   - Ensures steps are always set for both players
+   - MusicWheelRebuiltMessageCommand updates GAMESTATE and broadcasts steps messages
 
 ### Files Modified
 1. **BGAnimations/ScreenSelectMusic overlay/default.lua**
@@ -48,6 +56,18 @@
    - Removed `SampleMusicLoops`, `SampleMusicFallbackFadeInSeconds`, `DoRouletteOnMenuTimer`
    - Simplified CodeNames (removed engine wheel specific codes)
    - Added custom input handler for SortMenu and quit screen
+3. **Scripts/SL_MusicWheel.lua**
+   - Added group_index field to group headers for rainbow coloring
+4. **BGAnimations/ScreenSelectMusic overlay/SongDescription/SongDescription.lua**
+   - Replaced GetMusicWheel() calls with SL.MusicWheel.GetFocusedItem()
+   - Updated duration and BPM display logic for Lua wheel API
+5. **BGAnimations/ScreenSelectMusic overlay/NotefieldPreview.lua**
+   - Reverted to original implementation (working correctly)
+   - Preview tied to audio timing - will be enhanced with audio preview
+6. **BGAnimations/ScreenSelectMusic overlay/SortMenu/SortMenu_InputHandler.lua**
+   - Replaced GetMusicWheel():ChangeSort() calls with SL.MusicWheel.RebuildWheelData()
+   - Updated favorites toggle to rebuild wheel instead of nudging engine wheel
+   - Updated playlist loading to use Lua wheel rebuild
 
 ### Phase 1 Complete! ✅
 The Lua wheel is now the **sole music wheel** in the theme. Engine wheel is completely disabled at the class level.
@@ -58,20 +78,35 @@ The Lua wheel is now the **sole music wheel** in the theme. Engine wheel is comp
 - No grades/highscores displayed
 - No favorites icons
 - Only Group and Title sorts supported
-- No animations (cascade, highlight)
+- No cascade animation yet
+- No audio preview (needed for NoteField preview to show properly)
 
-## Phase 2: Groups & Sorting (READY TO START)
+## Phase 2: Groups & Sorting (IN PROGRESS)
 
-### Planned Tasks
-- [x] Extend WheelItem metatable to handle group_header type - ALREADY DONE IN PHASE 1
-- [x] Add group song count display - ALREADY DONE IN PHASE 1
-- [x] Add empty group hiding - ALREADY DONE IN PHASE 1
-- [ ] Implement group open/close logic in `ToggleGroup()`
-- [ ] Add songs to wheel when group is opened
-- [ ] Implement `RebuildWheelData()` for sort changes (triggered by existing SortMenu)
+### Completed Tasks
+- [x] Extend WheelItem metatable to handle group_header type
+- [x] Add group song count display
+- [x] Add empty group hiding
+- [x] Add rainbow colors for group headers
+- [x] Add pulsing highlight effect for focused songs
+- [x] Fix message broadcasting (CurrentStepsP1/P2Changed)
+- [x] Update SongDescription to use Lua wheel API
+- [x] Implement group open/close logic in `ToggleGroup()`
+- [x] Add songs to wheel when group is opened
+- [x] Implement `RebuildWheelData()` for sort changes (triggered by existing SortMenu)
+- [x] Update SortMenu_InputHandler to use Lua wheel API
+
+### Bug Fixes
+- [x] Fixed NoteField preview not updating after wheel rebuild
+- [x] Fixed multiple groups opening on screen load (state persistence issue)
+- [x] Fixed NoteField preview not loading on initial screen entry (timing issue)
+- [x] Fixed NoteField warnings about missing columns (initialized GAMESTATE before actor creation)
+
+### Remaining Tasks
 - [ ] Test folder navigation (Start key to open/close groups)
 - [ ] Test sort order changes from SortMenu
 - [ ] Add sample music preview when song is focused
+- [ ] Fix NoteField preview visibility (requires audio preview first)
 
 ## Phase 3: Favorites & Grades (Not Started)
 
@@ -121,6 +156,10 @@ The Lua wheel is now the **sole music wheel** in the theme. Engine wheel is comp
 - [x] GAMESTATE:GetCurrentSong() returns focused song
 - [x] No Lua errors in log
 - [x] Continuous scrolling when holding button
+- [x] Pulsing highlight effect on focused songs
+- [x] Rainbow colors on group headers (Group sort only)
+- [x] Message broadcasting updates left panel correctly
+- [x] SongDescription displays correct duration/BPM
 
 ### Integration Testing (Later Phases)
 - [ ] SortMenu changes sort order correctly

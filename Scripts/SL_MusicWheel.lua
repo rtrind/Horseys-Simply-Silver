@@ -382,7 +382,21 @@ function SL.MusicWheel.Initialize()
 	-- Set initial song in GAMESTATE
 	if first_song then
 		GAMESTATE:SetCurrentSong(first_song)
+		
+		-- Set initial steps for all players
+		for pn in ivalues(GAMESTATE:GetHumanPlayers()) do
+			local steps = GAMESTATE:GetCurrentSteps(pn)
+			if not steps then
+				local all_steps = first_song:GetAllSteps()
+				if all_steps and #all_steps > 0 then
+					GAMESTATE:SetCurrentSteps(pn, all_steps[1])
+				end
+			end
+		end
+		
 		MESSAGEMAN:Broadcast("CurrentSongChanged")
+		MESSAGEMAN:Broadcast("CurrentStepsP1Changed")
+		MESSAGEMAN:Broadcast("CurrentStepsP2Changed")
 	end
 end
 

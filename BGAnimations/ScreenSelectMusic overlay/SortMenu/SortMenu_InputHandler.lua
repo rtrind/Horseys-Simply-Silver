@@ -39,6 +39,8 @@ local input = function(event)
 			sortmenu:GetChild("start_sound"):play()
 			local focus = sort_wheel:get_actor_item_at_focus_pos()
 			if focus.kind == "SortBy" then
+				-- Rebuild Lua wheel with new sort order
+				SL.MusicWheel.RebuildWheelData(focus.sort_by)
 				MESSAGEMAN:Broadcast('Sort', { order = focus.sort_by })
 				MESSAGEMAN:Broadcast('ResetHeaderText')
 				overlay:queuecommand("DirectInputToEngine")
@@ -46,8 +48,9 @@ local input = function(event)
 				local path = THEME:GetPathO("", "Playlists/" .. focus.new_overlay .. ".txt")
 				SONGMAN:SetPreferredSongs(path, --[[isAbsolute=]]true);
 				if SONGMAN:GetPreferredSortSongs() then
+					-- Rebuild Lua wheel with Preferred sort
+					SL.MusicWheel.RebuildWheelData("SortOrder_Preferred")
 					overlay:queuecommand("DirectInputToEngine")
-					SCREENMAN:GetTopScreen():GetMusicWheel():ChangeSort("SortOrder_Preferred")
 				end
 			-- the player wants to change modes, for example from ITG to FA+
 			elseif focus.kind == "ChangeMode" then
@@ -126,12 +129,9 @@ local input = function(event)
                     overlay:queuecommand("DirectInputToEngineForSelectProfile")
 				elseif focus.new_overlay == "AddFavorite" then
 					addOrRemoveFavorite(event.PlayerNumber)
-					-- Nudge the wheel a bit so that that the icon is correctly updated.
+					-- Rebuild wheel to update favorite icons
+					SL.MusicWheel.RebuildWheelData()
 					overlay:queuecommand("DirectInputToEngine")
-					local screen = SCREENMAN:GetTopScreen()
-					screen:GetMusicWheel():Move(1)
-					screen:GetMusicWheel():Move(-1)
-					screen:GetMusicWheel():Move(0)
 				elseif focus.new_overlay == "PracticeMode" then
 					SCREENMAN:GetTopScreen():SetNextScreenName("ScreenPractice")
 					SCREENMAN:GetTopScreen():StartTransitioningScreen("SM_GoToNextScreen")
@@ -143,8 +143,9 @@ local input = function(event)
 						-- how it works to load from the profile directory.
 						SONGMAN:SetPreferredSongs(getFavoritesPath(event.PlayerNumber), --[[isAbsolute=]]true);
 						if SONGMAN:GetPreferredSortSongs() then
+							-- Rebuild Lua wheel with Preferred sort
+							SL.MusicWheel.RebuildWheelData("SortOrder_Preferred")
 							overlay:queuecommand("DirectInputToEngine")
-							SCREENMAN:GetTopScreen():GetMusicWheel():ChangeSort("SortOrder_Preferred")
 						else 
 							SM(ToEnumShortString(event.PlayerNumber).." has no favorites!")
 						end

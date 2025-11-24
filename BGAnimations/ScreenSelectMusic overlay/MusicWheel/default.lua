@@ -287,7 +287,8 @@ local t = Def.ActorFrame{
 		end
 		
 		-- Initialize wheel data
-		SL.MusicWheel.Initialize()
+		-- SL.MusicWheel.Initialize() is now called in overlay/default.lua 
+		-- to ensure GAMESTATE is ready before NoteField creation
 		
 		-- Set initial wheel data
 		wheel:set_info_set(SL.MusicWheel.State.items, SL.MusicWheel.State.focus_index)
@@ -300,8 +301,12 @@ local t = Def.ActorFrame{
 			screen:AddInputCallback(input)
 		end
 		
-		-- Ensure initial selection is broadcast to UI (Banner, etc.)
-		-- We do this in OnCommand because InitCommand messages might be missed
+		-- Ensure initial selection is broadcast to UI (Banner, NoteField, etc.)
+		self:playcommand("BroadcastInitialSelection")
+	end,
+	
+	BroadcastInitialSelectionCommand = function(self)
+		-- Ensure initial selection is broadcast to UI (Banner, NoteField, etc.)
 		local focused_song = SL.MusicWheel.GetFocusedSong()
 		local focused_group = SL.MusicWheel.GetFocusedGroup()
 		
@@ -364,6 +369,22 @@ local t = Def.ActorFrame{
 		if focused_song then
 			GAMESTATE:SetCurrentSong(focused_song)
 			MESSAGEMAN:Broadcast("CurrentSongChanged")
+			
+			-- Ensure steps are set for both players and broadcast for NoteField preview
+			for pn in ivalues(GAMESTATE:GetHumanPlayers()) do
+				local steps = GAMESTATE:GetCurrentSteps(pn)
+				if not steps then
+					-- Set default steps if none selected
+					local song_steps = focused_song:GetAllSteps()
+					if song_steps and #song_steps > 0 then
+						GAMESTATE:SetCurrentSteps(pn, song_steps[1])
+					end
+				end
+			end
+			
+			-- Broadcast steps changed for NoteField preview
+			MESSAGEMAN:Broadcast("CurrentStepsP1Changed")
+			MESSAGEMAN:Broadcast("CurrentStepsP2Changed")
 		end
 	end,
 	

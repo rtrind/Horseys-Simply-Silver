@@ -1,3 +1,9 @@
+-- Ensure MusicWheel is initialized and GAMESTATE has steps BEFORE loading any actors
+-- This prevents NoteField warnings about missing columns/steps
+if SL.MusicWheel then
+	SL.MusicWheel.Initialize()
+end
+
 local af = Def.ActorFrame{
 	-- GameplayReloadCheck is a kludgy global variable used in ScreenGameplay in.lua to check
 	-- if ScreenGameplay is being entered "properly" or being reloaded by a scripted mod-chart.

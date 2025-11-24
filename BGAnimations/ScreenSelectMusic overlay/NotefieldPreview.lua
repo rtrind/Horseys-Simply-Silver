@@ -174,12 +174,18 @@ for i, pn in ipairs(GAMESTATE:GetEnabledPlayers()) do
             YReverseOffsetPixels = ReceptorOffset,
             FieldID=-1,
             OnCommand=function(self)
-              self:ChangeReload( GAMESTATE:GetCurrentSteps(pnNoteField) )
+              -- Set up positioning and options first
               self:y(NotefieldY):GetPlayerOptions("ModsLevel_Current"):StealthPastReceptors(true, true)
               self:AutoPlay(true)
               local PlayerModsArray = GAMESTATE:GetPlayerState(pnNoteField):GetPlayerOptionsString("ModsLevel_Preferred")
               --force Mini% to 0 here because it throws off the notefield positioning; this notefield is meant to be a preview of the steps in the space allowed, not a complete 1:1 recreation of what the player will see on ScreenGameplay
               self:GetPlayerOptions("ModsLevel_Current"):FromString(PlayerModsArray):Mini(0)
+              
+              -- Steps are now guaranteed to be set by SL.MusicWheel.Initialize() in overlay/default.lua
+              local steps = GAMESTATE:GetCurrentSteps(pnNoteField)
+              if steps then
+                self:ChangeReload(steps)
+              end
             end,
 
             CurrentStepsP1ChangedMessageCommand=function(self) self:playcommand("Refresh") end,
