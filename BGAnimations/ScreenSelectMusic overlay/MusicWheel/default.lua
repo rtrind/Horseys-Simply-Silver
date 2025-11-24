@@ -25,6 +25,13 @@ local heldButtons = {
 	[PLAYER_2] = {}
 }
 
+-- Track button sequences for difficulty changes (Up,Up = easier, Down,Down = harder)
+local buttonSequence = {
+	[PLAYER_1] = {},
+	[PLAYER_2] = {}
+}
+local sequenceTimeout = 0.5  -- Time window for sequence detection (seconds)
+
 local function input(event)
 	if not event or not event.PlayerNumber or not event.button then
 		return false
@@ -80,6 +87,61 @@ local function input(event)
 			end
 			-- If not on group header, let Start pass through (for song selection)
 			return false
+		end
+		
+		-- Handle difficulty changes (Up,Up = easier, Down,Down = harder)
+		if button == "MenuUp" or button == "MenuDown" then
+			local currentTime = GetTimeSinceStart()
+			local seq = buttonSequence[pn]
+			
+			-- Clear old sequence if timeout expired
+			if #seq > 0 and (currentTime - seq[#seq].time) > sequenceTimeout then
+				buttonSequence[pn] = {}
+				seq = buttonSequence[pn]
+			end
+			
+			-- Add button to sequence
+			table.insert(seq, {button = button, time = currentTime})
+			
+			-- Check for difficulty change sequences (need 2 of the same button)
+			if #seq >= 2 and seq[#seq].button == seq[#seq-1].button then
+				local focused_song = SL.MusicWheel.GetFocusedSong()
+				if focused_song then
+					local stepsType = GAMESTATE:GetCurrentStyle():GetStepsType()
+					local allSteps = focused_song:GetStepsByStepsType(stepsType)
+					local currentSteps = GAMESTATE:GetCurrentSteps(pn)
+					
+					if #allSteps > 0 and currentSteps then
+						-- Find current difficulty index
+						local currentIndex = 1
+						for i, steps in ipairs(allSteps) do
+							if steps == currentSteps then
+								currentIndex = i
+								break
+							end
+						end
+						
+						-- Change difficulty
+						local newIndex = currentIndex
+						if button == "MenuUp" then
+							-- Easier (lower index)
+							newIndex = math.max(1, currentIndex - 1)
+						else
+							-- Harder (higher index)
+							newIndex = math.min(#allSteps, currentIndex + 1)
+						end
+						
+						if newIndex ~= currentIndex then
+							GAMESTATE:SetCurrentSteps(pn, allSteps[newIndex])
+							MESSAGEMAN:Broadcast("CurrentStepsP" .. (pn == PLAYER_1 and "1" or "2") .. "Changed")
+						end
+					end
+				end
+				
+				-- Clear sequence after processing
+				buttonSequence[pn] = {}
+				return true
+			end
 		end
 	end
 	
