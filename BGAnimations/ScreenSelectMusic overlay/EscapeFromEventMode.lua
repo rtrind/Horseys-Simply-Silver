@@ -5,10 +5,20 @@ local active_index = 0
 local choice_actors, sfx = {}, {}
 local af
 
+-- Shared state for Back button cooldown (shared with InputHandler.lua)
+if not _G.SSM_ignore_back_until then
+	_G.SSM_ignore_back_until = 0
+end
+
 local InputHandler = function(event)
 	if not event.PlayerNumber or not event.button then return false end
 
 	if event.type == "InputEventType_FirstPress" then
+		-- Ignore Back button if we're still in the cooldown period
+		if event.GameButton == "Back" and GetTimeSinceStart() < _G.SSM_ignore_back_until then
+			return true  -- Consume the input but don't act on it
+		end
+		
 		if event.GameButton == "MenuRight" or event.GameButton == "MenuLeft" then
 			af:queuecommand("ChangeChoice")
 
@@ -81,14 +91,16 @@ local af = Def.ActorFrame{
 		if topscreen then
 			-- play the start sound effect
 			sfx.start:play()
+			-- Set cooldown for Back button (0.2 seconds)
+			_G.SSM_ignore_back_until = GetTimeSinceStart() + 0.2
 			-- deactivate the Lua InputHandler
 			topscreen:RemoveInputCallback(InputHandler)
 			-- hide this overlay
 			self:visible(false)
-			-- return input handling to the SM5 engine so players can continune choosing a song
-			-- use a small sleep delay to prevent the "Back" press that triggered this CancelCommand
-			-- from bubbling through to the engine and immediately triggering the prompt again
-			self:sleep(0.5):queuecommand("UnlockInput")
+			-- return input handling immediately (Back button cooldown handled in InputHandler)
+			for player in ivalues(PlayerNumber) do
+				SCREENMAN:set_input_redirected(player, false)
+			end
 		end
 	end,
 	UnlockInputCommand=function(self)

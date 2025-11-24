@@ -2,6 +2,11 @@
 -- Restores functionality lost by switching to ScreenWithMenuElements
 -- Reads codes from metrics.ini to preserve original bindings
 
+-- Shared state for Back button cooldown (set by EscapeFromEventMode)
+if not _G.SSM_ignore_back_until then
+	_G.SSM_ignore_back_until = 0
+end
+
 local function BroadcastMessage(name, pn)
 	MESSAGEMAN:Broadcast("CodeMessage", {Name=name, PlayerNumber=pn})
 end
@@ -74,6 +79,11 @@ local input = function(event)
 		
 		-- Handle Back button
 		if button == "Back" then
+			-- Ignore Back button if we're in cooldown period (just closed quit prompt)
+			if GetTimeSinceStart() < _G.SSM_ignore_back_until then
+				return true  -- Consume but don't act
+			end
+			
 			-- Do not handle Back button if input is redirected (e.g. SortMenu is open or closing)
 			if SCREENMAN:get_input_redirected(pn) then
 				-- Trace("[InputHandler] Back ignored because input is redirected")
