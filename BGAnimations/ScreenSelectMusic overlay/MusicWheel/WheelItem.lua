@@ -115,7 +115,7 @@ function item_mt:transform(position, num_items, has_focus)
 		
 		-- Highlight background
 		if self.background then
-			self.background:diffuse(0.7, 0.7, 0.7, 0.3)  -- Light gray highlight for all items
+			self.background:diffuse(0.2, 0.2, 0.2, 0.8)
 		end
 	else
 		-- No fade effect - keep all items at full opacity
@@ -202,8 +202,8 @@ function item_mt:set_group_header(info)
 		-- Rainbow color on text for Group sort
 		if SL.MusicWheel.State.sort_order == "SortOrder_Group" and info.index then
 			local hue = ((info.index - 1) * 30 + 30) % 360
-			-- High Saturation/Value for readable colored text
-			local rainbow_color = HSV(hue, 0.8, 1)
+			-- Full saturation and brightness for maximum readability
+			local rainbow_color = HSV(hue, 0.8, 1.0)
 			self.group_name:diffuse(rainbow_color)
 		else
 			self.group_name:diffuse(Color.White)
