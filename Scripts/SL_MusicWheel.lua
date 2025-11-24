@@ -264,6 +264,8 @@ function SL.MusicWheel.ToggleGroup()
 	if state.open_groups[group_name] then
 		state.open_groups[group_name] = nil  -- Close group
 	else
+		-- Close all other groups before opening this one (single group open policy)
+		state.open_groups = {}
 		state.open_groups[group_name] = true  -- Open group
 	end
 	
