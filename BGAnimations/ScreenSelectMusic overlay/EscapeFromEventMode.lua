@@ -93,6 +93,8 @@ local af = Def.ActorFrame{
 			sfx.start:play()
 			-- Set cooldown for Back button (0.2 seconds)
 			_G.SSM_ignore_back_until = GetTimeSinceStart() + 0.2
+			-- Clear overlay lock
+			_G.SSM_OverlayActive = false
 			-- deactivate the Lua InputHandler
 			topscreen:RemoveInputCallback(InputHandler)
 			-- hide this overlay
@@ -114,6 +116,8 @@ local af = Def.ActorFrame{
 		if topscreen then
 			-- play the start sound effect
 			sfx.start:play()
+			-- Clear overlay lock
+			_G.SSM_OverlayActive = false
 			-- return input handling to the SM5 engine before leaving ScreenSelectMusic
 			for player in ivalues(PlayerNumber) do
 				SCREENMAN:set_input_redirected(player, false)

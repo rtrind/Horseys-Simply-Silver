@@ -157,6 +157,9 @@ local DirectInputToEngine = function(self)
 	local screen = SCREENMAN:GetTopScreen()
 	local overlay = self:GetParent()
 
+	-- Clear overlay lock
+	_G.SSM_OverlayActive = false
+
 	screen:RemoveInputCallback(sortmenu_input)
 	screen:RemoveInputCallback(testinput_input)
 	screen:RemoveInputCallback(leaderboard_input)

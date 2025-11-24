@@ -7,6 +7,11 @@ if not _G.SSM_ignore_back_until then
 	_G.SSM_ignore_back_until = 0
 end
 
+-- Global lock to prevent multiple overlays (SortMenu, ExitPrompt) from opening simultaneously
+if _G.SSM_OverlayActive == nil then
+	_G.SSM_OverlayActive = false
+end
+
 local function BroadcastMessage(name, pn)
 	MESSAGEMAN:Broadcast("CodeMessage", {Name=name, PlayerNumber=pn})
 end
@@ -70,7 +75,11 @@ local input = function(event)
 				if code and code ~= "" and code ~= "false" then
 					-- Check if this is a chord and if it's currently pressed
 					if IsChordPressed(code, pn) then
-						overlay:queuecommand("DirectInputToSortMenu")
+						-- Only open if no other overlay is active
+						if not _G.SSM_OverlayActive then
+							_G.SSM_OverlayActive = true
+							overlay:queuecommand("DirectInputToSortMenu")
+						end
 						return true
 					end
 				end
@@ -92,7 +101,11 @@ local input = function(event)
 			
 			-- If Event Mode is ON, Back triggers the Exit Prompt
 			if PREFSMAN:GetPreference("EventMode") then
-				MESSAGEMAN:Broadcast("ShowExitPrompt", {PlayerNumber=pn})
+				-- Only open if no other overlay is active
+				if not _G.SSM_OverlayActive then
+					_G.SSM_OverlayActive = true
+					MESSAGEMAN:Broadcast("ShowExitPrompt", {PlayerNumber=pn})
+				end
 				return true
 			else
 				-- Normal navigation
