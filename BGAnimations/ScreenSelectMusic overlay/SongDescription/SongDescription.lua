@@ -147,13 +147,12 @@ af[#af+1] = Def.ActorFrame{
 			self:xy(-12,40)
 		end,
 		SetCommand=function(self)
-
-			if MusicWheel then SelectedType = MusicWheel:GetSelectedType() end
+			-- Use custom Lua wheel API instead of engine wheel
+			local focused_item = SL.MusicWheel.GetFocusedItem()
 
 			-- we only want to try to show BPM values for Songs and Courses
-			-- not Section, Roulette, Random, Portal, Sort, or Custom
-			-- (aside: what is "WheelItemDataType_Custom"?  I need to look into that.)
-			if not (SelectedType=="WheelItemDataType_Song" or SelectedType=="WheelItemDataType_Course") then
+			-- not group headers
+			if not focused_item or (focused_item.type ~= "song" and not GAMESTATE:IsCourseMode()) then
 				self:settext("")
 				return
 			end
@@ -216,12 +215,11 @@ af[#af+1] = Def.ActorFrame{
 			self:horizalign(center):xy(233,40):zoom(0.8)
 		end,
 		SetCommand=function(self)
-			if MusicWheel == nil then MusicWheel = SCREENMAN:GetTopScreen():GetMusicWheel() end
-
-			SelectedType = MusicWheel:GetSelectedType()
+			-- Use custom Lua wheel API instead of engine wheel
+			local focused_item = SL.MusicWheel.GetFocusedItem()
 			local seconds
 
-			if SelectedType == "WheelItemDataType_Song" then
+			if focused_item and focused_item.type == "song" then
 				-- GAMESTATE:GetCurrentSong() can return nil here if we're in pay mode on round 2 (or later)
 				-- and we're returning to SSM to find that the song we'd just played is no longer available
 				-- because it exceeds the 2-round or 3-round time limit cutoff.
@@ -230,12 +228,11 @@ af[#af+1] = Def.ActorFrame{
 					seconds = song:GetLastSecond()
 				end
 
-			elseif SelectedType == "WheelItemDataType_Section" then
-				-- MusicWheel:GetSelectedSection() will return a string for the text of the currently active WheelItem
-				-- use it here to look up the overall duration of this group from our precalculated table of group durations
-				seconds = group_durations[MusicWheel:GetSelectedSection()]
+			elseif focused_item and focused_item.type == "group_header" then
+				-- Look up the overall duration of this group from our precalculated table of group durations
+				seconds = group_durations[focused_item.group_name]
 
-			elseif SelectedType == "WheelItemDataType_Course" then
+			elseif GAMESTATE:IsCourseMode() then
 				-- is it possible for 2 Trails within the same Course to have differing durations?
 				-- I can't think of a scenario where that would happen, but hey, this is StepMania.
 				-- In any case, I'm opting to display the duration of the MPN's current trail.
