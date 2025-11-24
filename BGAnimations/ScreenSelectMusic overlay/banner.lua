@@ -53,17 +53,24 @@ t[#t+1] = Def.Sprite{
 }
 
 if PREFSMAN:GetPreference("ShowBanners") then
-	t[#t+1] = Def.ActorProxy{
-		Name="BannerProxy",
-		OnCommand=cmd(setsize,418,164),
-		BeginCommand=function(self)
-			local screen = SCREENMAN:GetTopScreen()
-			if screen then
-				local banner = screen:GetChild('Banner')
-				-- Only set target if Banner exists (ScreenWithMenuElements doesn't have one)
-				if banner then
-					self:SetTarget(banner)
-				end
+	t[#t+1] = Def.Banner{
+		Name="SongBanner",
+		InitCommand=function(self)
+			self:setsize(bannerWidth, bannerHeight)
+		end,
+		CurrentSongChangedMessageCommand=function(self)
+			self:playcommand("Set")
+		end,
+		CurrentCourseChangedMessageCommand=function(self)
+			self:playcommand("Set")
+		end,
+		SetCommand=function(self)
+			SongOrCourse = GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentCourse() or GAMESTATE:GetCurrentSong()
+			if SongOrCourse and SongOrCourse:HasBanner() then
+				self:LoadFromSong(SongOrCourse)
+				self:visible(true)
+			else
+				self:visible(false)
 			end
 		end
 	}

@@ -12,9 +12,6 @@ item_mt.__index = item_mt
 -- Match original engine wheel dimensions
 local item_width = SCREEN_WIDTH / 2.125  -- Same as engine wheel
 local item_height = 31
-local banner_width = 80  -- Slightly smaller banner
-local banner_height = 38  -- Proportional to new item height
-local text_x = 90  -- X position for text (after banner)
 
 -- ============================================================================
 -- create_actors - Returns Def.ActorFrame with visual elements
@@ -39,25 +36,15 @@ function item_mt:create_actors(name)
 			end
 		},
 		
-		-- Banner sprite
-		Def.Banner{
-			Name = "Banner",
-			InitCommand = function(subself)
-				self.banner = subself
-				subself:x(-item_width/2 + banner_width/2 + 5)
-				subself:zoomto(banner_width, banner_height)
-			end
-		},
-		
-		-- Song title text
+		-- Song title text (no banner - theme has dedicated banner display)
 		LoadFont("Common Normal") .. {
 			Name = "Title",
 			InitCommand = function(subself)
 				self.title = subself
-				subself:x(-item_width/2 + text_x)
+				subself:x(-item_width/2 + 10)  -- Left-aligned with small margin
 				subself:halign(0)
 				subself:zoom(0.8)
-				subself:maxwidth(item_width - text_x - 10)
+				subself:maxwidth(item_width - 20)  -- Full width minus margins
 				subself:diffuse(Color.White)
 			end
 		},
@@ -177,12 +164,7 @@ function item_mt:set_song(info)
 		self.background:diffusealpha(1)
 	end
 	
-	-- Show song elements
-	if self.banner then
-		self.banner:visible(true)
-		self.banner:LoadFromSong(song)
-	end
-	
+	-- Show song title
 	if self.title then
 		self.title:visible(true)
 		self.title:settext(song:GetDisplayMainTitle())
@@ -200,11 +182,7 @@ end
 
 -- Set display for group header item
 function item_mt:set_group_header(info)
-	-- Hide song elements
-	if self.banner then
-		self.banner:visible(false)
-	end
-	
+	-- Hide song title
 	if self.title then
 		self.title:visible(false)
 	end

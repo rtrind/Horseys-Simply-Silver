@@ -63,6 +63,20 @@ local function input(event)
 		end
 	end
 	
+	-- Handle FirstPress for Start button (toggle group)
+	if event.type == "InputEventType_FirstPress" then
+		if event.GameButton == "Start" then
+			-- Try to toggle group (only works if on group header)
+			if SL.MusicWheel.ToggleGroup() then
+				-- Group was toggled, update wheel display
+				wheel:set_info_set(SL.MusicWheel.State.items, SL.MusicWheel.State.focus_index)
+				return true
+			end
+			-- If not on group header, let Start pass through (for song selection)
+			return false
+		end
+	end
+	
 	-- Handle both FirstPress and Repeat for continuous scrolling
 	if event.type == "InputEventType_FirstPress" or event.type == "InputEventType_Repeat" then
 		-- MenuLeft - Scroll up (previous song)

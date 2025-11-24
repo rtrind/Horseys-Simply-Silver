@@ -136,7 +136,7 @@ end
 -- ============================================================================
 
 -- Build flat list of wheel items for Group sort
--- Phase 1: Simple implementation - all groups closed, no favorites yet
+-- Phase 2: Supports open/close groups
 function SL.MusicWheel.BuildWheelData_Group()
 	local items = {}
 	local groups = GetAllGroups()
@@ -146,19 +146,39 @@ function SL.MusicWheel.BuildWheelData_Group()
 		return a:lower() < b:lower()
 	end)
 	
-	-- Add each group as a header
+	-- Add each group as a header, and songs if open
 	for _, group_name in ipairs(groups) do
 		local songs = GetSongsInGroup(group_name)
 		
 		-- Only add groups that have songs
 		if #songs > 0 then
+			local is_open = SL.MusicWheel.State.open_groups[group_name] or false
+			
 			-- Add group header
 			table.insert(items, {
 				type = "group_header",
 				group_name = group_name,
 				song_count = #songs,
-				is_open = false
+				is_open = is_open
 			})
+			
+			-- If group is open, add all songs in the group
+			if is_open then
+				-- Sort songs alphabetically by title
+				table.sort(songs, function(a, b)
+					return a:GetDisplayMainTitle():lower() < b:GetDisplayMainTitle():lower()
+				end)
+				
+				for _, song in ipairs(songs) do
+					table.insert(items, {
+						type = "song",
+						song = song,
+						group = group_name,
+						is_favorite = false,
+						favorited_by = {}
+					})
+				end
+			end
 		end
 	end
 	
@@ -225,6 +245,58 @@ function SL.MusicWheel.RebuildWheelData(sort_order)
 end
 
 -- ============================================================================
+-- Group Management
+-- ============================================================================
+
+-- Toggle a group open/closed
+function SL.MusicWheel.ToggleGroup()
+	local state = SL.MusicWheel.State
+	local focused_item = state.items[state.focus_index]
+	
+	-- Only toggle if focused on a group header
+	if not focused_item or focused_item.type ~= "group_header" then
+		return false
+	end
+	
+	local group_name = focused_item.group_name
+	
+	-- Toggle the open state
+	if state.open_groups[group_name] then
+		state.open_groups[group_name] = nil  -- Close group
+	else
+		state.open_groups[group_name] = true  -- Open group
+	end
+	
+	-- Rebuild wheel data to reflect the change
+	local old_focus_index = state.focus_index
+	state.items = SL.MusicWheel.BuildWheelData(state.sort_order)
+	
+	-- Try to maintain focus on the same group header
+	-- After rebuild, find the group header again
+	for i, item in ipairs(state.items) do
+		if item.type == "group_header" and item.group_name == group_name then
+			state.focus_index = i
+			break
+		end
+	end
+	
+	-- Update GAMESTATE with focused song (if any)
+	local focused_song = SL.MusicWheel.GetFocusedSong()
+	if focused_song then
+		GAMESTATE:SetCurrentSong(focused_song)
+	end
+	
+	-- Broadcast rebuild message
+	MESSAGEMAN:Broadcast("MusicWheelRebuilt", {
+		sort_order = state.sort_order,
+		group_toggled = group_name
+	})
+	MESSAGEMAN:Broadcast("CurrentSongChanged")
+	
+	return true
+end
+
+-- ============================================================================
 -- Wheel Navigation
 -- ============================================================================
 
@@ -270,13 +342,29 @@ end
 
 -- Initialize wheel on screen entry
 function SL.MusicWheel.Initialize()
-	-- Build initial wheel data
+	-- Open first group by default
+	local groups = GetAllGroups()
+	if #groups > 0 then
+		SL.MusicWheel.State.open_groups[groups[1]] = true
+	end
+	
+	-- Build initial wheel data with first group open
 	SL.MusicWheel.RebuildWheelData("SortOrder_Group")
 	
+	-- Find first song in the wheel and focus on it
+	local first_song = nil
+	for i, item in ipairs(SL.MusicWheel.State.items) do
+		if item.type == "song" then
+			first_song = item.song
+			SL.MusicWheel.State.focus_index = i  -- Focus on first song
+			break
+		end
+	end
+	
 	-- Set initial song in GAMESTATE
-	local first_song = SL.MusicWheel.GetFocusedSong()
 	if first_song then
 		GAMESTATE:SetCurrentSong(first_song)
+		MESSAGEMAN:Broadcast("CurrentSongChanged")
 	end
 end
 
