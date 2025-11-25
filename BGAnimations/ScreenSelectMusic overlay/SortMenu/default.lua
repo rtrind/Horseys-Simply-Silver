@@ -336,7 +336,7 @@ local wheel_options = {
 			{ {"SortBy", "DoubleChallengeMeter"}, function() return not isStyleSingle() end },
 			{ {"SortBy", "MostPlayed"} },
 			{ {"SortBy", "MachineMostPlayed"} },
-			{ {"SortBy", "TopGrades"} },
+			{ {"SortBy", "TopScores"} },
 			-- these sort methods are not supported by OutFox
 			{ {"SortBy", "Meter"}, not IsOutFox() },
 			{ {"SortBy", "TopP1Grades"}, PROFILEMAN:IsPersistentProfile(PLAYER_1) and not IsOutFox() },

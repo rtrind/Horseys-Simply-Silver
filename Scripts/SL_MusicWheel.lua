@@ -690,6 +690,137 @@ function SL.MusicWheel.BuildWheelData_MachineMostPlayed()
 	return items
 end
 
+-- Build list of wheel items for Top Scores sort (grouped by Grade)
+-- Considers high scores from all enabled players
+-- Uses the highest grade achieved across ALL difficulties for each song
+function SL.MusicWheel.BuildWheelData_TopScores()
+	local items = {}
+	local songs = GetAllSongs()
+	local steps_type = GAMESTATE:GetCurrentStyle():GetStepsType()
+	
+	-- Map grades to Simply Love display names and sort order
+	-- Groups S+/S/S- into S, etc.
+	local grade_map = {
+		["Grade_Tier01"] = {label = "★★★★", order = 1},
+		["Grade_Tier02"] = {label = "★★★", order = 2},
+		["Grade_Tier03"] = {label = "★★", order = 3},
+		["Grade_Tier04"] = {label = "★", order = 4},
+		["Grade_Tier05"] = {label = "S", order = 5},
+		["Grade_Tier06"] = {label = "S", order = 5},
+		["Grade_Tier07"] = {label = "S", order = 5},
+		["Grade_Tier08"] = {label = "A", order = 6},
+		["Grade_Tier09"] = {label = "A", order = 6},
+		["Grade_Tier10"] = {label = "A", order = 6},
+		["Grade_Tier11"] = {label = "B", order = 7},
+		["Grade_Tier12"] = {label = "B", order = 7},
+		["Grade_Tier13"] = {label = "B", order = 7},
+		["Grade_Tier14"] = {label = "C", order = 8},
+		["Grade_Tier15"] = {label = "C", order = 8},
+		["Grade_Tier16"] = {label = "C", order = 8},
+		["Grade_Tier17"] = {label = "D", order = 9},
+		["Grade_Tier18"] = {label = "D", order = 9},
+		["Grade_Tier19"] = {label = "D", order = 9},
+		["Grade_Tier20"] = {label = "D", order = 9},
+		["Grade_Failed"] = {label = "F", order = 10}
+	}
+	
+	local groups = {} -- Key = label, Value = {order=int, songs={}}
+	local unplayed_songs = {}
+	
+	for _, song in ipairs(songs) do
+		local best_grade_order = 999
+		local best_grade_info = nil
+		
+		-- Check all enabled players
+		for pn in ivalues(GAMESTATE:GetEnabledPlayers()) do
+			local profile = PROFILEMAN:GetProfile(pn)
+			if profile then
+				-- Check scores for current steps type (all difficulties)
+				-- We take the BEST grade across all difficulties for this song
+				local all_steps = song:GetStepsByStepsType(steps_type)
+				for _, steps in ipairs(all_steps) do
+					local score_list = profile:GetHighScoreListIfExists(song, steps)
+					if score_list then
+						local scores = score_list:GetHighScores()
+						for _, score in ipairs(scores) do
+							local grade = score:GetGrade()
+							local info = grade_map[tostring(grade)]
+							if info then
+								if info.order < best_grade_order then
+									best_grade_order = info.order
+									best_grade_info = info
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+		
+		if best_grade_info then
+			local label = best_grade_info.label
+			if not groups[label] then
+				groups[label] = {order = best_grade_info.order, songs = {}}
+			end
+			table.insert(groups[label].songs, song)
+		else
+			-- No scores found for this song
+			table.insert(unplayed_songs, song)
+		end
+	end
+	
+	-- Add Unplayed group if needed
+	if #unplayed_songs > 0 then
+		groups["Unplayed"] = {order = 11, songs = unplayed_songs}
+	end
+	
+	-- Sort groups by order
+	local sorted_labels = {}
+	for label, data in pairs(groups) do
+		table.insert(sorted_labels, {label=label, order=data.order})
+	end
+	table.sort(sorted_labels, function(a, b) return a.order < b.order end)
+	
+	-- Build items
+	local group_index = 0
+	for _, group_info in ipairs(sorted_labels) do
+		group_index = group_index + 1
+		local label = group_info.label
+		local songs_in_group = groups[label].songs
+		
+		-- Sort songs alphabetically
+		table.sort(songs_in_group, function(a, b)
+			return a:GetDisplayMainTitle():lower() < b:GetDisplayMainTitle():lower()
+		end)
+		
+		local is_open = SL.MusicWheel.State.open_groups[label] or false
+		
+		-- Add group header
+		table.insert(items, {
+			type = "group_header",
+			group_name = label,
+			song_count = #songs_in_group,
+			is_open = is_open,
+			group_index = group_index
+		})
+		
+		-- Add songs if group is open
+		if is_open then
+			for _, song in ipairs(songs_in_group) do
+				table.insert(items, {
+					type = "song",
+					song = song,
+					group = label,
+					is_favorite = false,
+					favorited_by = {}
+				})
+			end
+		end
+	end
+	
+	return items
+end
+
 -- Main entry point: Build wheel data based on current sort order
 function SL.MusicWheel.BuildWheelData(sort_order)
 	sort_order = sort_order or SL.MusicWheel.State.sort_order
@@ -725,6 +856,10 @@ function SL.MusicWheel.BuildWheelData(sort_order)
 	elseif sort_order == "MachineMostPlayed" then
 		items = SL.MusicWheel.BuildWheelData_MachineMostPlayed()
 		SL.MusicWheel.State.sort_order = "MachineMostPlayed"
+		
+	elseif sort_order == "TopScores" then
+		items = SL.MusicWheel.BuildWheelData_TopScores()
+		SL.MusicWheel.State.sort_order = "TopScores"
 		
 	else
 		-- Default to Group sort for unsupported sorts
