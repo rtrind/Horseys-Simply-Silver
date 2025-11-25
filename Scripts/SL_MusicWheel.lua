@@ -189,8 +189,7 @@ function SL.MusicWheel.BuildWheelData_Group()
 	return items
 end
 
--- Build flat list of wheel items for Title sort (alphabetical)
--- Phase 1: Simple flat list of all songs
+-- Build list of wheel items for Title sort (alphabetical with letter headers)
 function SL.MusicWheel.BuildWheelData_Title()
 	local items = {}
 	local songs = GetAllSongs()
@@ -200,15 +199,64 @@ function SL.MusicWheel.BuildWheelData_Title()
 		return a:GetDisplayMainTitle():lower() < b:GetDisplayMainTitle():lower()
 	end)
 	
-	-- Add all songs as items
+	-- Group songs by first letter
+	local current_letter = nil
+	local letter_index = 0
+	
 	for _, song in ipairs(songs) do
-		table.insert(items, {
-			type = "song",
-			song = song,
-			group = song:GetGroupName(),
-			is_favorite = false,
-			favorited_by = {}
-		})
+		local title = song:GetDisplayMainTitle()
+		local first_char = title:sub(1, 1):upper()
+		
+		-- If first character is not a letter, group under "#"
+		if not first_char:match("[A-Z]") then
+			first_char = "#"
+		end
+		
+		-- Add letter header if we're starting a new letter group
+		if first_char ~= current_letter then
+			current_letter = first_char
+			letter_index = letter_index + 1
+			
+			-- Count songs in this letter group
+			local song_count = 0
+			for _, s in ipairs(songs) do
+				local s_title = s:GetDisplayMainTitle()
+				local s_char = s_title:sub(1, 1):upper()
+				if not s_char:match("[A-Z]") then s_char = "#" end
+				if s_char == current_letter then
+					song_count = song_count + 1
+				end
+			end
+			
+			local is_open = SL.MusicWheel.State.open_groups[current_letter] or false
+			
+			table.insert(items, {
+				type = "group_header",
+				group_name = current_letter,
+				song_count = song_count,
+				is_open = is_open,
+				group_index = letter_index
+			})
+			
+			-- Only add songs if this letter group is open
+			if is_open then
+				for _, s in ipairs(songs) do
+					local s_title = s:GetDisplayMainTitle()
+					local s_char = s_title:sub(1, 1):upper()
+					if not s_char:match("[A-Z]") then s_char = "#" end
+					
+					if s_char == current_letter then
+						table.insert(items, {
+							type = "song",
+							song = s,
+							group = current_letter,
+							is_favorite = false,
+							favorited_by = {}
+						})
+					end
+				end
+			end
+		end
 	end
 	
 	return items
@@ -221,10 +269,16 @@ function SL.MusicWheel.BuildWheelData(sort_order)
 	local items = {}
 	
 	-- Phase 1: Only support Group and Title sorts
-	if sort_order == "SortOrder_Group" then
+	-- Accept both engine enums (SortOrder_*) and SortMenu friendly names (Group, Title)
+	if sort_order == "SortOrder_Group" or sort_order == "Group" then
 		items = SL.MusicWheel.BuildWheelData_Group()
-	elseif sort_order == "SortOrder_Title" then
+		-- Ensure stored state matches the friendly name used by SortMenu if possible, or standard enum
+		if sort_order == "Group" then SL.MusicWheel.State.sort_order = "SortOrder_Group" end
+		
+	elseif sort_order == "SortOrder_Title" or sort_order == "Title" then
 		items = SL.MusicWheel.BuildWheelData_Title()
+		if sort_order == "Title" then SL.MusicWheel.State.sort_order = "SortOrder_Title" end
+		
 	else
 		-- Default to Group sort for unsupported sorts
 		items = SL.MusicWheel.BuildWheelData_Group()
