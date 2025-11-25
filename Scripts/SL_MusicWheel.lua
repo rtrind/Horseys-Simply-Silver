@@ -502,13 +502,111 @@ function SL.MusicWheel.BuildWheelData_BPM()
 	return items
 end
 
+-- Build list of wheel items for Length sort (grouped by song duration ranges)
+function SL.MusicWheel.BuildWheelData_Length()
+	local items = {}
+	local songs = GetAllSongs()
+	
+	-- Define length ranges (in seconds)
+	local length_ranges = {}
+	
+	-- <3 minutes: groups of 30 seconds (0:01-0:30, 0:31-1:00, etc.)
+	for i = 1, 151, 30 do
+		local min_sec = i
+		local max_sec = i + 29
+		local label = string.format("%d:%02d-%d:%02d", 
+			math.floor(min_sec / 60), min_sec % 60,
+			math.floor(max_sec / 60), max_sec % 60)
+		table.insert(length_ranges, {min = min_sec, max = max_sec, label = label})
+	end
+	
+	-- 3-10 minutes: groups of 1 minute
+	for i = 181, 541, 60 do
+		local min_sec = i
+		local max_sec = i + 59
+		local label = string.format("%d:%02d-%d:%02d", 
+			math.floor(min_sec / 60), min_sec % 60,
+			math.floor(max_sec / 60), max_sec % 60)
+		table.insert(length_ranges, {min = min_sec, max = max_sec, label = label})
+	end
+	
+	-- 10-20 minutes: groups of 5 minutes
+	for i = 601, 1141, 300 do
+		local min_sec = i
+		local max_sec = i + 299
+		local label = string.format("%d:%02d-%d:%02d", 
+			math.floor(min_sec / 60), min_sec % 60,
+			math.floor(max_sec / 60), max_sec % 60)
+		table.insert(length_ranges, {min = min_sec, max = max_sec, label = label})
+	end
+	
+	-- 20+ minutes
+	table.insert(length_ranges, {min = 1201, max = math.huge, label = "20:01+"})
+	
+	-- Group songs by length range
+	local range_index = 0
+	for _, range in ipairs(length_ranges) do
+		local songs_in_range = {}
+		
+		-- Find all songs in this length range
+		for _, song in ipairs(songs) do
+			local length = song:GetLastSecond()
+			
+			if length >= range.min and length <= range.max then
+				table.insert(songs_in_range, song)
+			end
+		end
+		
+		-- Only add this range if it has songs
+		if #songs_in_range > 0 then
+			range_index = range_index + 1
+			
+			-- Sort songs within this range by length, then by title
+			table.sort(songs_in_range, function(a, b)
+				local length_a = a:GetLastSecond()
+				local length_b = b:GetLastSecond()
+				if length_a == length_b then
+					return a:GetDisplayMainTitle():lower() < b:GetDisplayMainTitle():lower()
+				end
+				return length_a < length_b
+			end)
+			
+			local is_open = SL.MusicWheel.State.open_groups[range.label] or false
+			
+			-- Add range header
+			table.insert(items, {
+				type = "group_header",
+				group_name = range.label,
+				song_count = #songs_in_range,
+				is_open = is_open,
+				group_index = range_index
+			})
+			
+			-- Only add songs if this range is open
+			if is_open then
+				for _, song in ipairs(songs_in_range) do
+					table.insert(items, {
+						type = "song",
+						song = song,
+						group = range.label,
+						is_favorite = false,
+						favorited_by = {}
+					})
+				end
+			end
+		end
+	end
+	
+	return items
+end
+
 -- Main entry point: Build wheel data based on current sort order
 function SL.MusicWheel.BuildWheelData(sort_order)
 	sort_order = sort_order or SL.MusicWheel.State.sort_order
 	
 	local items = {}
 	
-	-- Accept both engine enums (SortOrder_*) and SortMenu friendly names (Group, Title, Artist, BPM)
+	-- Accept both engine enums (SortOrder_*) and SortMenu friendly names (Group, Title, Artist, BPM, Length)
 	if sort_order == "SortOrder_Group" or sort_order == "Group" then
 		items = SL.MusicWheel.BuildWheelData_Group()
 		-- Ensure stored state matches the friendly name used by SortMenu if possible, or standard enum
@@ -525,6 +623,10 @@ function SL.MusicWheel.BuildWheelData(sort_order)
 	elseif sort_order == "SortOrder_BPM" or sort_order == "BPM" then
 		items = SL.MusicWheel.BuildWheelData_BPM()
 		if sort_order == "BPM" then SL.MusicWheel.State.sort_order = "SortOrder_BPM" end
+		
+	elseif sort_order == "SortOrder_Length" or sort_order == "Length" then
+		items = SL.MusicWheel.BuildWheelData_Length()
+		if sort_order == "Length" then SL.MusicWheel.State.sort_order = "SortOrder_Length" end
 		
 	else
 		-- Default to Group sort for unsupported sorts
