@@ -134,21 +134,21 @@ local function input(event)
 	-- Handle FirstPress for Start button (toggle group)
 	if event.type == "InputEventType_FirstPress" then
 		-- Check for MenuUp+MenuDown chord to close/open folder
+		-- Only trigger if the current button is MenuUp or MenuDown AND both are now held
 		if (button == "MenuUp" or button == "MenuDown") and 
 		   heldButtons[pn]["MenuUp"] and heldButtons[pn]["MenuDown"] then
-			-- Both MenuUp and MenuDown pressed - toggle group
-			if SL.MusicWheel.ToggleGroup() then
+			-- Both MenuUp and MenuDown pressed - toggle group (allow from song)
+			if SL.MusicWheel.ToggleGroup(true) then
 				-- Group was toggled, update wheel display
 				wheel:set_info_set(SL.MusicWheel.State.items, SL.MusicWheel.State.focus_index)
-				return true
 			end
-			-- If not on group header or song in group, do nothing
-			return true  -- Consume the input either way
+			-- Consume the input to prevent scrolling
+			return true
 		end
 		
 		if event.GameButton == "Start" then
-			-- Try to toggle group (only works if on group header)
-			if SL.MusicWheel.ToggleGroup() then
+			-- Try to toggle group (only works if on group header, not from song)
+			if SL.MusicWheel.ToggleGroup(false) then
 				-- Group was toggled, update wheel display
 				wheel:set_info_set(SL.MusicWheel.State.items, SL.MusicWheel.State.focus_index)
 				return true

@@ -554,7 +554,11 @@ end
 -- ============================================================================
 
 -- Toggle a group open/closed
-function SL.MusicWheel.ToggleGroup()
+-- allow_from_song: if true, allows closing group when focused on a song (for MenuUp+MenuDown)
+--                  if false, only works when focused on group header (for Start key)
+function SL.MusicWheel.ToggleGroup(allow_from_song)
+	if allow_from_song == nil then allow_from_song = false end
+	
 	local state = SL.MusicWheel.State
 	local focused_item = state.items[state.focus_index]
 	
@@ -568,11 +572,11 @@ function SL.MusicWheel.ToggleGroup()
 	if focused_item.type == "group_header" then
 		-- Focused on group header - toggle this group
 		group_name = focused_item.group_name
-	elseif focused_item.type == "song" and focused_item.group then
-		-- Focused on a song - close its parent group
+	elseif allow_from_song and focused_item.type == "song" and focused_item.group then
+		-- Focused on a song - close its parent group (only if allow_from_song is true)
 		group_name = focused_item.group
 	else
-		-- Not on a group or song in a group
+		-- Not on a group or song in a group, or not allowed from song
 		return false
 	end
 	
