@@ -354,13 +354,161 @@ function SL.MusicWheel.BuildWheelData_Artist()
 	return items
 end
 
+-- Helper function: Get the most representative BPM for a song
+local function GetRepresentativeBPM(song)
+	local bpms = song:GetDisplayBpms()
+	local max_display_bpm = bpms[1]
+	-- Find max display BPM as a safe fallback
+	for _, bpm in ipairs(bpms) do
+		if bpm > max_display_bpm then max_display_bpm = bpm end
+	end
+	
+	-- If only one BPM, use it
+	if #bpms == 1 then return bpms[1] end
+	
+	-- Try to get timing data
+	local timing_data = song:GetTimingData()
+	if timing_data then
+		-- GetBPMsAndTimes(true) returns a list of {beat, bpm} tables
+		local bpm_segments = timing_data:GetBPMsAndTimes(true)
+		
+		if bpm_segments and #bpm_segments > 0 and type(bpm_segments[1]) == "table" then
+			local bpm_durations = {}
+			local total_duration = 0
+			local max_found_bpm = 0
+			local last_beat = song:GetLastBeat()
+			
+			for i = 1, #bpm_segments do
+				local segment = bpm_segments[i]
+				local start_beat = segment[1]
+				local bpm = segment[2]
+				
+				if bpm > max_found_bpm then max_found_bpm = bpm end
+				
+				-- Determine end beat of this segment
+				local end_beat
+				if i < #bpm_segments then
+					end_beat = bpm_segments[i+1][1]
+				else
+					end_beat = last_beat
+				end
+				
+				-- Calculate duration in seconds
+				local start_time = timing_data:GetElapsedTimeFromBeat(start_beat)
+				local end_time = timing_data:GetElapsedTimeFromBeat(end_beat)
+				local duration = end_time - start_time
+				
+				if duration > 0 then
+					bpm_durations[bpm] = (bpm_durations[bpm] or 0) + duration
+					total_duration = total_duration + duration
+				end
+			end
+			
+			-- Rule 1: If a BPM is used for >50% of the song, use it
+			if total_duration > 0 then
+				for bpm, duration in pairs(bpm_durations) do
+					if duration > (total_duration * 0.5) then
+						return bpm
+					end
+				end
+			end
+			
+			-- Rule 2: Otherwise, use the highest BPM found
+			if max_found_bpm > 0 then
+				return max_found_bpm
+			end
+		end
+	end
+	
+	-- Final Fallback: use the highest display BPM
+	return max_display_bpm
+end
+
+-- Build list of wheel items for BPM sort (grouped by BPM ranges)
+function SL.MusicWheel.BuildWheelData_BPM()
+	local items = {}
+	local songs = GetAllSongs()
+	
+	-- Define BPM ranges
+	local bpm_ranges = {}
+	
+	-- 1-300 in groups of 20
+	for i = 1, 281, 20 do
+		table.insert(bpm_ranges, {min = i, max = i + 19, label = i .. "-" .. (i + 19)})
+	end
+	
+	-- 301-1000 in groups of 100
+	for i = 301, 901, 100 do
+		table.insert(bpm_ranges, {min = i, max = i + 99, label = i .. "-" .. (i + 99)})
+	end
+	
+	-- 1000+
+	table.insert(bpm_ranges, {min = 1000, max = math.huge, label = "1000+"})
+	
+	-- Group songs by BPM range
+	local range_index = 0
+	for _, range in ipairs(bpm_ranges) do
+		local songs_in_range = {}
+		
+		-- Find all songs in this BPM range
+		for _, song in ipairs(songs) do
+			local bpm = GetRepresentativeBPM(song)
+			
+			if bpm >= range.min and bpm <= range.max then
+				table.insert(songs_in_range, song)
+			end
+		end
+		
+		-- Only add this range if it has songs
+		if #songs_in_range > 0 then
+			range_index = range_index + 1
+			
+			-- Sort songs within this range by BPM, then by title
+			table.sort(songs_in_range, function(a, b)
+				local bpm_a = GetRepresentativeBPM(a)
+				local bpm_b = GetRepresentativeBPM(b)
+				if bpm_a == bpm_b then
+					return a:GetDisplayMainTitle():lower() < b:GetDisplayMainTitle():lower()
+				end
+				return bpm_a < bpm_b
+			end)
+			
+			local is_open = SL.MusicWheel.State.open_groups[range.label] or false
+			
+			-- Add range header
+			table.insert(items, {
+				type = "group_header",
+				group_name = range.label,
+				song_count = #songs_in_range,
+				is_open = is_open,
+				group_index = range_index
+			})
+			
+			-- Only add songs if this range is open
+			if is_open then
+				for _, song in ipairs(songs_in_range) do
+					table.insert(items, {
+						type = "song",
+						song = song,
+						group = range.label,
+						is_favorite = false,
+						favorited_by = {}
+					})
+				end
+			end
+		end
+	end
+	
+	return items
+end
+
 -- Main entry point: Build wheel data based on current sort order
 function SL.MusicWheel.BuildWheelData(sort_order)
 	sort_order = sort_order or SL.MusicWheel.State.sort_order
 	
 	local items = {}
 	
-	-- Accept both engine enums (SortOrder_*) and SortMenu friendly names (Group, Title, Artist)
+	-- Accept both engine enums (SortOrder_*) and SortMenu friendly names (Group, Title, Artist, BPM)
 	if sort_order == "SortOrder_Group" or sort_order == "Group" then
 		items = SL.MusicWheel.BuildWheelData_Group()
 		-- Ensure stored state matches the friendly name used by SortMenu if possible, or standard enum
@@ -373,6 +521,10 @@ function SL.MusicWheel.BuildWheelData(sort_order)
 	elseif sort_order == "SortOrder_Artist" or sort_order == "Artist" then
 		items = SL.MusicWheel.BuildWheelData_Artist()
 		if sort_order == "Artist" then SL.MusicWheel.State.sort_order = "SortOrder_Artist" end
+		
+	elseif sort_order == "SortOrder_BPM" or sort_order == "BPM" then
+		items = SL.MusicWheel.BuildWheelData_BPM()
+		if sort_order == "BPM" then SL.MusicWheel.State.sort_order = "SortOrder_BPM" end
 		
 	else
 		-- Default to Group sort for unsupported sorts
