@@ -189,30 +189,36 @@ function SL.MusicWheel.BuildWheelData_Group()
 	return items
 end
 
+-- Helper function: Sort songs alphabetically with non-letters forced to the top
+-- field_getter: function that takes a song and returns the string to sort by
+local function SortSongsAlphabetically(songs, field_getter)
+	table.sort(songs, function(a, b)
+		local text_a = field_getter(a):lower()
+		local text_b = field_getter(b):lower()
+		
+		local char_a = text_a:sub(1, 1):upper()
+		local char_b = text_b:sub(1, 1):upper()
+		
+		local is_letter_a = char_a:match("[A-Z]")
+		local is_letter_b = char_b:match("[A-Z]")
+		
+		-- If both are letters or both are non-letters, sort normally
+		if (is_letter_a and is_letter_b) or (not is_letter_a and not is_letter_b) then
+			return text_a < text_b
+		end
+		
+		-- If one is a letter and the other isn't, put the non-letter first
+		return not is_letter_a
+	end)
+end
+
 -- Build list of wheel items for Title sort (alphabetical with letter headers)
 function SL.MusicWheel.BuildWheelData_Title()
 	local items = {}
 	local songs = GetAllSongs()
 	
 	-- Sort songs alphabetically by title, but force all non-letters to the top
-	table.sort(songs, function(a, b)
-		local title_a = a:GetDisplayMainTitle():lower()
-		local title_b = b:GetDisplayMainTitle():lower()
-		
-		local char_a = title_a:sub(1, 1):upper()
-		local char_b = title_b:sub(1, 1):upper()
-		
-		local is_letter_a = char_a:match("[A-Z]")
-		local is_letter_b = char_b:match("[A-Z]")
-		
-		-- If both are letters or both are non-letters, sort normally by title
-		if (is_letter_a and is_letter_b) or (not is_letter_a and not is_letter_b) then
-			return title_a < title_b
-		end
-		
-		-- If one is a letter and the other isn't, put the non-letter first
-		return not is_letter_a
-	end)
+	SortSongsAlphabetically(songs, function(song) return song:GetDisplayMainTitle() end)
 	
 	-- Group songs by first letter
 	local current_letter = nil
@@ -277,14 +283,84 @@ function SL.MusicWheel.BuildWheelData_Title()
 	return items
 end
 
+-- Build list of wheel items for Artist sort (alphabetical with letter headers)
+function SL.MusicWheel.BuildWheelData_Artist()
+	local items = {}
+	local songs = GetAllSongs()
+	
+	-- Sort songs alphabetically by artist, but force all non-letters to the top
+	SortSongsAlphabetically(songs, function(song) return song:GetDisplayArtist() end)
+	
+	-- Group songs by first letter of artist
+	local current_letter = nil
+	local letter_index = 0
+	
+	for _, song in ipairs(songs) do
+		local artist = song:GetDisplayArtist()
+		local first_char = artist:sub(1, 1):upper()
+		
+		-- If first character is not a letter, group under "#"
+		if not first_char:match("[A-Z]") then
+			first_char = "#"
+		end
+		
+		-- Add letter header if we're starting a new letter group
+		if first_char ~= current_letter then
+			current_letter = first_char
+			letter_index = letter_index + 1
+			
+			-- Count songs in this letter group
+			local song_count = 0
+			for _, s in ipairs(songs) do
+				local s_artist = s:GetDisplayArtist()
+				local s_char = s_artist:sub(1, 1):upper()
+				if not s_char:match("[A-Z]") then s_char = "#" end
+				if s_char == current_letter then
+					song_count = song_count + 1
+				end
+			end
+			
+			local is_open = SL.MusicWheel.State.open_groups[current_letter] or false
+			
+			table.insert(items, {
+				type = "group_header",
+				group_name = current_letter,
+				song_count = song_count,
+				is_open = is_open,
+				group_index = letter_index
+			})
+			
+			-- Only add songs if this letter group is open
+			if is_open then
+				for _, s in ipairs(songs) do
+					local s_artist = s:GetDisplayArtist()
+					local s_char = s_artist:sub(1, 1):upper()
+					if not s_char:match("[A-Z]") then s_char = "#" end
+					
+					if s_char == current_letter then
+						table.insert(items, {
+							type = "song",
+							song = s,
+							group = current_letter,
+							is_favorite = false,
+							favorited_by = {}
+						})
+					end
+				end
+			end
+		end
+	end
+	
+	return items
+end
+
 -- Main entry point: Build wheel data based on current sort order
 function SL.MusicWheel.BuildWheelData(sort_order)
 	sort_order = sort_order or SL.MusicWheel.State.sort_order
 	
 	local items = {}
 	
-	-- Phase 1: Only support Group and Title sorts
-	-- Accept both engine enums (SortOrder_*) and SortMenu friendly names (Group, Title)
+	-- Accept both engine enums (SortOrder_*) and SortMenu friendly names (Group, Title, Artist)
 	if sort_order == "SortOrder_Group" or sort_order == "Group" then
 		items = SL.MusicWheel.BuildWheelData_Group()
 		-- Ensure stored state matches the friendly name used by SortMenu if possible, or standard enum
@@ -293,6 +369,10 @@ function SL.MusicWheel.BuildWheelData(sort_order)
 	elseif sort_order == "SortOrder_Title" or sort_order == "Title" then
 		items = SL.MusicWheel.BuildWheelData_Title()
 		if sort_order == "Title" then SL.MusicWheel.State.sort_order = "SortOrder_Title" end
+		
+	elseif sort_order == "SortOrder_Artist" or sort_order == "Artist" then
+		items = SL.MusicWheel.BuildWheelData_Artist()
+		if sort_order == "Artist" then SL.MusicWheel.State.sort_order = "SortOrder_Artist" end
 		
 	else
 		-- Default to Group sort for unsupported sorts
