@@ -558,12 +558,23 @@ function SL.MusicWheel.ToggleGroup()
 	local state = SL.MusicWheel.State
 	local focused_item = state.items[state.focus_index]
 	
-	-- Only toggle if focused on a group header
-	if not focused_item or focused_item.type ~= "group_header" then
+	if not focused_item then
 		return false
 	end
 	
-	local group_name = focused_item.group_name
+	local group_name = nil
+	
+	-- Determine which group to toggle
+	if focused_item.type == "group_header" then
+		-- Focused on group header - toggle this group
+		group_name = focused_item.group_name
+	elseif focused_item.type == "song" and focused_item.group then
+		-- Focused on a song - close its parent group
+		group_name = focused_item.group
+	else
+		-- Not on a group or song in a group
+		return false
+	end
 	
 	-- Toggle the open state
 	if state.open_groups[group_name] then
@@ -575,11 +586,9 @@ function SL.MusicWheel.ToggleGroup()
 	end
 	
 	-- Rebuild wheel data to reflect the change
-	local old_focus_index = state.focus_index
 	state.items = SL.MusicWheel.BuildWheelData(state.sort_order)
 	
-	-- Try to maintain focus on the same group header
-	-- After rebuild, find the group header again
+	-- Always focus on the group header after toggling
 	for i, item in ipairs(state.items) do
 		if item.type == "group_header" and item.group_name == group_name then
 			state.focus_index = i
