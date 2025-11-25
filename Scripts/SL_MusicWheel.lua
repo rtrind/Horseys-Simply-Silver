@@ -194,9 +194,24 @@ function SL.MusicWheel.BuildWheelData_Title()
 	local items = {}
 	local songs = GetAllSongs()
 	
-	-- Sort songs alphabetically by title
+	-- Sort songs alphabetically by title, but force all non-letters to the top
 	table.sort(songs, function(a, b)
-		return a:GetDisplayMainTitle():lower() < b:GetDisplayMainTitle():lower()
+		local title_a = a:GetDisplayMainTitle():lower()
+		local title_b = b:GetDisplayMainTitle():lower()
+		
+		local char_a = title_a:sub(1, 1):upper()
+		local char_b = title_b:sub(1, 1):upper()
+		
+		local is_letter_a = char_a:match("[A-Z]")
+		local is_letter_b = char_b:match("[A-Z]")
+		
+		-- If both are letters or both are non-letters, sort normally by title
+		if (is_letter_a and is_letter_b) or (not is_letter_a and not is_letter_b) then
+			return title_a < title_b
+		end
+		
+		-- If one is a letter and the other isn't, put the non-letter first
+		return not is_letter_a
 	end)
 	
 	-- Group songs by first letter
