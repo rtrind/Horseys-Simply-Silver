@@ -334,7 +334,8 @@ local wheel_options = {
 			{ {"SortBy", "DoubleMediumMeter"}, function() return not isStyleSingle() end },
 			{ {"SortBy", "DoubleHardMeter"}, function() return not isStyleSingle() end },
 			{ {"SortBy", "DoubleChallengeMeter"}, function() return not isStyleSingle() end },
-			{ {"SortBy", "Popularity"} },
+			{ {"SortBy", "MostPlayed"} },
+			{ {"SortBy", "MachineMostPlayed"} },
 			{ {"SortBy", "Recent"} },
 			{ {"SortBy", "TopGrades"} },
 			-- these sort methods are not supported by OutFox

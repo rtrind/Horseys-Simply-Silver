@@ -600,13 +600,103 @@ function SL.MusicWheel.BuildWheelData_Length()
 	return items
 end
 
+-- Build list of wheel items for Most Played sort (flat list, no grouping)
+-- Combines play counts from all enabled players
+function SL.MusicWheel.BuildWheelData_MostPlayed()
+	local items = {}
+	local songs = GetAllSongs()
+	
+	-- Calculate total play count for each song (sum across all enabled players)
+	local song_play_counts = {}
+	for _, song in ipairs(songs) do
+		local total_plays = 0
+		
+		-- Sum play counts from all enabled players
+		for pn in ivalues(GAMESTATE:GetEnabledPlayers()) do
+			local profile = PROFILEMAN:GetProfile(pn)
+			if profile then
+				total_plays = total_plays + profile:GetSongNumTimesPlayed(song)
+			end
+		end
+		
+		song_play_counts[song] = total_plays
+	end
+	
+	-- Sort all songs by play count (descending), then by title
+	table.sort(songs, function(a, b)
+		local count_a = song_play_counts[a]
+		local count_b = song_play_counts[b]
+		if count_a == count_b then
+			return a:GetDisplayMainTitle():lower() < b:GetDisplayMainTitle():lower()
+		end
+		return count_a > count_b  -- Descending order (most played first)
+	end)
+	
+	-- Add all songs as flat list
+	for _, song in ipairs(songs) do
+		table.insert(items, {
+			type = "song",
+			song = song,
+			group = nil,
+			is_favorite = false,
+			favorited_by = {}
+		})
+	end
+	
+	return items
+end
+
+-- Build list of wheel items for Machine Most Played sort (flat list, no grouping)
+-- Uses machine profile play counts only
+function SL.MusicWheel.BuildWheelData_MachineMostPlayed()
+	local items = {}
+	local songs = GetAllSongs()
+	
+	-- Calculate machine play count for each song
+	local song_play_counts = {}
+	local machine_profile = PROFILEMAN:GetMachineProfile()
+	
+	for _, song in ipairs(songs) do
+		local machine_plays = 0
+		
+		if machine_profile then
+			machine_plays = machine_profile:GetSongNumTimesPlayed(song)
+		end
+		
+		song_play_counts[song] = machine_plays
+	end
+	
+	-- Sort all songs by machine play count (descending), then by title
+	table.sort(songs, function(a, b)
+		local count_a = song_play_counts[a]
+		local count_b = song_play_counts[b]
+		if count_a == count_b then
+			return a:GetDisplayMainTitle():lower() < b:GetDisplayMainTitle():lower()
+		end
+		return count_a > count_b  -- Descending order (most played first)
+	end)
+	
+	-- Add all songs as flat list
+	for _, song in ipairs(songs) do
+		table.insert(items, {
+			type = "song",
+			song = song,
+			group = nil,
+			is_favorite = false,
+			favorited_by = {}
+		})
+	end
+	
+	return items
+end
+
 -- Main entry point: Build wheel data based on current sort order
 function SL.MusicWheel.BuildWheelData(sort_order)
 	sort_order = sort_order or SL.MusicWheel.State.sort_order
 	
 	local items = {}
 	
-	-- Accept both engine enums (SortOrder_*) and SortMenu friendly names (Group, Title, Artist, BPM, Length)
+	-- Accept both engine enums (SortOrder_*) and SortMenu friendly names (Group, Title, Artist, BPM, Length, MostPlayed, MachineMostPlayed)
 	if sort_order == "SortOrder_Group" or sort_order == "Group" then
 		items = SL.MusicWheel.BuildWheelData_Group()
 		-- Ensure stored state matches the friendly name used by SortMenu if possible, or standard enum
@@ -627,6 +717,14 @@ function SL.MusicWheel.BuildWheelData(sort_order)
 	elseif sort_order == "SortOrder_Length" or sort_order == "Length" then
 		items = SL.MusicWheel.BuildWheelData_Length()
 		if sort_order == "Length" then SL.MusicWheel.State.sort_order = "SortOrder_Length" end
+		
+	elseif sort_order == "SortOrder_Popularity" or sort_order == "MostPlayed" then
+		items = SL.MusicWheel.BuildWheelData_MostPlayed()
+		if sort_order == "MostPlayed" then SL.MusicWheel.State.sort_order = "SortOrder_Popularity" end
+		
+	elseif sort_order == "MachineMostPlayed" then
+		items = SL.MusicWheel.BuildWheelData_MachineMostPlayed()
+		SL.MusicWheel.State.sort_order = "MachineMostPlayed"
 		
 	else
 		-- Default to Group sort for unsupported sorts
