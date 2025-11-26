@@ -135,6 +135,13 @@ end
 -- Wheel Data Building
 -- ============================================================================
 
+-- Helper function: Check if a song has charts for the current style
+local function HasChartsForCurrentStyle(song)
+	local steps_type = GAMESTATE:GetCurrentStyle():GetStepsType()
+	local steps = song:GetStepsByStepsType(steps_type)
+	return steps and #steps > 0
+end
+
 -- Build flat list of wheel items for Group sort
 -- Phase 2: Supports open/close groups
 function SL.MusicWheel.BuildWheelData_Group()
@@ -150,9 +157,17 @@ function SL.MusicWheel.BuildWheelData_Group()
 	
 	-- Add each group as a header, and songs if open
 	for _, group_name in ipairs(groups) do
-		local songs = GetSongsInGroup(group_name)
+		local all_songs = GetSongsInGroup(group_name)
 		
-		-- Only add groups that have songs
+		-- Filter songs to only include those with charts for current style
+		local songs = {}
+		for _, song in ipairs(all_songs) do
+			if HasChartsForCurrentStyle(song) then
+				table.insert(songs, song)
+			end
+		end
+		
+		-- Only add groups that have compatible songs
 		if #songs > 0 then
 			group_index_counter = group_index_counter + 1
 			local is_open = SL.MusicWheel.State.open_groups[group_name] or false
@@ -215,7 +230,15 @@ end
 -- Build list of wheel items for Title sort (alphabetical with letter headers)
 function SL.MusicWheel.BuildWheelData_Title()
 	local items = {}
-	local songs = GetAllSongs()
+	local all_songs = GetAllSongs()
+	
+	-- Filter songs to only include those with charts for current style
+	local songs = {}
+	for _, song in ipairs(all_songs) do
+		if HasChartsForCurrentStyle(song) then
+			table.insert(songs, song)
+		end
+	end
 	
 	-- Sort songs alphabetically by title, but force all non-letters to the top
 	SortSongsAlphabetically(songs, function(song) return song:GetDisplayMainTitle() end)
@@ -286,7 +309,15 @@ end
 -- Build list of wheel items for Artist sort (alphabetical with letter headers)
 function SL.MusicWheel.BuildWheelData_Artist()
 	local items = {}
-	local songs = GetAllSongs()
+	local all_songs = GetAllSongs()
+	
+	-- Filter songs to only include those with charts for current style
+	local songs = {}
+	for _, song in ipairs(all_songs) do
+		if HasChartsForCurrentStyle(song) then
+			table.insert(songs, song)
+		end
+	end
 	
 	-- Sort songs alphabetically by artist, but force all non-letters to the top
 	SortSongsAlphabetically(songs, function(song) return song:GetDisplayArtist() end)
@@ -427,7 +458,15 @@ end
 -- Build list of wheel items for BPM sort (grouped by BPM ranges)
 function SL.MusicWheel.BuildWheelData_BPM()
 	local items = {}
-	local songs = GetAllSongs()
+	local all_songs = GetAllSongs()
+	
+	-- Filter songs to only include those with charts for current style
+	local songs = {}
+	for _, song in ipairs(all_songs) do
+		if HasChartsForCurrentStyle(song) then
+			table.insert(songs, song)
+		end
+	end
 	
 	-- Define BPM ranges
 	local bpm_ranges = {}
@@ -505,7 +544,15 @@ end
 -- Build list of wheel items for Length sort (grouped by song duration ranges)
 function SL.MusicWheel.BuildWheelData_Length()
 	local items = {}
-	local songs = GetAllSongs()
+	local all_songs = GetAllSongs()
+	
+	-- Filter songs to only include those with charts for current style
+	local songs = {}
+	for _, song in ipairs(all_songs) do
+		if HasChartsForCurrentStyle(song) then
+			table.insert(songs, song)
+		end
+	end
 	
 	-- Define length ranges (in seconds)
 	local length_ranges = {}
@@ -604,7 +651,15 @@ end
 -- Combines play counts from all enabled players
 function SL.MusicWheel.BuildWheelData_MostPlayed()
 	local items = {}
-	local songs = GetAllSongs()
+	local all_songs = GetAllSongs()
+	
+	-- Filter songs to only include those with charts for current style
+	local songs = {}
+	for _, song in ipairs(all_songs) do
+		if HasChartsForCurrentStyle(song) then
+			table.insert(songs, song)
+		end
+	end
 	
 	-- Calculate total play count for each song (sum across all enabled players)
 	local song_play_counts = {}
@@ -650,7 +705,15 @@ end
 -- Uses machine profile play counts only
 function SL.MusicWheel.BuildWheelData_MachineMostPlayed()
 	local items = {}
-	local songs = GetAllSongs()
+	local all_songs = GetAllSongs()
+	
+	-- Filter songs to only include those with charts for current style
+	local songs = {}
+	for _, song in ipairs(all_songs) do
+		if HasChartsForCurrentStyle(song) then
+			table.insert(songs, song)
+		end
+	end
 	
 	-- Calculate machine play count for each song
 	local song_play_counts = {}
@@ -807,8 +870,16 @@ end
 -- Uses the highest grade achieved across ALL difficulties for each song
 function SL.MusicWheel.BuildWheelData_TopScores()
 	local items = {}
-	local songs = GetAllSongs()
+	local all_songs = GetAllSongs()
 	local steps_type = GAMESTATE:GetCurrentStyle():GetStepsType()
+	
+	-- Filter songs to only include those with charts for current style
+	local songs = {}
+	for _, song in ipairs(all_songs) do
+		if HasChartsForCurrentStyle(song) then
+			table.insert(songs, song)
+		end
+	end
 	
 	-- Map grades to Simply Love display names and sort order
 	-- Groups S+/S/S- into S, etc.
