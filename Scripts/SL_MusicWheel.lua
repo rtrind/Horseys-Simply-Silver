@@ -692,6 +692,7 @@ end
 
 -- Get Peak NPS for a given Steps object using the engine's native method
 -- This is much faster than parsing note data manually
+-- FIXME: It's still not perfect
 local function GetPeakNPS(steps)
 	if not steps then return 0 end
 	
@@ -1151,9 +1152,11 @@ function SL.MusicWheel.Initialize()
 		for pn in ivalues(GAMESTATE:GetHumanPlayers()) do
 			local steps = GAMESTATE:GetCurrentSteps(pn)
 			if not steps then
-				local all_steps = first_song:GetAllSteps()
-				if all_steps and #all_steps > 0 then
-					GAMESTATE:SetCurrentSteps(pn, all_steps[1])
+				-- Get steps for current style (Single/Double/etc.)
+				local steps_type = GAMESTATE:GetCurrentStyle():GetStepsType()
+				local compatible_steps = first_song:GetStepsByStepsType(steps_type)
+				if compatible_steps and #compatible_steps > 0 then
+					GAMESTATE:SetCurrentSteps(pn, compatible_steps[1])
 				end
 			end
 		end
