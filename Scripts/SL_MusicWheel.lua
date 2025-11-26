@@ -697,7 +697,22 @@ local function GetPeakNPS(steps)
 	
 	-- Use native GetPeakNPS if available (OutFox)
 	if steps.GetPeakNPS then
-		return steps:GetPeakNPS()
+		local nps = steps:GetPeakNPS()
+		-- If native GetPeakNPS returns a valid value, use it
+		if nps and nps > 0 then return nps end
+	end
+	
+	-- Fallback: Use GetNPSGraph which returns a table of density values
+	-- We just need the maximum value from this graph
+	if steps.GetNPSGraph then
+		local graph = steps:GetNPSGraph()
+		if graph and #graph > 0 then
+			local max_nps = 0
+			for _, val in ipairs(graph) do
+				if val > max_nps then max_nps = val end
+			end
+			return max_nps
+		end
 	end
 	
 	return 0
@@ -747,12 +762,12 @@ function SL.MusicWheel.BuildWheelData_Difficulty()
 		group_index = group_index + 1
 		local charts = charts_by_meter[meter]
 		
-		-- Sort charts by Peak NPS (descending), then by song title
+		-- Sort charts by Peak NPS (ascending: Easy -> Hard), then by song title
 		table.sort(charts, function(a, b)
 			if math.abs(a.peak_nps - b.peak_nps) < 0.01 then
 				return a.song:GetDisplayMainTitle():lower() < b.song:GetDisplayMainTitle():lower()
 			end
-			return a.peak_nps > b.peak_nps
+			return a.peak_nps < b.peak_nps
 		end)
 		
 		local group_label = tostring(meter)
