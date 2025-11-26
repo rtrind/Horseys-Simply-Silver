@@ -690,6 +690,102 @@ function SL.MusicWheel.BuildWheelData_MachineMostPlayed()
 	return items
 end
 
+-- Get Peak NPS for a given Steps object using the engine's native method
+-- This is much faster than parsing note data manually
+local function GetPeakNPS(steps)
+	if not steps then return 0 end
+	
+	-- Use native GetPeakNPS if available (OutFox)
+	if steps.GetPeakNPS then
+		return steps:GetPeakNPS()
+	end
+	
+	return 0
+end
+
+-- Build list of wheel items for Difficulty sort (grouped by numerical meter)
+-- Shows ALL charts from ALL songs, grouped by their meter value
+-- Sorted by Peak NPS within each group
+function SL.MusicWheel.BuildWheelData_Difficulty()
+	local items = {}
+	local songs = GetAllSongs()
+	local steps_type = GAMESTATE:GetCurrentStyle():GetStepsType()
+	
+	-- Collect all charts with their meter and peak NPS
+	local charts_by_meter = {} -- Key = meter value, Value = array of {song, steps, peak_nps}
+	
+	for _, song in ipairs(songs) do
+		local all_steps = song:GetStepsByStepsType(steps_type)
+		for _, steps in ipairs(all_steps) do
+			local meter = steps:GetMeter()
+			
+			if not charts_by_meter[meter] then
+				charts_by_meter[meter] = {}
+			end
+			
+			-- Calculate and cache Peak NPS for this chart
+			local peak_nps = GetPeakNPS(steps)
+			
+			table.insert(charts_by_meter[meter], {
+				song = song,
+				steps = steps,
+				peak_nps = peak_nps
+			})
+		end
+	end
+	
+	-- Sort meters numerically
+	local sorted_meters = {}
+	for meter, _ in pairs(charts_by_meter) do
+		table.insert(sorted_meters, meter)
+	end
+	table.sort(sorted_meters, function(a, b) return a < b end)
+	
+	-- Build wheel items
+	local group_index = 0
+	for _, meter in ipairs(sorted_meters) do
+		group_index = group_index + 1
+		local charts = charts_by_meter[meter]
+		
+		-- Sort charts by Peak NPS (descending), then by song title
+		table.sort(charts, function(a, b)
+			if math.abs(a.peak_nps - b.peak_nps) < 0.01 then
+				return a.song:GetDisplayMainTitle():lower() < b.song:GetDisplayMainTitle():lower()
+			end
+			return a.peak_nps > b.peak_nps
+		end)
+		
+		local group_label = tostring(meter)
+		local is_open = SL.MusicWheel.State.open_groups[group_label] or false
+		
+		-- Add group header
+		table.insert(items, {
+			type = "group_header",
+			group_name = group_label,
+			song_count = #charts,
+			is_open = is_open,
+			group_index = group_index
+		})
+		
+		-- Add charts if group is open
+		if is_open then
+			for _, chart_data in ipairs(charts) do
+				table.insert(items, {
+					type = "song",
+					song = chart_data.song,
+					steps = chart_data.steps, -- Include steps so we can set them when selected
+					group = group_label,
+					is_favorite = false,
+					favorited_by = {},
+					peak_nps = chart_data.peak_nps -- Cache for display
+				})
+			end
+		end
+	end
+	
+	return items
+end
+
 -- Build list of wheel items for Top Scores sort (grouped by Grade)
 -- Considers high scores from all enabled players
 -- Uses the highest grade achieved across ALL difficulties for each song
@@ -860,6 +956,10 @@ function SL.MusicWheel.BuildWheelData(sort_order)
 	elseif sort_order == "TopScores" then
 		items = SL.MusicWheel.BuildWheelData_TopScores()
 		SL.MusicWheel.State.sort_order = "TopScores"
+		
+	elseif sort_order == "SortOrder_ModeMenu" or sort_order == "Difficulty" then
+		items = SL.MusicWheel.BuildWheelData_Difficulty()
+		if sort_order == "Difficulty" then SL.MusicWheel.State.sort_order = "SortOrder_ModeMenu" end
 		
 	else
 		-- Default to Group sort for unsupported sorts
