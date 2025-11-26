@@ -13,8 +13,23 @@ play_sample_music = function()
 		local sample_len = song:GetSampleLength()
 
 		if songpath and sample_start and sample_len then
+			-- Handle looping preference
+			local loop = true
+			if ThemePrefs.Get("SampleMusicLoops") == false then
+				loop = false
+			end
+
 			SOUND:DimMusic(PREFSMAN:GetPreference("SoundVolume"), math.huge)
-			SOUND:PlayMusicPart(songpath, sample_start,sample_len, 0.5, 1.5, true, true)
+			SOUND:PlayMusicPart(songpath, sample_start,sample_len, 0.5, 1.5, loop, true)
+			
+			-- Update Global State for NoteField sync
+			if SL.Global.SampleMusic then
+				SL.Global.SampleMusic.StartTime = GetTimeSinceStart()
+				SL.Global.SampleMusic.StartOffset = sample_start
+				SL.Global.SampleMusic.Length = sample_len
+				SL.Global.SampleMusic.Loop = loop
+				SL.Global.SampleMusic.Playing = true
+			end
 		else
 			stop_music()
 		end
@@ -29,6 +44,11 @@ end
 -- ths is also invoked when the player closes the current group to choose some other group
 stop_music = function()
 	SOUND:PlayMusicPart("", 0, 0)
+	
+	-- Reset Global State
+	if SL.Global.SampleMusic then
+		SL.Global.SampleMusic.Playing = false
+	end
 end
 
 

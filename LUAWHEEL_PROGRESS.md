@@ -19,26 +19,28 @@
 - EscapeFromEventMode code disabled
 - Songs filter by current style (Single/Double)
 
-## Phase 3: Audio Preview & NoteField Sync (🚧 CRITICAL - Not Started)
+## Phase 3: Audio Preview & NoteField Sync ( CRITICAL - COMPLETE)
+
+### Completed Tasks
+- [x] **Audio Preview System** (CRITICAL - Project fails without this)
+  - [x] Play song preview when focused (respect SAMPLESTART/SAMPLELENGTH from chart)
+  - [x] Loop preview or play once (respect user preference setting)
+  - [x] Stop audio when changing songs
+  - [x] Fade in/out transitions (handled by PlayMusicPart)
+  - [x] Handle songs without preview metadata (falls back to stop_music)
+- [x] **NoteField Preview Synchronization** (CRITICAL)
+  - [x] Sync NoteField to audio playback position (via GAMESTATE:SetSongBeat in Update loop)
+  - [x] Respect player modifiers (speed mods, scroll direction, etc.)
+  - [x] Update in real-time as audio plays
+  - [x] Handle preview loop correctly
 
 ### Planned Tasks
-- [ ] **Audio Preview System** (CRITICAL - Project fails without this)
-  - [ ] Play song preview when focused (respect SAMPLESTART/SAMPLELENGTH from chart)
-  - [ ] Loop preview or play once (respect user preference setting)
-  - [ ] Stop audio when changing songs
-  - [ ] Fade in/out transitions
-  - [ ] Handle songs without preview metadata
-- [ ] **NoteField Preview Synchronization** (CRITICAL)
-  - [ ] Sync NoteField to audio playback position
-  - [ ] Respect player modifiers (speed mods, scroll direction, etc.)
-  - [ ] Update in real-time as audio plays
-  - [ ] Handle preview loop correctly
-- [ ] Test audio preview with various song formats
-- [ ] Test NoteField sync accuracy
-- [ ] Verify modifier application works correctly
+- [x] Test audio preview with various song formats
+- [x] Test NoteField sync accuracy
+- [x] Verify modifier application works correctly
 
 ### Bug Fixes
-- [ ] TBD
+- [x] Fixed initial audio playback not starting on screen entry (added OnCommand delay)
 
 ## Phase 4: Favorites & Grades (Not Started)
 

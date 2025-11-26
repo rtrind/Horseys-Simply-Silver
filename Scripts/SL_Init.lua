@@ -185,6 +185,15 @@ local GlobalDefaults = {
 			self.GameplayReloadCheck = false
 			-- How long to wait before displaying a "cue"
 			self.ColumnCueMinTime = 1.5
+			
+			-- Audio Preview State
+			self.SampleMusic = {
+				StartTime = 0,
+				StartOffset = 0,
+				Length = 0,
+				Loop = false,
+				Playing = false
+			}
 		end,
 
 		-- These values outside initialize() won't be reset each game cycle,

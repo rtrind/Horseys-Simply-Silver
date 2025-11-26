@@ -17,7 +17,33 @@ local function GetCurrentChartIndex(pn, ChartArray)
     return nil
 end
 
-local t = Def.ActorFrame {}
+local t = Def.ActorFrame {
+    InitCommand=function(self)
+        self:SetUpdateFunction(function(self, delta)
+            if SL.Global.SampleMusic and SL.Global.SampleMusic.Playing then
+                local now = GetTimeSinceStart()
+                local elapsed = now - SL.Global.SampleMusic.StartTime
+                
+                -- Handle looping
+                if SL.Global.SampleMusic.Loop and SL.Global.SampleMusic.Length > 0 then
+                    elapsed = elapsed % SL.Global.SampleMusic.Length
+                end
+                
+                local song_time = SL.Global.SampleMusic.StartOffset + elapsed
+                
+                -- Get Beat from TimingData
+                local song = GAMESTATE:GetCurrentSong()
+                if song then
+                    local timing = song:GetTimingData()
+                    if timing then
+                        local beat = timing:GetBeatFromElapsedTime(song_time)
+                        GAMESTATE:SetSongBeat(beat)
+                    end
+                end
+            end
+        end)
+    end
+}
 
 for i, pn in ipairs(GAMESTATE:GetEnabledPlayers()) do
     -- To avoid crashes with player 2

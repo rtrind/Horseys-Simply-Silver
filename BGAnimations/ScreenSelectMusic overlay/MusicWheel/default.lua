@@ -326,7 +326,8 @@ local t = Def.ActorFrame{
 		end
 		
 		-- Ensure initial selection is broadcast to UI (Banner, NoteField, etc.)
-		self:playcommand("BroadcastInitialSelection")
+		-- Add a small delay to ensure everything is ready before playing audio
+		self:sleep(0.05):queuecommand("BroadcastInitialSelection")
 	end,
 	
 	BroadcastInitialSelectionCommand = function(self)
@@ -434,6 +435,18 @@ local t = Def.ActorFrame{
 			-- Broadcast steps changed for NoteField preview
 			MESSAGEMAN:Broadcast("CurrentStepsP1Changed")
 			MESSAGEMAN:Broadcast("CurrentStepsP2Changed")
+		else
+			-- If focused item is not a song (e.g. group header), clear current song
+			GAMESTATE:SetCurrentSong(nil)
+			MESSAGEMAN:Broadcast("CurrentSongChanged")
+		end
+	end,
+	
+	-- Handle song change to play preview music
+	CurrentSongChangedMessageCommand = function(self)
+		-- Play sample music (defined in Scripts/SL-SelectMusicHelpers.lua)
+		if play_sample_music then
+			play_sample_music()
 		end
 	end,
 	
