@@ -76,6 +76,7 @@
 - [ ] Performance profiling and optimization
 - [ ] Optimize all touched files in the project and extract common code to functions
 - [ ] Identify more elements not used in the dedicab and remove them to make build leaner (remove course mode, ITL, unused graphics, ...)
+- [ ] Add debug instrumentation to have more information if the build crashes (on previous build, after 90 minutes there was a usual crash)
 
 ### Bug Fixes
 - [ ] TBD
