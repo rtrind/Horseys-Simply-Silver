@@ -239,18 +239,29 @@ local function input(event)
 			if focused_song then
 				GAMESTATE:SetCurrentSong(focused_song)
 				
-				-- Set steps for each player based on their difficulty preference
+				-- Get the focused item to check if it has specific steps (Difficulty sort)
+				local focused_item = SL.MusicWheel.GetFocusedItem()
+				
+				-- Set steps for each player
 				for player in ivalues(GAMESTATE:GetHumanPlayers()) do
-					local stepsType = GAMESTATE:GetCurrentStyle():GetStepsType()
-					-- Find best matching steps for player's preferred difficulty
-					local bestSteps = FindBestSteps(focused_song, stepsType, preferredDifficulty[player])
+					local stepsToSet = nil
 					
-					if bestSteps then
-						GAMESTATE:SetCurrentSteps(player, bestSteps)
-						-- If no preference set yet, initialize it with the first steps
-						if not preferredDifficulty[player] then
-							preferredDifficulty[player] = bestSteps:GetDifficulty()
+					-- If the item has specific steps (Difficulty sort), use those
+					if focused_item and focused_item.steps then
+						stepsToSet = focused_item.steps
+					else
+						-- Otherwise, find best matching steps for player's preferred difficulty
+						local stepsType = GAMESTATE:GetCurrentStyle():GetStepsType()
+						stepsToSet = FindBestSteps(focused_song, stepsType, preferredDifficulty[player])
+						
+						-- Update preference if we found steps
+						if stepsToSet and not preferredDifficulty[player] then
+							preferredDifficulty[player] = stepsToSet:GetDifficulty()
 						end
+					end
+					
+					if stepsToSet then
+						GAMESTATE:SetCurrentSteps(player, stepsToSet)
 					else
 						-- No steps available for this song/style
 						GAMESTATE:SetCurrentSteps(player, nil)
@@ -326,18 +337,29 @@ local t = Def.ActorFrame{
 		if focused_song then
 			GAMESTATE:SetCurrentSong(focused_song)
 			
-			-- Set steps for each player based on their difficulty preference
+			-- Get the focused item to check if it has specific steps (Difficulty sort)
+			local focused_item = SL.MusicWheel.GetFocusedItem()
+			
+			-- Set steps for each player
 			for player in ivalues(GAMESTATE:GetHumanPlayers()) do
-				local stepsType = GAMESTATE:GetCurrentStyle():GetStepsType()
-				-- Find best matching steps for player's preferred difficulty
-				local bestSteps = FindBestSteps(focused_song, stepsType, preferredDifficulty[player])
+				local stepsToSet = nil
 				
-				if bestSteps then
-					GAMESTATE:SetCurrentSteps(player, bestSteps)
-					-- If no preference set yet, initialize it with the first steps
-					if not preferredDifficulty[player] then
-						preferredDifficulty[player] = bestSteps:GetDifficulty()
+				-- If the item has specific steps (Difficulty sort), use those
+				if focused_item and focused_item.steps then
+					stepsToSet = focused_item.steps
+				else
+					-- Otherwise, find best matching steps for player's preferred difficulty
+					local stepsType = GAMESTATE:GetCurrentStyle():GetStepsType()
+					stepsToSet = FindBestSteps(focused_song, stepsType, preferredDifficulty[player])
+					
+					-- Update preference if we found steps
+					if stepsToSet and not preferredDifficulty[player] then
+						preferredDifficulty[player] = stepsToSet:GetDifficulty()
 					end
+				end
+				
+				if stepsToSet then
+					GAMESTATE:SetCurrentSteps(player, stepsToSet)
 				else
 					GAMESTATE:SetCurrentSteps(player, nil)
 				end
@@ -383,15 +405,29 @@ local t = Def.ActorFrame{
 			GAMESTATE:SetCurrentSong(focused_song)
 			MESSAGEMAN:Broadcast("CurrentSongChanged")
 			
+			-- Get the focused item to check if it has specific steps (Difficulty sort)
+			local focused_item = SL.MusicWheel.GetFocusedItem()
+			
 			-- Ensure steps are set for both players and broadcast for NoteField preview
 			for pn in ivalues(GAMESTATE:GetHumanPlayers()) do
-				local steps = GAMESTATE:GetCurrentSteps(pn)
-				if not steps then
-					-- Set default steps if none selected
-					local song_steps = focused_song:GetAllSteps()
-					if song_steps and #song_steps > 0 then
-						GAMESTATE:SetCurrentSteps(pn, song_steps[1])
+				local stepsToSet = nil
+				
+				-- If the item has specific steps (Difficulty sort), use those
+				if focused_item and focused_item.steps then
+					stepsToSet = focused_item.steps
+				else
+					-- Otherwise, check if steps are already set, or use first available
+					stepsToSet = GAMESTATE:GetCurrentSteps(pn)
+					if not stepsToSet then
+						local song_steps = focused_song:GetAllSteps()
+						if song_steps and #song_steps > 0 then
+							stepsToSet = song_steps[1]
+						end
 					end
+				end
+				
+				if stepsToSet then
+					GAMESTATE:SetCurrentSteps(pn, stepsToSet)
 				end
 			end
 			

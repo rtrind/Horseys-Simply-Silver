@@ -196,7 +196,16 @@ function item_mt:set_song(info)
 	-- Show song title
 	if self.title then
 		self.title:visible(true)
-		self.title:settext(song:GetDisplayMainTitle())
+		local title = song:GetDisplayMainTitle()
+		
+		-- If this item has specific steps (Difficulty sort), append difficulty name
+		if info.steps then
+			local diff = info.steps:GetDifficulty()
+			local diff_name = THEME:GetString("Difficulty", ToEnumShortString(diff))
+			title = title .. " [" .. diff_name .. "]"
+		end
+		
+		self.title:settext(title)
 	end
 	
 	-- Hide group elements
