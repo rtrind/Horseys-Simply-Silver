@@ -123,11 +123,9 @@ local af = Def.ActorFrame{
 		InitCommand=function(self) 
 			self:draworder(500) 
 		end,
-		OnCommand=function(self) SM("StartPrompt Actor Loaded") end, 
 
 		-- Catch the message at the frame level
 		ShowPressStartForOptionsMessageCommand=function(self)
-			SM("StartPrompt Frame Received Message")
 			self:GetChild("Dim"):playcommand("Show")
 			self:GetChild("Text"):playcommand("Show")
 		end,
@@ -145,7 +143,7 @@ local af = Def.ActorFrame{
 		Def.Quad{
 			Name="Dim",
 			InitCommand=function(self) self:FullScreen():diffuse(0,0,0,0) end,
-			ShowCommand=function(self) self:diffusealpha(0.5) end,
+			ShowCommand=function(self) self:diffusealpha(0.7) end, -- Darker (70%)
 			HideCommand=function(self) self:diffusealpha(0) end
 		},
 
@@ -157,7 +155,8 @@ local af = Def.ActorFrame{
 				self:visible(false):Center():zoom(0.75):draworder(501)
 			end,
 			ShowCommand=function(self) 
-				self:visible(true):diffusealpha(1):pulse():effectmagnitude(1,1.1,1):effectperiod(0.5)
+				-- Slower pulse (1.0s period)
+				self:visible(true):diffusealpha(1):pulse():effectmagnitude(1,1.1,1):effectperiod(1.0)
 			end,
 			HideCommand=function(self) self:visible(false):stopeffect() end,
 			EnterOptionsCommand=function(self) self:visible(true):settext(THEME:GetString("ScreenSelectMusic", "Entering Options...")):stopeffect() end
@@ -175,48 +174,23 @@ local af = Def.ActorFrame{
 			-- Hide the prompt if it's visible
 			MESSAGEMAN:Broadcast("HidePressStartForOptions")
 			
-			-- Ensure song and steps are set for all enabled players
-			local focused_item = SL.MusicWheel.State.items[SL.MusicWheel.State.focus_index]
-			if focused_item and focused_item.type == "song" then
-				local song = focused_item.song
-				if song then
-					GAMESTATE:SetCurrentSong(song)
-					
-					-- Set steps for each enabled player
-					for player in ivalues(GAMESTATE:GetEnabledPlayers()) do
-						-- Get current steps type for this player
-						local stepsType = GAMESTATE:GetCurrentStyle():GetStepsType()
-						
-						-- Use focused item's steps if available (Difficulty sort), otherwise find best
-						local steps = focused_item.steps
-						if not steps then
-							-- Find best steps for this player's preference
-							local allSteps = song:GetStepsByStepsType(stepsType)
-							if #allSteps > 0 then
-								steps = allSteps[1]  -- Default to first available
-							end
-						end
-						
-						if steps then
-							GAMESTATE:SetCurrentSteps(player, steps)
-						end
+			-- Verify we have a valid song selected in GAMESTATE
+			-- (It should be set by MusicWheel input handler)
+			if GAMESTATE:GetCurrentSong() then
+				-- Set PlayMode to Regular (prevents crash)
+				GAMESTATE:SetCurrentPlayMode("PlayMode_Regular")
+				
+				-- Navigate directly to gameplay (skip options)
+				local screen = SCREENMAN:GetTopScreen()
+				if screen then
+					-- Determine which gameplay screen to use (routine vs normal)
+					local style = GAMESTATE:GetCurrentStyle():GetName()
+					if style == "routine" then
+						screen:SetNextScreenName("ScreenGameplayShared")
+					else
+						screen:SetNextScreenName("ScreenGameplay")
 					end
-					
-					-- Set PlayMode to Regular (prevents crash)
-					GAMESTATE:SetCurrentPlayMode("PlayMode_Regular")
-					
-					-- Navigate directly to gameplay (skip options)
-					local screen = SCREENMAN:GetTopScreen()
-					if screen then
-						-- Determine which gameplay screen to use (routine vs normal)
-						local style = GAMESTATE:GetCurrentStyle():GetName()
-						if style == "routine" then
-							screen:SetNextScreenName("ScreenGameplayShared")
-						else
-							screen:SetNextScreenName("ScreenGameplay")
-						end
-						screen:StartTransitioningScreen("SM_GoToNextScreen")
-					end
+					screen:StartTransitioningScreen("SM_GoToNextScreen")
 				end
 			end
 		end

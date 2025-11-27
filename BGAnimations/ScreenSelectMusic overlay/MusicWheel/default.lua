@@ -181,20 +181,8 @@ local function input(event)
 					startPressTime = nil
 					startPressPlayer = nil
 					
-					-- Ensure song and steps are set for all enabled players
-					local song = focused_item.song
-					if song then
-						GAMESTATE:SetCurrentSong(song)
-						
-						-- Set steps for each enabled player
-						for player in ivalues(GAMESTATE:GetEnabledPlayers()) do
-							local stepsType = GAMESTATE:GetCurrentStyle():GetStepsType()
-							local steps = focused_item.steps or FindBestSteps(song, stepsType, preferredDifficulty[player])
-							if steps then
-								GAMESTATE:SetCurrentSteps(player, steps)
-							end
-						end
-						
+					-- Verify we have a valid song selected in GAMESTATE
+					if GAMESTATE:GetCurrentSong() then
 						-- Show "Entering Options..." and navigate to options
 						local screen = SCREENMAN:GetTopScreen()
 						if screen then
@@ -211,8 +199,6 @@ local function input(event)
 					-- First press - show prompt and start timer
 					startPressTime = now
 					startPressPlayer = pn
-					
-					SM("Broadcasting ShowPressStartForOptions") -- Debug
 					
 					-- Show "Press Start for Options" overlay
 					MESSAGEMAN:Broadcast("ShowPressStartForOptions")
