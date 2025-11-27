@@ -131,7 +131,7 @@ local function input(event)
 		end
 	end
 	
-	-- Handle FirstPress for Start button (toggle group)
+	-- Handle FirstPress for Start button (toggle group or player join)
 	if event.type == "InputEventType_FirstPress" then
 		-- Check for MenuUp+MenuDown chord to close/open folder
 		-- Only trigger if the current button is MenuUp or MenuDown AND both are now held
@@ -147,7 +147,14 @@ local function input(event)
 		end
 		
 		if event.GameButton == "Start" then
-			-- Try to toggle group (only works if on group header, not from song)
+			-- Check if this is a non-enabled player trying to join
+			if not GAMESTATE:IsPlayerEnabled(pn) then
+				-- Join player and allow existing overlay logic to open profile select
+				GAMESTATE:JoinPlayer(pn)
+				return true
+			end
+			
+			-- Player is already enabled - try to toggle group (only works if on group header, not from song)
 			if SL.MusicWheel.ToggleGroup(false) then
 				-- Group was toggled, update wheel display
 				wheel:set_info_set(SL.MusicWheel.State.items, SL.MusicWheel.State.focus_index)
