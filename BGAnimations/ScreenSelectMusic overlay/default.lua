@@ -26,6 +26,10 @@ local af = Def.ActorFrame{
 		-- see 06 SL-Utilities.lua for function definitions
 		SetPreferredSong()
 	end,
+	
+	OffCommand=function(self)
+		self:linear(0.3):diffusealpha(0)
+	end,
 
 	PlayerProfileSetMessageCommand=function(self, params)
 		if not PROFILEMAN:IsPersistentProfile(params.Player) then
@@ -113,15 +117,59 @@ local af = Def.ActorFrame{
 
 	LoadActor("./footer.lua"),
 	
-	-- Options prompt overlay
-	LoadActor("./StartPrompt.lua"),
+	-- Options prompt overlay (Defined inline to ensure loading)
+	Def.ActorFrame{
+		Name="StartPrompt",
+		InitCommand=function(self) 
+			self:draworder(500) 
+		end,
+		OnCommand=function(self) SM("StartPrompt Actor Loaded") end, 
+
+		-- Catch the message at the frame level
+		ShowPressStartForOptionsMessageCommand=function(self)
+			SM("StartPrompt Frame Received Message")
+			self:GetChild("Dim"):playcommand("Show")
+			self:GetChild("Text"):playcommand("Show")
+		end,
+		
+		HidePressStartForOptionsMessageCommand=function(self)
+			self:GetChild("Dim"):playcommand("Hide")
+			self:GetChild("Text"):playcommand("Hide")
+		end,
+		
+		ShowEnteringOptionsMessageCommand=function(self)
+			self:GetChild("Text"):playcommand("EnterOptions")
+		end,
+
+		-- Background dim
+		Def.Quad{
+			Name="Dim",
+			InitCommand=function(self) self:FullScreen():diffuse(0,0,0,0) end,
+			ShowCommand=function(self) self:diffusealpha(0.5) end,
+			HideCommand=function(self) self:diffusealpha(0) end
+		},
+
+		-- Text prompt
+		LoadFont(ThemePrefs.Get("ThemeFont") .. " Bold")..{
+			Name="Text",
+			Text=THEME:GetString("ScreenSelectMusic", "Press Start for Options"),
+			InitCommand=function(self) 
+				self:visible(false):Center():zoom(0.75):draworder(501)
+			end,
+			ShowCommand=function(self) 
+				self:visible(true):diffusealpha(1):pulse():effectmagnitude(1,1.1,1):effectperiod(0.5)
+			end,
+			HideCommand=function(self) self:visible(false):stopeffect() end,
+			EnterOptionsCommand=function(self) self:visible(true):settext(THEME:GetString("ScreenSelectMusic", "Entering Options...")):stopeffect() end
+		}
+	},
 	
 	-- Handle Start button timeout for going directly to gameplay
 	Def.ActorFrame{
 		Name="StartTimeoutHandler",
 		StartTimeoutCommand=function(self)
-			-- Wait for the timeout period (0.75 seconds)
-			self:sleep(0.75):queuecommand("GoToGameplay")
+			-- Wait for the timeout period (3.0 seconds)
+			self:sleep(3.0):queuecommand("GoToGameplay")
 		end,
 		GoToGameplayCommand=function(self)
 			-- Hide the prompt if it's visible

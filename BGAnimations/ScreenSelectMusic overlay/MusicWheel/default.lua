@@ -28,7 +28,7 @@ local heldButtons = {
 -- Track Start button timing for options prompt
 local startPressTime = nil
 local startPressPlayer = nil
-local optionsPromptTimeout = 0.75  -- seconds to wait for second Start press
+local optionsPromptTimeout = 3.0  -- seconds to wait for second Start press
 
 -- Track button sequences for difficulty changes (Up,Up = easier, Down,Down = harder)
 local buttonSequence = {
@@ -211,6 +211,8 @@ local function input(event)
 					-- First press - show prompt and start timer
 					startPressTime = now
 					startPressPlayer = pn
+					
+					SM("Broadcasting ShowPressStartForOptions") -- Debug
 					
 					-- Show "Press Start for Options" overlay
 					MESSAGEMAN:Broadcast("ShowPressStartForOptions")

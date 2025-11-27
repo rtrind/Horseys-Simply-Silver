@@ -1,20 +1,26 @@
 return Def.ActorFrame{
-	InitCommand=function(self) self:draworder(200) end,
+	InitCommand=function(self) self:draworder(500) end, -- High draworder
 
-	-- Background dim (initially invisible)
+	-- Background dim
 	Def.Quad{
-		InitCommand=function(self) self:diffuse(0,0,0,0):FullScreen():cropbottom(1):fadebottom(0.5) end,
-		ShowPressStartForOptionsCommand=function(self) self:diffusealpha(1):cropbottom(1):linear(0.3):cropbottom(-0.5) end,
-		HidePressStartForOptionsCommand=function(self) self:linear(0.3):cropbottom(1):diffusealpha(0) end
+		InitCommand=function(self) self:FullScreen():diffuse(0,0,0,0) end,
+		ShowPressStartForOptionsCommand=function(self) 
+			self:diffusealpha(0.5) -- Simple fade to black 50%
+		end,
+		HidePressStartForOptionsCommand=function(self) self:diffusealpha(0) end
 	},
 
 	-- Text prompt
 	LoadFont(ThemePrefs.Get("ThemeFont") .. " Bold")..{
 		Text=THEME:GetString("ScreenSelectMusic", "Press Start for Options"),
-		InitCommand=function(self) self:visible(false):Center():zoom(0.75) end,
-		ShowPressStartForOptionsCommand=function(self) self:visible(true):diffusealpha(1) end,
-		HidePressStartForOptionsCommand=function(self) self:visible(false) end,
-		ShowEnteringOptionsCommand=function(self) self:linear(0.125):diffusealpha(0):queuecommand("NewText") end,
-		NewTextCommand=function(self) self:hibernate(0.1):settext(THEME:GetString("ScreenSelectMusic", "Entering Options...")):linear(0.125):diffusealpha(1):sleep(1) end
+		InitCommand=function(self) 
+			self:visible(false):Center():zoom(0.75):draworder(501)
+		end,
+		ShowPressStartForOptionsCommand=function(self) 
+			self:visible(true):diffusealpha(1):pulse():effectmagnitude(1,1.1,1):effectperiod(0.5)
+			SM("Showing Start Prompt") -- Debug message
+		end,
+		HidePressStartForOptionsCommand=function(self) self:visible(false):stopeffect() end,
+		ShowEnteringOptionsCommand=function(self) self:visible(true):settext(THEME:GetString("ScreenSelectMusic", "Entering Options...")):stopeffect() end
 	}
 }
