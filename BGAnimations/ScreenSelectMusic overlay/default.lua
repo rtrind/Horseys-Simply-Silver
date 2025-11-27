@@ -168,14 +168,20 @@ local af = Def.ActorFrame{
 		Name="StartTimeoutHandler",
 		StartTimeoutCommand=function(self)
 			-- Wait for the timeout period (3.0 seconds)
-			self:sleep(3.0):queuecommand("GoToGameplay")
+			self:sleep(3.0):queuecommand("FadeToBlack")
 		end,
-		GoToGameplayCommand=function(self)
-			-- Hide the prompt if it's visible
+		FadeToBlackCommand=function(self)
+			-- Hide the prompt
 			MESSAGEMAN:Broadcast("HidePressStartForOptions")
 			
+			-- Fade in the black transition quad
+			self:GetParent():GetChild("TransitionQuad"):playcommand("FadeIn")
+			
+			-- Wait for fade then go to gameplay
+			self:sleep(0.5):queuecommand("GoToGameplay")
+		end,
+		GoToGameplayCommand=function(self)
 			-- Verify we have a valid song selected in GAMESTATE
-			-- (It should be set by MusicWheel input handler)
 			if GAMESTATE:GetCurrentSong() then
 				-- Set PlayMode to Regular (prevents crash)
 				GAMESTATE:SetCurrentPlayMode("PlayMode_Regular")
@@ -195,6 +201,17 @@ local af = Def.ActorFrame{
 			end
 		end
 	},
+	
+	-- Manual Fade to Black transition quad
+	Def.Quad{
+		Name="TransitionQuad",
+		InitCommand=function(self) 
+			self:FullScreen():diffuse(0,0,0,0):draworder(1000) -- Topmost
+		end,
+		FadeInCommand=function(self)
+			self:linear(0.5):diffusealpha(1)
+		end
+	}
 }
 
 return af
