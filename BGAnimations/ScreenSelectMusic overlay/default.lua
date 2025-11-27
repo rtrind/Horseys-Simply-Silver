@@ -171,10 +171,7 @@ local af = Def.ActorFrame{
 			self:sleep(3.0):queuecommand("FadeToBlack")
 		end,
 		FadeToBlackCommand=function(self)
-			-- Hide the prompt
-			MESSAGEMAN:Broadcast("HidePressStartForOptions")
-			
-			-- Fade in the black transition quad
+			-- Fade in the black transition quad (prompt will naturally disappear)
 			self:GetParent():GetChild("TransitionQuad"):playcommand("FadeIn")
 			
 			-- Wait for fade then go to gameplay
