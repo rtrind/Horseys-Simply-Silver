@@ -112,6 +112,67 @@ local af = Def.ActorFrame{
 	LoadActor("../ScreenSelectMusic overlay/ToggleFavorite.lua"),
 
 	LoadActor("./footer.lua"),
+	
+	-- Options prompt overlay
+	LoadActor("./StartPrompt.lua"),
+	
+	-- Handle Start button timeout for going directly to gameplay
+	Def.ActorFrame{
+		Name="StartTimeoutHandler",
+		StartTimeoutCommand=function(self)
+			-- Wait for the timeout period (0.75 seconds)
+			self:sleep(0.75):queuecommand("GoToGameplay")
+		end,
+		GoToGameplayCommand=function(self)
+			-- Hide the prompt if it's visible
+			MESSAGEMAN:Broadcast("HidePressStartForOptions")
+			
+			-- Ensure song and steps are set for all enabled players
+			local focused_item = SL.MusicWheel.State.items[SL.MusicWheel.State.focus_index]
+			if focused_item and focused_item.type == "song" then
+				local song = focused_item.song
+				if song then
+					GAMESTATE:SetCurrentSong(song)
+					
+					-- Set steps for each enabled player
+					for player in ivalues(GAMESTATE:GetEnabledPlayers()) do
+						-- Get current steps type for this player
+						local stepsType = GAMESTATE:GetCurrentStyle():GetStepsType()
+						
+						-- Use focused item's steps if available (Difficulty sort), otherwise find best
+						local steps = focused_item.steps
+						if not steps then
+							-- Find best steps for this player's preference
+							local allSteps = song:GetStepsByStepsType(stepsType)
+							if #allSteps > 0 then
+								steps = allSteps[1]  -- Default to first available
+							end
+						end
+						
+						if steps then
+							GAMESTATE:SetCurrentSteps(player, steps)
+						end
+					end
+					
+					-- Set PlayMode to Regular (prevents crash)
+					GAMESTATE:SetCurrentPlayMode("PlayMode_Regular")
+					
+					-- Navigate directly to gameplay (skip options)
+					local screen = SCREENMAN:GetTopScreen()
+					if screen then
+						-- Determine which gameplay screen to use (routine vs normal)
+						local style = GAMESTATE:GetCurrentStyle():GetName()
+						if style == "routine" then
+							screen:SetNextScreenName("ScreenGameplayShared")
+						else
+							screen:SetNextScreenName("ScreenGameplay")
+						end
+						screen:StartTransitioningScreen("SM_GoToNextScreen")
+					end
+				end
+			end
+		end
+	},
 }
 
 return af

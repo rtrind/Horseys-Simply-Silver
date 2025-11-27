@@ -25,6 +25,11 @@ local heldButtons = {
 	[PLAYER_2] = {}
 }
 
+-- Track Start button timing for options prompt
+local startPressTime = nil
+local startPressPlayer = nil
+local optionsPromptTimeout = 0.75  -- seconds to wait for second Start press
+
 -- Track button sequences for difficulty changes (Up,Up = easier, Down,Down = harder)
 local buttonSequence = {
 	[PLAYER_1] = {},
@@ -154,13 +159,72 @@ local function input(event)
 				return true
 			end
 			
-			-- Player is already enabled - try to toggle group (only works if on group header, not from song)
-			if SL.MusicWheel.ToggleGroup(false) then
-				-- Group was toggled, update wheel display
-				wheel:set_info_set(SL.MusicWheel.State.items, SL.MusicWheel.State.focus_index)
-				return true
+			-- Player is already enabled - check if we're on a group header or song
+			local focused_item = SL.MusicWheel.State.items[SL.MusicWheel.State.focus_index]
+			
+			-- If on group header, try to toggle it
+			if focused_item and focused_item.type == "group_header" then
+				if SL.MusicWheel.ToggleGroup(false) then
+					-- Group was toggled, update wheel display
+					wheel:set_info_set(SL.MusicWheel.State.items, SL.MusicWheel.State.focus_index)
+					return true
+				end
 			end
-			-- If not on group header, let Start pass through (for song selection)
+			
+			-- If on a song, handle song selection with options prompt
+			if focused_item and focused_item.type == "song" then
+				local now = GetTimeSinceStart()
+				
+				-- Check if this is a second Start press within timeout
+				if startPressTime and (now - startPressTime) < optionsPromptTimeout and startPressPlayer == pn then
+					-- Second press - go to options
+					startPressTime = nil
+					startPressPlayer = nil
+					
+					-- Ensure song and steps are set for all enabled players
+					local song = focused_item.song
+					if song then
+						GAMESTATE:SetCurrentSong(song)
+						
+						-- Set steps for each enabled player
+						for player in ivalues(GAMESTATE:GetEnabledPlayers()) do
+							local stepsType = GAMESTATE:GetCurrentStyle():GetStepsType()
+							local steps = focused_item.steps or FindBestSteps(song, stepsType, preferredDifficulty[player])
+							if steps then
+								GAMESTATE:SetCurrentSteps(player, steps)
+							end
+						end
+						
+						-- Show "Entering Options..." and navigate to options
+						local screen = SCREENMAN:GetTopScreen()
+						if screen then
+							-- Set PlayMode to Regular (prevents crash)
+							GAMESTATE:SetCurrentPlayMode("PlayMode_Regular")
+							
+							MESSAGEMAN:Broadcast("ShowEnteringOptions")
+							screen:SetNextScreenName("ScreenPlayerOptions")
+							screen:StartTransitioningScreen("SM_GoToNextScreen")
+						end
+					end
+					return true
+				else
+					-- First press - show prompt and start timer
+					startPressTime = now
+					startPressPlayer = pn
+					
+					-- Show "Press Start for Options" overlay
+					MESSAGEMAN:Broadcast("ShowPressStartForOptions")
+					
+					-- Schedule timeout to go directly to gameplay
+					local overlay = SCREENMAN:GetTopScreen():GetChild("Overlay")
+					if overlay then
+						overlay:queuecommand("StartTimeout")
+					end
+					return true
+				end
+			end
+			
+			-- Not on a song or group - let it pass through
 			return false
 		end
 		
