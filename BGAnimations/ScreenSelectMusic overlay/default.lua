@@ -12,7 +12,7 @@ local af = Def.ActorFrame{
 	InitCommand=function(self)
 		SL.Global.GameplayReloadCheck = false
 		generateFavoritesForMusicWheel()
-		
+
 		-- reset song start time here in case player force-escaped
 		start_time = -1
 
@@ -26,7 +26,7 @@ local af = Def.ActorFrame{
 		-- see 06 SL-Utilities.lua for function definitions
 		SetPreferredSong()
 	end,
-	
+
 	OffCommand=function(self)
 		self:linear(0.3):diffusealpha(0)
 	end,
@@ -40,31 +40,39 @@ local af = Def.ActorFrame{
 	end,
 
 	PlayerJoinedMessageCommand=function(self, params)
-        -- Instead of reloading abruptly, open the profile selection screen
-		MESSAGEMAN:Broadcast("OpenProfileSelectFromJoin")	
+		-- Instead of reloading abruptly, open the profile selection screen
+		MESSAGEMAN:Broadcast("OpenProfileSelectFromJoin")
 	end,
 
 	SSM_RequestReloadMessageCommand=function(self, params)
-        -- Defer one frame to ensure we're still on the profile screen as top
-        self:sleep(0.01):queuecommand("DoReload")
-    end,
+		-- Defer one frame to ensure we're still on the profile screen as top
+		self:sleep(0.01):queuecommand("DoReload")
+	end,
 
     DoReloadCommand=function(self, params)
 		-- For some reason we cannot reload the screen after a profile switch,
 		-- so we have to wait until ScreenSelectMusic is the top screen and
 		-- no other screen is on top of it. Then reload the entire screen...
-        local s = SCREENMAN:GetTopScreen()
-        if s then
+		local s = SCREENMAN:GetTopScreen()
+		if s then
 			SM("Reloading screen...")
-            s:SetNextScreenName("ScreenReloadSSM")
-            s:StartTransitioningScreen("SM_GoToNextScreen")
-        end
-    end,
+			s:SetNextScreenName("ScreenReloadSSM")
+			s:StartTransitioningScreen("SM_GoToNextScreen")
+		end
+	end,
+
+	GoToOptionsCommand = function(self)
+		local screen = SCREENMAN:GetTopScreen()
+		if screen then
+			screen:SetNextScreenName("ScreenPlayerOptions")
+			screen:StartTransitioningScreen("SM_GoToNextScreen")
+		end
+	end,
 
 	-- ---------------------------------------------------
 	--  first, load files that contain no visual elements, just code that needs to run
 
-	-- MenuTimer code for preserving SSM's timer value when going 
+	-- MenuTimer code for preserving SSM's timer value when going
 	-- from SSM to a different screen and back to SSM (i.e. returning from PlayerOptions).
 	LoadActor("./PreserveMenuTimer.lua"),
 	-- Apply player modifiers from profile
@@ -116,12 +124,12 @@ local af = Def.ActorFrame{
 	LoadActor("../ScreenSelectMusic overlay/ToggleFavorite.lua"),
 
 	LoadActor("./footer.lua"),
-	
+
 	-- Options prompt overlay (Defined inline to ensure loading)
 	Def.ActorFrame{
 		Name="StartPrompt",
 		InitCommand=function(self) 
-			self:draworder(500) 
+			self:draworder(500)
 		end,
 
 		-- Catch the message at the frame level
@@ -129,12 +137,12 @@ local af = Def.ActorFrame{
 			self:GetChild("Dim"):playcommand("Show")
 			self:GetChild("Text"):playcommand("Show")
 		end,
-		
+
 		HidePressStartForOptionsMessageCommand=function(self)
 			self:GetChild("Dim"):playcommand("Hide")
 			self:GetChild("Text"):playcommand("Hide")
 		end,
-		
+
 		ShowEnteringOptionsMessageCommand=function(self)
 			self:GetChild("Text"):playcommand("EnterOptions")
 		end,
@@ -162,7 +170,7 @@ local af = Def.ActorFrame{
 			EnterOptionsCommand=function(self) self:visible(true):settext(THEME:GetString("ScreenSelectMusic", "Entering Options...")):stopeffect() end
 		}
 	},
-	
+
 	-- Handle Start button timeout for going directly to gameplay
 	Def.ActorFrame{
 		Name="StartTimeoutHandler",
@@ -173,7 +181,7 @@ local af = Def.ActorFrame{
 		FadeToBlackCommand=function(self)
 			-- Fade in the black transition quad (prompt will naturally disappear)
 			self:GetParent():GetChild("TransitionQuad"):playcommand("FadeIn")
-			
+
 			-- Wait for fade then go to gameplay
 			self:sleep(0.5):queuecommand("GoToGameplay")
 		end,
@@ -182,7 +190,7 @@ local af = Def.ActorFrame{
 			if GAMESTATE:GetCurrentSong() then
 				-- Set PlayMode to Regular (prevents crash)
 				GAMESTATE:SetCurrentPlayMode("PlayMode_Regular")
-				
+
 				-- Navigate directly to gameplay (skip options)
 				local screen = SCREENMAN:GetTopScreen()
 				if screen then
@@ -198,7 +206,7 @@ local af = Def.ActorFrame{
 			end
 		end
 	},
-	
+
 	-- Manual Fade to Black transition quad
 	Def.Quad{
 		Name="TransitionQuad",
