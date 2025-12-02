@@ -89,6 +89,38 @@ SM = function( arg, duration )
 end
 
 
+------------------------------------------------------------
+-- Group Name Utilities
+-- For handling folder naming conventions like "O1998a-DDR (J)"
+------------------------------------------------------------
+
+-- Strip folder naming prefix (e.g., "O1998a-DDR (J)" -> "DDR (J)")
+-- Pattern: letter, 4 digits, optional letter, hyphen
+StripGroupPrefix = function(name)
+	if not name then return name end
+	return name:gsub("^%a%d%d%d%d%a?%-", "")
+end
+
+-- Get the pack type from a group name based on first letter
+-- O = Original DDR, S = Stamina, X = Gimmick, Y = Couples, Z = Custom
+-- Returns: type string or nil if not matching pattern
+GetGroupPackType = function(name)
+	if not name then return nil end
+	local first_letter = name:match("^(%a)%d%d%d%d")
+	if not first_letter then return nil end
+	
+	first_letter = first_letter:upper()
+	local pack_types = {
+		O = "original",   -- Original DDR songs
+		S = "stamina",    -- Stamina packs
+		X = "gimmick",    -- Gimmick packs
+		Y = "couples",    -- Couples mode
+		Z = "custom"      -- Custom packs
+	}
+	return pack_types[first_letter]
+end
+
+
 -- range() accepts one, two, or three arguments and returns a table
 -- Example Usage:
 

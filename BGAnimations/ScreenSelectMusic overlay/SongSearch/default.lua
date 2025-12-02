@@ -127,8 +127,10 @@ local overlay = Def.ActorFrame {
 	candidatesScroller:create_actors("Candidates", 12, candidateItemMt, -paneWidth/4, -paneHeight/2 - textHeight * 2.5)
 }
 
+-- Uses global StripGroupPrefix() from 06 SL-Utilities.lua
+
 local songDetails = {
-	{ "Pack", function(song) return song:GetGroupName() end },
+	{ "Pack", function(song) return StripGroupPrefix(song:GetGroupName()) end },
 	{ "Song", function(song) return song:GetDisplayMainTitle() end },
 	{ "Subtitle", function(song) return song:GetDisplaySubTitle() end },
 	{ "Artist", function(song) return song:GetDisplayArtist() end },

@@ -2,6 +2,8 @@
 -- Metatable for music wheel items (implements sick_wheel interface)
 -- Phase 1: Basic display with song title and banner
 
+-- Uses global StripGroupPrefix() and GetGroupPackType() from 06 SL-Utilities.lua
+
 local item_mt = {}
 item_mt.__index = item_mt
 
@@ -90,6 +92,17 @@ function item_mt:create_actors(name)
 				subself:halign(1)
 				subself:zoom(0.7)
 				subself:diffuse(Color.White)
+				subself:visible(false)
+			end
+		},
+		
+		-- Pack type icon (for group headers) - uses sprites from Graphics/PackIcons/
+		Def.Sprite{
+			Name = "PackIcon",
+			InitCommand = function(subself)
+				self.pack_icon = subself
+				subself:x(-item_width/2 + 20)
+				subself:halign(0.5):valign(0.5)
 				subself:visible(false)
 			end
 		}
@@ -207,6 +220,10 @@ function item_mt:set_song(info)
 	if self.song_count then
 		self.song_count:visible(false)
 	end
+	
+	if self.pack_icon then
+		self.pack_icon:visible(false)
+	end
 end
 
 -- Set display for group header item
@@ -223,10 +240,51 @@ function item_mt:set_group_header(info)
 		self.background:diffusealpha(1)
 	end
 	
+	-- Determine pack type and load icon sprite
+	local pack_type = GetGroupPackType(info.group_name)
+	
+	-- Show pack icon if applicable
+	if self.pack_icon then
+		if pack_type then
+			-- Try to find icon file (supports png, svg, jpg, etc.)
+			local base_path = THEME:GetCurrentThemeDirectory() .. "Graphics/PackIcons/" .. pack_type
+			local icon_path = nil
+			
+			-- Check common image formats
+			for _, ext in ipairs({".png", ".svg", ".jpg", ".jpeg"}) do
+				if FILEMAN:DoesFileExist(base_path .. ext) then
+					icon_path = base_path .. ext
+					break
+				end
+			end
+			
+			if icon_path then
+				self.pack_icon:visible(true)
+				self.pack_icon:Load(icon_path)
+				-- Scale to fit in header (max 24px height)
+				local h = self.pack_icon:GetHeight()
+				if h > 0 then
+					self.pack_icon:zoom(math.min(24/h, 1))
+				end
+			else
+				self.pack_icon:visible(false)
+			end
+		else
+			self.pack_icon:visible(false)
+		end
+	end
+	
 	-- Show group elements
 	if self.group_name then
 		self.group_name:visible(true)
-		self.group_name:settext(info.group_name)
+		self.group_name:settext(StripGroupPrefix(info.group_name))
+		
+		-- Shift text right if icon is visible
+		if pack_type then
+			self.group_name:x(10)  -- Offset to make room for icon
+		else
+			self.group_name:x(0)   -- Centered
+		end
 		
 		-- Rainbow color on text for Group sort
 		if SL.MusicWheel.State.sort_order == "SortOrder_Group" and info.index then
