@@ -8,6 +8,18 @@ if ThemePrefs.Get("WriteCustomScores") then
 	WriteScores()
 end
 
+-- Save last played song/difficulty for each player
+-- This is done here (instead of ScreenGameplay out.lua) because force-failing
+-- by holding Start may not trigger the OffCommand in gameplay
+local song = GAMESTATE:GetCurrentSong()
+if song and SL.MusicWheel and SL.MusicWheel.SaveLastPlayed then
+	for player in ivalues(Players) do
+		local steps = GAMESTATE:GetCurrentSteps(player)
+		local difficulty = steps and steps:GetDifficulty() or nil
+		SL.MusicWheel.SaveLastPlayed(player, song, difficulty)
+	end
+end
+
 local t = Def.ActorFrame{Name="ScreenEval Common"}
 
 -- add a lua-based InputCallback to this screen so that we can navigate

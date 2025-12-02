@@ -22,9 +22,10 @@ local af = Def.ActorFrame{
 		local songOptions = GAMESTATE:GetSongOptionsObject("ModsLevel_Preferred")
 		songOptions:MusicRate(SL.Global.ActiveModifiers.MusicRate)
 
-		-- here we're going to set the preferred song of the music wheel when [no player profile is loaded] or [a player profile is loaded and does not have a preferred song]
-		-- see 06 SL-Utilities.lua for function definitions
-		SetPreferredSong()
+		-- Note: Last played song is now handled by SL.MusicWheel.Initialize()
+		-- which is called at the top of this file before actors are loaded.
+		-- It uses profile's GetLastPlayedSong(), session data, or falls back
+		-- to a random song from ITG-Mode-DefaultSongs.txt
 	end,
 
 	OffCommand=function(self)

@@ -194,6 +194,14 @@ local GlobalDefaults = {
 				Loop = false,
 				Playing = false
 			}
+			
+			-- Session-based last played song/difficulty tracking
+			-- Used when players don't have profiles, or to remember within a session
+			-- Each entry: {song = Song, difficulty = Difficulty enum, timestamp = number}
+			self.LastPlayed = {
+				[PLAYER_1] = nil,
+				[PLAYER_2] = nil
+			}
 		end,
 
 		-- These values outside initialize() won't be reset each game cycle,

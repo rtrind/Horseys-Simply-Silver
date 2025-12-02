@@ -372,6 +372,36 @@ local t = Def.ActorFrame{
 			return
 		end
 
+		-- Initialize preferred difficulty from session data or profile
+		-- Priority: 1. Session data, 2. Initial difficulties from Initialize(), 3. Current steps, 4. Engine preference
+		local initial_diffs = SL.MusicWheel.State and SL.MusicWheel.State.initial_difficulties or {}
+		
+		for player in ivalues(GAMESTATE:GetHumanPlayers()) do
+			-- First check session data (highest priority)
+			local session_data = SL.Global.LastPlayed and SL.Global.LastPlayed[player]
+			if session_data and session_data.difficulty then
+				preferredDifficulty[player] = session_data.difficulty
+			end
+			
+			-- If no session data, check the per-player difficulties from Initialize()
+			if not preferredDifficulty[player] and initial_diffs[player] then
+				preferredDifficulty[player] = initial_diffs[player]
+			end
+			
+			-- If still nothing, try current steps (set by Initialize)
+			if not preferredDifficulty[player] then
+				local current_steps = GAMESTATE:GetCurrentSteps(player)
+				if current_steps then
+					preferredDifficulty[player] = current_steps:GetDifficulty()
+				end
+			end
+			
+			-- Fallback to engine preference
+			if not preferredDifficulty[player] and PROFILEMAN:IsPersistentProfile(player) then
+				preferredDifficulty[player] = GAMESTATE:GetPreferredDifficulty(player)
+			end
+		end
+
 		-- Initialize wheel data
 		-- SL.MusicWheel.Initialize() is now called in overlay/default.lua
 		-- to ensure GAMESTATE is ready before NoteField creation

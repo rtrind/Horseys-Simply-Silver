@@ -1188,6 +1188,264 @@ function SL.MusicWheel.GetFocusedGroup()
 end
 
 -- ============================================================================
+-- Last Played Song/Difficulty Tracking
+-- ============================================================================
+-- Custom implementation because engine's GetLastPlayedSong() is unreliable.
+-- Priority: Session data first (most recent), then profile file as fallback.
+
+local LAST_PLAYED_FILENAME = "SL-LastPlayed.txt"
+
+-- Load last played data from a player's profile directory
+-- Returns: {song = Song, difficulty = string} or nil
+function SL.MusicWheel.LoadLastPlayedFromProfile(pn)
+	if not PROFILEMAN:IsPersistentProfile(pn) then return nil end
+	
+	local slot = pn == PLAYER_1 and "ProfileSlot_Player1" or "ProfileSlot_Player2"
+	local profile_dir = PROFILEMAN:GetProfileDir(slot)
+	if not profile_dir or profile_dir == "" then return nil end
+	
+	local file_path = profile_dir .. LAST_PLAYED_FILENAME
+	if not FILEMAN:DoesFileExist(file_path) then return nil end
+	
+	-- Read the file (format: song_path\ndifficulty)
+	local contents = GetFileContents and GetFileContents(file_path)
+	if not contents or #contents < 1 then return nil end
+	
+	local song_path = contents[1]
+	local difficulty = contents[2]  -- May be nil or empty
+	
+	-- Try to find the song
+	local song = SONGMAN:FindSong(song_path)
+	if not song then return nil end
+	
+	return {
+		song = song,
+		difficulty = difficulty ~= "" and difficulty or nil,
+		source = "profile_file"
+	}
+end
+
+-- Save last played data to a player's profile directory
+function SL.MusicWheel.SaveLastPlayedToProfile(pn, song, difficulty)
+	if not pn or not song then return end
+	if not PROFILEMAN:IsPersistentProfile(pn) then return end
+	
+	local slot = pn == PLAYER_1 and "ProfileSlot_Player1" or "ProfileSlot_Player2"
+	local profile_dir = PROFILEMAN:GetProfileDir(slot)
+	if not profile_dir or profile_dir == "" then return end
+	
+	local file_path = profile_dir .. LAST_PLAYED_FILENAME
+	
+	-- Get song path (Group/SongDir format)
+	local song_path = song:GetSongDir()
+	-- Convert to relative path if needed
+	if song_path then
+		-- Extract just "Group/Song" from full path
+		local group = song:GetGroupName()
+		local song_dir = song_path:match("([^/\\]+)[/\\]?$") or song_path
+		song_path = group .. "/" .. song_dir
+	end
+	
+	-- Convert difficulty enum to string
+	local diff_str = difficulty and tostring(difficulty) or ""
+	
+	-- Write to file (format: song_path\ndifficulty)
+	local content = song_path .. "\n" .. diff_str
+	
+	-- Use RageFileUtil to write the file
+	local f = RageFileUtil.CreateRageFile()
+	if f then
+		if f:Open(file_path, 2) then  -- 2 = write mode
+			f:Write(content)
+			f:Close()
+		end
+		f:destroy()
+	end
+end
+
+-- Save last played song/difficulty to session storage only
+-- Called when entering gameplay (so Escape returns to same song)
+function SL.MusicWheel.SaveLastPlayedToSession(pn, song, difficulty)
+	if not pn or not song then return end
+	
+	-- Ensure the LastPlayed table exists
+	if not SL.Global.LastPlayed then
+		SL.Global.LastPlayed = {
+			[PLAYER_1] = nil,
+			[PLAYER_2] = nil
+		}
+	end
+	
+	-- Save to session with timestamp for within-session comparison
+	SL.Global.LastPlayed[pn] = {
+		song = song,
+		difficulty = difficulty,
+		timestamp = GetTimeSinceStart()
+	}
+end
+
+-- Save last played song/difficulty to both session and profile
+-- Called after completing a song (on evaluation screen)
+function SL.MusicWheel.SaveLastPlayed(pn, song, difficulty)
+	if not pn or not song then return end
+	
+	-- Save to session
+	SL.MusicWheel.SaveLastPlayedToSession(pn, song, difficulty)
+	
+	-- Also save to profile file (if persistent profile)
+	SL.MusicWheel.SaveLastPlayedToProfile(pn, song, difficulty)
+end
+
+-- Get the best last played song for initialization
+-- Priority:
+-- 1. Session data (most recent from current session, by timestamp)
+-- 2. Profile file data from P1 (fallback when session is empty, e.g., start of game)
+-- 3. nil (will use default song list)
+-- Returns: {song = Song, difficulties = {[pn] = difficulty}, player = PlayerNumber} or nil
+-- The difficulties table contains per-player difficulties when available
+function SL.MusicWheel.GetBestLastPlayed()
+	local players = GAMESTATE:GetHumanPlayers()
+	if #players == 0 then return nil end
+	
+	-- Collect session data for all players
+	local session_data_by_player = {}
+	local session_candidates = {}
+	
+	for _, pn in ipairs(players) do
+		local session_data = SL.Global.LastPlayed and SL.Global.LastPlayed[pn]
+		if session_data and session_data.song then
+			session_data_by_player[pn] = session_data
+			table.insert(session_candidates, {
+				song = session_data.song,
+				difficulty = session_data.difficulty,
+				player = pn,
+				timestamp = session_data.timestamp or 0,
+				source = "session"
+			})
+		end
+	end
+	
+	-- If we have session data, use the most recent song
+	if #session_candidates > 0 then
+		table.sort(session_candidates, function(a, b)
+			return a.timestamp > b.timestamp
+		end)
+		
+		local best = session_candidates[1]
+		
+		-- Build per-player difficulties table
+		-- Each player gets their own saved difficulty if they played this song
+		local difficulties = {}
+		for _, pn in ipairs(players) do
+			local pn_data = session_data_by_player[pn]
+			if pn_data and pn_data.song == best.song then
+				-- This player also played the same song, use their difficulty
+				difficulties[pn] = pn_data.difficulty
+			else
+				-- Player didn't play this song, use the best player's difficulty as fallback
+				difficulties[pn] = best.difficulty
+			end
+		end
+		
+		return {
+			song = best.song,
+			difficulty = best.difficulty,  -- For backwards compatibility
+			difficulties = difficulties,   -- Per-player difficulties
+			player = best.player,
+			source = "session"
+		}
+	end
+	
+	-- No session data - try profile files
+	-- P1 takes priority for song selection, but each player gets their own difficulty
+	local profile_data_by_player = {}
+	local best_song = nil
+	local best_player = nil
+	
+	-- Load profile data for all players
+	for _, pn in ipairs({PLAYER_1, PLAYER_2}) do
+		local is_playing = false
+		for _, p in ipairs(players) do
+			if p == pn then is_playing = true break end
+		end
+		
+		if is_playing then
+			local profile_data = SL.MusicWheel.LoadLastPlayedFromProfile(pn)
+			if profile_data and profile_data.song then
+				profile_data_by_player[pn] = profile_data
+				-- P1 takes priority for song selection
+				if not best_song then
+					best_song = profile_data.song
+					best_player = pn
+				end
+			end
+		end
+	end
+	
+	if best_song then
+		-- Build per-player difficulties
+		-- Each player gets their own saved difficulty if available
+		local difficulties = {}
+		for _, pn in ipairs(players) do
+			local pn_data = profile_data_by_player[pn]
+			if pn_data then
+				difficulties[pn] = pn_data.difficulty
+			else
+				-- Fallback to the best player's difficulty
+				difficulties[pn] = profile_data_by_player[best_player] and profile_data_by_player[best_player].difficulty
+			end
+		end
+		
+		return {
+			song = best_song,
+			difficulty = profile_data_by_player[best_player] and profile_data_by_player[best_player].difficulty,
+			difficulties = difficulties,
+			player = best_player,
+			source = "profile_file"
+		}
+	end
+	
+	return nil
+end
+
+-- Find a song in the wheel items and return its index
+-- Also opens the containing group if needed
+-- Returns: index in items array, or nil if not found
+function SL.MusicWheel.FindSongIndex(target_song)
+	if not target_song then return nil end
+	
+	local state = SL.MusicWheel.State
+	
+	-- First, check if the song is already visible in current items
+	for i, item in ipairs(state.items) do
+		if item.type == "song" and item.song == target_song then
+			return i
+		end
+	end
+	
+	-- Song not visible - need to find and open its group
+	-- Get the song's group name
+	local song_group = target_song:GetGroupName()
+	
+	-- Close all groups and open the target group
+	state.open_groups = {}
+	state.open_groups[song_group] = true
+	
+	-- Rebuild wheel data with the new group open
+	state.items = SL.MusicWheel.BuildWheelData(state.sort_order)
+	
+	-- Now find the song in the rebuilt items
+	for i, item in ipairs(state.items) do
+		if item.type == "song" and item.song == target_song then
+			return i
+		end
+	end
+	
+	-- Still not found (song might not exist in current sort/filter)
+	return nil
+end
+
+-- ============================================================================
 -- Initialization
 -- ============================================================================
 
@@ -1196,39 +1454,127 @@ function SL.MusicWheel.Initialize()
 	-- Clear any previously open groups
 	SL.MusicWheel.State.open_groups = {}
 	
-	-- Open first group by default
-	local groups = GetAllGroups()
-	if #groups > 0 then
-		SL.MusicWheel.State.open_groups[groups[1]] = true
-	end
+	-- Try to get the best last played song (from profile or session)
+	local last_played = SL.MusicWheel.GetBestLastPlayed()
+	local target_song = last_played and last_played.song
+	local target_difficulty = last_played and last_played.difficulty
 	
-	-- Build initial wheel data with first group open
-	SL.MusicWheel.RebuildWheelData("SortOrder_Group")
+	-- Store the per-player difficulties for MusicWheel to access
+	SL.MusicWheel.State.initial_difficulties = last_played and last_played.difficulties or {}
 	
-	-- Find first song in the wheel and focus on it
-	local first_song = nil
-	for i, item in ipairs(SL.MusicWheel.State.items) do
-		if item.type == "song" then
-			first_song = item.song
-			SL.MusicWheel.State.focus_index = i  -- Focus on first song
-			break
+	-- If we have a target song, try to open its group
+	if target_song then
+		local song_group = target_song:GetGroupName()
+		SL.MusicWheel.State.open_groups[song_group] = true
+	else
+		-- Fallback: Open first group by default
+		local groups = GetAllGroups()
+		if #groups > 0 then
+			SL.MusicWheel.State.open_groups[groups[1]] = true
 		end
 	end
 	
+	-- Build initial wheel data
+	SL.MusicWheel.RebuildWheelData("SortOrder_Group")
+	
+	-- Try to focus on the target song, or fall back to first song
+	local focus_song = nil
+	local focus_index = 1
+	
+	if target_song then
+		-- Find the target song in the wheel
+		local song_index = SL.MusicWheel.FindSongIndex(target_song)
+		if song_index then
+			focus_index = song_index
+			focus_song = target_song
+		end
+	end
+	
+	-- If no target song found, use first song in wheel
+	if not focus_song then
+		for i, item in ipairs(SL.MusicWheel.State.items) do
+			if item.type == "song" then
+				focus_song = item.song
+				focus_index = i
+				break
+			end
+		end
+	end
+	
+	SL.MusicWheel.State.focus_index = focus_index
+	
 	-- Set initial song in GAMESTATE
-	if first_song then
-		GAMESTATE:SetCurrentSong(first_song)
+	if focus_song then
+		GAMESTATE:SetCurrentSong(focus_song)
 		
 		-- Set initial steps for all players
+		local steps_type = GAMESTATE:GetCurrentStyle():GetStepsType()
+		
 		for pn in ivalues(GAMESTATE:GetHumanPlayers()) do
-			local steps = GAMESTATE:GetCurrentSteps(pn)
-			if not steps then
-				-- Get steps for current style (Single/Double/etc.)
-				local steps_type = GAMESTATE:GetCurrentStyle():GetStepsType()
-				local compatible_steps = first_song:GetStepsByStepsType(steps_type)
-				if compatible_steps and #compatible_steps > 0 then
-					GAMESTATE:SetCurrentSteps(pn, compatible_steps[1])
+			local steps_to_set = nil
+			
+			-- Determine the player's preferred difficulty
+			-- Priority: 1. Per-player difficulty from last_played, 2. Session data, 3. Engine preference
+			local player_difficulty = nil
+			
+			-- First check per-player difficulties from last_played (includes session data)
+			if last_played and last_played.difficulties and last_played.difficulties[pn] then
+				player_difficulty = last_played.difficulties[pn]
+			end
+			
+			-- Fallback to engine's preferred difficulty
+			if not player_difficulty and PROFILEMAN:IsPersistentProfile(pn) then
+				player_difficulty = GAMESTATE:GetPreferredDifficulty(pn)
+			end
+			
+			-- Find steps matching the preferred difficulty
+			local compatible_steps = focus_song:GetStepsByStepsType(steps_type)
+			if compatible_steps and #compatible_steps > 0 then
+				if player_difficulty then
+					-- Convert string difficulty to enum if needed (profile file stores as string)
+					local diff_to_match = player_difficulty
+					if type(player_difficulty) == "string" then
+						diff_to_match = _G[player_difficulty] or player_difficulty
+					end
+					
+					-- Try to find exact match
+					for _, steps in ipairs(compatible_steps) do
+						if steps:GetDifficulty() == diff_to_match then
+							steps_to_set = steps
+							break
+						end
+					end
+					
+					-- If no exact match, find closest
+					if not steps_to_set then
+						local diff_order = {
+							[Difficulty_Beginner] = 1, ["Difficulty_Beginner"] = 1,
+							[Difficulty_Easy] = 2, ["Difficulty_Easy"] = 2,
+							[Difficulty_Medium] = 3, ["Difficulty_Medium"] = 3,
+							[Difficulty_Hard] = 4, ["Difficulty_Hard"] = 4,
+							[Difficulty_Challenge] = 5, ["Difficulty_Challenge"] = 5,
+							[Difficulty_Edit] = 6, ["Difficulty_Edit"] = 6
+						}
+						local target_value = diff_order[diff_to_match] or diff_order[player_difficulty] or 3
+						local best_distance = 999
+						
+						for _, steps in ipairs(compatible_steps) do
+							local steps_value = diff_order[steps:GetDifficulty()] or 3
+							local distance = math.abs(steps_value - target_value)
+							if distance < best_distance then
+								best_distance = distance
+								steps_to_set = steps
+							end
+						end
+					end
 				end
+				
+				-- Fallback to first available steps
+				if not steps_to_set then
+					steps_to_set = compatible_steps[1]
+				end
+				
+				GAMESTATE:SetCurrentSteps(pn, steps_to_set)
 			end
 		end
 		

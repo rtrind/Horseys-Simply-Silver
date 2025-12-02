@@ -2,6 +2,18 @@
 -- and the MeasureCounter has been abstracted out to a different file to keep this one simpler.
 local InitializeMeasureCounterAndModsLevel = LoadActor("./MeasureCounterAndModsLevel.lua")
 
+-- Save last played song/difficulty to SESSION when entering gameplay
+-- This ensures pressing Escape returns to the same song on the wheel
+-- Profile saving only happens on evaluation screen after completing the song
+local song = GAMESTATE:GetCurrentSong()
+if song and SL.MusicWheel and SL.MusicWheel.SaveLastPlayedToSession then
+	for player in ivalues(GAMESTATE:GetHumanPlayers()) do
+		local steps = GAMESTATE:GetCurrentSteps(player)
+		local difficulty = steps and steps:GetDifficulty() or nil
+		SL.MusicWheel.SaveLastPlayedToSession(player, song, difficulty)
+	end
+end
+
 local text = ""
 local SongNumberInCourse = 0
 local SongsInCourse
