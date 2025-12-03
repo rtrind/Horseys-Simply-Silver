@@ -142,9 +142,9 @@ function item_mt:create_actors(name)
             Texture = THEME:GetPathG("MusicWheelItem","Grades/grades 1x18.png"),
             InitCommand = function(subself)
                 self["gradeSprite"..pn] = subself
-                subself:zoom(0.25) -- Adjusted zoom to match previous size approx
+                subself:zoom(0.32) -- Slightly smaller, balanced size
                 subself:animate(false)
-                subself:x(0):y(-4) -- Centered on the player position
+                subself:x(0):y(0) -- Centered in the space above the lamp
                 subself:visible(false)
             end,
             UpdateGradeCommand=function(subself)
@@ -179,8 +179,8 @@ function item_mt:create_actors(name)
             Text="5",
             InitCommand = function(subself)
                 self["count"..pn] = subself
-                subself:zoom(0.12)
-                subself:x(-10):y(10) -- 2px more left, 2px more down to avoid overlap
+                subself:zoom(0.12) -- Back to original size
+                subself:x(-13):y(12) -- 1px higher, 1px more left
                 subself:halign(1):valign(1)
                 subself:diffuse(Color.White)
                 subself:visible(false)
@@ -206,8 +206,8 @@ function item_mt:create_actors(name)
             Name = "Lamp"..pn,
             InitCommand = function(subself)
                 self["lamp"..pn] = subself
-                subself:y(10) -- Below the grade
-                subself:zoomto(18, 2) -- Thinner and smaller as requested
+                subself:y(13) -- 1px higher than before
+                subself:zoomto(24, 4) -- 4px wider (20 -> 24)
                 subself:halign(0.5)
             end,
             UpdateGradeCommand=function(subself)
