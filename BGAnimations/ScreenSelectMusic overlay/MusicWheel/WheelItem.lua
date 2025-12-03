@@ -26,7 +26,7 @@ local group_color = color("#4c565d")
 function item_mt:create_actors(name)
 	self.name = name
 	
-	return Def.ActorFrame{
+	local af = Def.ActorFrame{
 		Name = name,
 		InitCommand = function(subself)
 			self.container = subself
@@ -107,6 +107,141 @@ function item_mt:create_actors(name)
 			end
 		}
 	}
+
+    -- Add Grade/Lamp indicators for both players
+    -- Layout: P1 Grade | P2 Grade (on the left side)
+    -- Lamp is a horizontal bar below the grade
+    
+    -- Load metrics for grade tiers (needed for sprite frame mapping)
+    local num_tiers = THEME:GetMetric("PlayerStageStats", "NumGradeTiersUsed")
+    local grade_frames = {}
+    for i=1,num_tiers do
+        grade_frames[ ("Grade_Tier%02d"):format(i) ] = i-1
+    end
+    grade_frames["Grade_Failed"] = num_tiers
+
+    for player in ivalues(PlayerNumber) do
+        local pn = ToEnumShortString(player)
+        -- Position P1 at x=20, P2 at x=50 (relative to left edge)
+        local x_offset = (player == PLAYER_1) and 20 or 50
+        local x_pos = -item_width/2 + x_offset
+
+        local playerFrame = Def.ActorFrame{
+            Name = "GradeFrame"..pn,
+            InitCommand = function(subself)
+                self["gradeFrame"..pn] = subself
+                subself:x(x_pos)
+                subself:visible(false)
+            end
+        }
+
+        -- Grade Sprite (replaces Wendy font)
+        -- Uses 1x18 sprite sheet from Simply Love
+        playerFrame[#playerFrame+1] = Def.Sprite{
+            Name = "GradeSprite"..pn,
+            Texture = THEME:GetPathG("MusicWheelItem","Grades/grades 1x18.png"),
+            InitCommand = function(subself)
+                self["gradeSprite"..pn] = subself
+                subself:zoom(0.25) -- Adjusted zoom to match previous size approx
+                subself:animate(false)
+                subself:x(0):y(-4) -- Centered on the player position
+                subself:visible(false)
+            end,
+            UpdateGradeCommand=function(subself)
+                local song = subself:GetParent():GetParent().song
+                if not song then subself:visible(false) return end
+                
+                local best_lamp, tap_count, best_grade = WheelHelpers.GetLamp(song, player)
+                
+                if best_grade then
+                    local grade_str = ToEnumShortString(best_grade)
+                    local frame_index = num_tiers
+                    
+                    if grade_str == "Failed" then
+                        frame_index = num_tiers
+                    else
+                        local tier_num = tonumber(grade_str:match("Tier(%d+)"))
+                        if tier_num then frame_index = tier_num - 1 end
+                    end
+                    subself:setstate(frame_index):visible(true)
+                else
+                    subself:visible(false)
+                end
+            end,
+            ["CurrentSteps"..pn.."ChangedMessageCommand"]=function(subself) subself:queuecommand("UpdateGrade") end
+        }
+
+        -- Count Text (Small text overlay for FC counts)
+        -- Use BitmapText with ScreenEval font for better readability
+        playerFrame[#playerFrame+1] = Def.BitmapText{
+            Font="Wendy/_ScreenEvaluation numbers",
+            Name = "Count"..pn,
+            Text="5",
+            InitCommand = function(subself)
+                self["count"..pn] = subself
+                subself:zoom(0.12)
+                subself:x(-10):y(10) -- 2px more left, 2px more down to avoid overlap
+                subself:halign(1):valign(1)
+                subself:diffuse(Color.White)
+                subself:visible(false)
+            end,
+            UpdateGradeCommand=function(subself)
+                local song = subself:GetParent():GetParent().song
+                if not song then subself:visible(false) return end
+                
+                local best_lamp, tap_count, best_grade = WheelHelpers.GetLamp(song, player)
+                
+                if tap_count and tap_count < 10 then
+                    subself:settext(tap_count)
+                    subself:visible(true)
+                else
+                    subself:visible(false)
+                end
+            end,
+            ["CurrentSteps"..pn.."ChangedMessageCommand"]=function(subself) subself:queuecommand("UpdateGrade") end
+        }
+
+        -- Lamp (Horizontal Bar below grade)
+        playerFrame[#playerFrame+1] = Def.Quad{
+            Name = "Lamp"..pn,
+            InitCommand = function(subself)
+                self["lamp"..pn] = subself
+                subself:y(10) -- Below the grade
+                subself:zoomto(18, 2) -- Thinner and smaller as requested
+                subself:halign(0.5)
+            end,
+            UpdateGradeCommand=function(subself)
+                local song = subself:GetParent():GetParent().song
+                if not song then subself:visible(false) return end
+                
+                local best_lamp, tap_count, best_grade = WheelHelpers.GetLamp(song, player)
+                
+                if best_lamp then
+                    subself:visible(true)
+                    if best_lamp == 0 then
+                        local ItlPink = color("1,0.2,0.406,1")
+                        subself:diffuse(ItlPink)
+                    elseif best_lamp > 50 then
+                        local ClearLamp = { color("#0000CC"), color("#990000") }
+                        subself:diffuse(ClearLamp[best_lamp - 50])
+                    else
+                        subself:diffuse(SL.JudgmentColors[SL.Global.GameMode][best_lamp])
+                    end
+                    
+                    -- Update Count color to match
+                    local countActor = subself:GetParent():GetChild("Count"..pn)
+                    if countActor then countActor:diffuse(subself:GetDiffuse()) end
+                else
+                    subself:visible(false)
+                end
+            end,
+            ["CurrentSteps"..pn.."ChangedMessageCommand"]=function(subself) subself:queuecommand("UpdateGrade") end
+        }
+        
+        af[#af+1] = playerFrame
+    end
+
+    return af
 end
 
 -- ============================================================================
@@ -196,8 +331,14 @@ end
 -- Set display for song item
 function item_mt:set_song(info)
 	local song = info.song
+    
+    -- Store song on container for child actors to access
+    if self.container then self.container.song = song end
 	
-	if not song then return end
+	if not song then 
+        if self.title then self.title:settext("") end
+        return 
+    end
 	
 	-- Reset background to default song color (Dark Blue/Black)
 	if self.background then
@@ -224,6 +365,19 @@ function item_mt:set_song(info)
 	if self.pack_icon then
 		self.pack_icon:visible(false)
 	end
+
+    -- Trigger UpdateGrade for both players
+    for player in ivalues(PlayerNumber) do
+        local pn = ToEnumShortString(player)
+        
+        if self["gradeFrame"..pn] then
+            self["gradeFrame"..pn]:visible(true)
+            -- Propagate UpdateGrade to children using playcommand
+            if self["gradeSprite"..pn] then self["gradeSprite"..pn]:playcommand("UpdateGrade") end
+            if self["lamp"..pn] then self["lamp"..pn]:playcommand("UpdateGrade") end
+            if self["count"..pn] then self["count"..pn]:playcommand("UpdateGrade") end
+        end
+    end
 end
 
 -- Set display for group header item
@@ -301,6 +455,12 @@ function item_mt:set_group_header(info)
 		self.song_count:visible(true)
 		self.song_count:settext(info.song_count)
 	end
+
+    -- Hide Grade/Lamp for group headers
+    for player in ivalues(PlayerNumber) do
+        local pn = ToEnumShortString(player)
+        if self["gradeFrame"..pn] then self["gradeFrame"..pn]:visible(false) end
+    end
 end
 
 -- ============================================================================
