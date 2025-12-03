@@ -16,6 +16,10 @@ SL.MusicWheel = {
 		sort_order = "SortOrder_Group", -- Current sort order
 		open_groups = {},              -- Table of open group names {["Group Name"] = true}
 		
+		-- Last selected song/steps (persists when on group headers)
+		last_song = nil,               -- Last selected song (for grade display)
+		last_steps = {},               -- Last selected steps per player {[player] = steps}
+		
 		-- Caching
 		highscore_cache = {},          -- Cached highscores with context
 		favorites_cache = {},          -- Deduplicated favorites

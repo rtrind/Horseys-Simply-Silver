@@ -300,6 +300,9 @@ local function input(event)
 
 			if focused_song then
 				GAMESTATE:SetCurrentSong(focused_song)
+				
+				-- Track last song for grade display when on group headers
+				SL.MusicWheel.State.last_song = focused_song
 
 				-- Get the focused item to check if it has specific steps (Difficulty sort)
 				local focused_item = SL.MusicWheel.GetFocusedItem()
@@ -324,6 +327,8 @@ local function input(event)
 
 					if stepsToSet then
 						GAMESTATE:SetCurrentSteps(player, stepsToSet)
+						-- Track last steps for grade display when on group headers
+						SL.MusicWheel.State.last_steps[player] = stepsToSet
 					else
 						-- No steps available for this song/style
 						GAMESTATE:SetCurrentSteps(player, nil)

@@ -148,7 +148,9 @@ function item_mt:create_actors(name)
                 subself:visible(false)
             end,
             UpdateGradeCommand=function(subself)
+                -- Use item's song, or fall back to last_song for group headers
                 local song = subself:GetParent():GetParent().song
+                if not song then song = SL.MusicWheel.State.last_song end
                 if not song then subself:visible(false) return end
                 
                 local best_lamp, tap_count, best_grade = WheelHelpers.GetLamp(song, player)
@@ -186,7 +188,9 @@ function item_mt:create_actors(name)
                 subself:visible(false)
             end,
             UpdateGradeCommand=function(subself)
+                -- Use item's song, or fall back to last_song for group headers
                 local song = subself:GetParent():GetParent().song
+                if not song then song = SL.MusicWheel.State.last_song end
                 if not song then subself:visible(false) return end
                 
                 local best_lamp, tap_count, best_grade = WheelHelpers.GetLamp(song, player)
@@ -211,7 +215,9 @@ function item_mt:create_actors(name)
                 subself:halign(0.5)
             end,
             UpdateGradeCommand=function(subself)
+                -- Use item's song, or fall back to last_song for group headers
                 local song = subself:GetParent():GetParent().song
+                if not song then song = SL.MusicWheel.State.last_song end
                 if not song then subself:visible(false) return end
                 
                 local best_lamp, tap_count, best_grade = WheelHelpers.GetLamp(song, player)
@@ -456,10 +462,21 @@ function item_mt:set_group_header(info)
 		self.song_count:settext(info.song_count)
 	end
 
-    -- Hide Grade/Lamp for group headers
+    -- Clear item's song reference (group headers don't have songs)
+    -- Grade display will fall back to last_song
+    if self.container then self.container.song = nil end
+
+    -- Show Grade/Lamp using last_song for group headers
     for player in ivalues(PlayerNumber) do
         local pn = ToEnumShortString(player)
-        if self["gradeFrame"..pn] then self["gradeFrame"..pn]:visible(false) end
+        
+        if self["gradeFrame"..pn] then
+            self["gradeFrame"..pn]:visible(true)
+            -- Trigger UpdateGrade to use last_song fallback
+            if self["gradeSprite"..pn] then self["gradeSprite"..pn]:playcommand("UpdateGrade") end
+            if self["lamp"..pn] then self["lamp"..pn]:playcommand("UpdateGrade") end
+            if self["count"..pn] then self["count"..pn]:playcommand("UpdateGrade") end
+        end
     end
 end
 

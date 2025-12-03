@@ -19,7 +19,11 @@ function WheelHelpers.GetLamp(song, player)
 	if not GAMESTATE:IsPlayerEnabled(player) then return nil end
 	
 	-- Get current steps for this player to match difficulty
+	-- Fall back to last_steps from wheel state when on group header
 	local currentSteps = GAMESTATE:GetCurrentSteps(player)
+	if not currentSteps and SL.MusicWheel and SL.MusicWheel.State.last_steps then
+		currentSteps = SL.MusicWheel.State.last_steps[player]
+	end
 	if not currentSteps then return nil end
 	
 	local diff = currentSteps:GetDifficulty()
