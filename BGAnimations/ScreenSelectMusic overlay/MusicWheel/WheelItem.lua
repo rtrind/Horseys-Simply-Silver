@@ -76,7 +76,7 @@ function item_mt:create_actors(name)
 				self.group_name = subself
 				subself:x(0)
 				subself:halign(0.5)
-				subself:zoom(0.9)
+				subself:zoom(1)
 				subself:maxwidth(item_width - 20)
 				subself:diffuse(Color.White)
 				subself:visible(false)
