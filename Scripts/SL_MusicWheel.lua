@@ -143,7 +143,7 @@ end
 -- Build deduplicated favorites section
 -- Returns: array of song items with favorites metadata
 function SL.MusicWheel.BuildFavoritesSection()
-	local favorites_set = {}  -- Use as set for deduplication
+	local favorites_set = {}  -- Use as set for deduplication (stores song dirs)
 	local favorites_list = {}
 	
 	-- Collect favorites from all enabled players
@@ -172,9 +172,10 @@ function SL.MusicWheel.BuildFavoritesSection()
 					end
 										
 					if song then
-						if not favorites_set[song] then
+						local song_dir_path = song:GetSongDir()
+						if not favorites_set[song_dir_path] then
 							-- First time seeing this song
-							favorites_set[song] = true
+							favorites_set[song_dir_path] = true
 							table.insert(favorites_list, {
 								type = "song",
 								song = song,
@@ -185,8 +186,18 @@ function SL.MusicWheel.BuildFavoritesSection()
 						else
 							-- Song already in list, just add this player to favorited_by
 							for _, item in ipairs(favorites_list) do
-								if item.song == song then
-									table.insert(item.favorited_by, pn)
+								if item.song:GetSongDir() == song_dir_path then
+									-- Check if player is already in favorited_by (avoid duplicates there too)
+									local already_added = false
+									for _, existing_pn in ipairs(item.favorited_by) do
+										if existing_pn == pn then
+											already_added = true
+											break
+										end
+									end
+									if not already_added then
+										table.insert(item.favorited_by, pn)
+									end
 									break
 								end
 							end
@@ -196,6 +207,12 @@ function SL.MusicWheel.BuildFavoritesSection()
 			end
 		end
 	end
+
+	-- Sort favorites alphabetically
+	table.sort(favorites_list, function(a, b)
+		return a.song:GetDisplayMainTitle():lower() < b.song:GetDisplayMainTitle():lower()
+	end)
+
 	return favorites_list
 end
 
