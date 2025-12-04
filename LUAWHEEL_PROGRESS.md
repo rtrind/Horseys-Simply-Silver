@@ -47,14 +47,14 @@
 ### Planned Tasks
 - [ ] Implement favorites section with deduplication
 - [ ] Add favorites icon to wheel items
-- [ ] Add grade display (P1/P2) to wheel items
-- [ ] Add combo line display (yellow/green/white + number when <10)
+- [x] Add grade display (P1/P2) to wheel items
+- [x] Add combo line display (yellow/green/white + number when <10)
 - [ ] Implement favorites toggle (sequence: MenuUp MenuDown MenuUp MenuDown)
 - [ ] Implement highscore caching with context awareness
 - [ ] Test favorites workflow
 
 ### Bug Fixes
-- [ ] TBD
+- [ ] When changing the sort order, the wheel should be positioned in the same song it was before the change
 
 ## Phase 5: Integration & Polish (Not Started)
 

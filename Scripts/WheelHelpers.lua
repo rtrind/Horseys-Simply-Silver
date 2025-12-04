@@ -52,7 +52,6 @@ function WheelHelpers.GetLamp(song, player)
 	local tap_count = 99
 	local best_grade = nil
 
-    Trace("WheelHelpers: Checking song " .. tostring(song:GetMainTitle()) .. " for " .. tostring(pn) .. " | Diff: " .. tostring(diff))
 
 	for score in ivalues(high_score_list:GetHighScores()) do
 		local award = score:GetStageAward()
@@ -102,10 +101,8 @@ function WheelHelpers.GetLamp(song, player)
         elseif grade ~= nil and grade > best_grade then
             best_grade = grade
         end
-        Trace("WheelHelpers: Score Grade: " .. tostring(grade) .. " | Best was: " .. tostring(prev_best) .. " | Best is now: " .. tostring(best_grade))
 	end
 
-    Trace("WheelHelpers: Final Best Grade for " .. tostring(song:GetMainTitle()) .. ": " .. tostring(best_grade))
 	return best_lamp, tap_count, best_grade
 end
 

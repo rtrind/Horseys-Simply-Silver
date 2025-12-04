@@ -233,6 +233,32 @@ local function input(event)
 			-- Add button to sequence
 			table.insert(seq, {button = button, time = currentTime})
 
+			-- Check for favorites toggle sequence (Up,Down,Up,Down)
+			if #seq >= 4 then
+				if seq[#seq-3].button == "MenuUp" and 
+				   seq[#seq-2].button == "MenuDown" and 
+				   seq[#seq-1].button == "MenuUp" and 
+				   seq[#seq].button == "MenuDown" then
+					-- Match found! Toggle favorite using Profile API
+					local song = GAMESTATE:GetCurrentSong()
+					if song then
+						local profile = PROFILEMAN:GetProfile(pn)
+						if profile then
+							if profile:SongIsFavorite(song) then
+								profile:RemoveSongFromFavorites(song)
+							else
+								profile:AddSongToFavorites(song)
+							end
+							-- Broadcast to update heart icons
+							MESSAGEMAN:Broadcast("FavoritesChanged")
+						end
+					end
+					-- Clear sequence after processing
+					buttonSequence[pn] = {}
+					return true
+				end
+			end
+
 			-- Check for difficulty change sequences (need 2 of the same button)
 			if #seq >= 2 and seq[#seq].button == seq[#seq-1].button then
 				local focused_song = SL.MusicWheel.GetFocusedSong()
@@ -546,6 +572,8 @@ local t = Def.ActorFrame{
 			play_sample_music()
 		end
 	end,
+
+	-- FavoritesChangedMessageCommand removed - heart icons update themselves via UpdateGrade
 
 	-- Add the wheel actors (this returns an ActorFrame from sick_wheel)
 	wheel:create_actors("WheelContainer", num_items, WheelItem, wheel_x, wheel_y)

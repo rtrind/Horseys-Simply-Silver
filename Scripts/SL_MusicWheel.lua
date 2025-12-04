@@ -100,26 +100,33 @@ function SL.MusicWheel.BuildFavoritesSection()
 	
 	-- Collect favorites from all enabled players
 	for pn in ivalues(GAMESTATE:GetEnabledPlayers()) do
-		local player_favorites = SL[ToEnumShortString(pn)].Favorites or {}
-		
-		for _, song in ipairs(player_favorites) do
-			if song then
-				if not favorites_set[song] then
-					-- First time seeing this song
-					favorites_set[song] = true
-					table.insert(favorites_list, {
-						type = "song",
-						song = song,
-						group = "<Favorites>",
-						is_favorite = true,
-						favorited_by = {pn}
-					})
-				else
-					-- Song already in list, add player to favorited_by
-					for _, item in ipairs(favorites_list) do
-						if item.song == song then
-							table.insert(item.favorited_by, pn)
-							break
+		local profile = PROFILEMAN:GetProfile(pn)
+		if profile then
+			-- GetFavorites() returns a table of song paths (strings)
+			local fav_paths = profile:GetFavorites()
+			
+			for _, path in ipairs(fav_paths) do
+				-- Convert path to song object
+				local song = SONGMAN:FindSong(path)
+				
+				if song then
+					if not favorites_set[song] then
+						-- First time seeing this song
+						favorites_set[song] = true
+						table.insert(favorites_list, {
+							type = "song",
+							song = song,
+							group = "<Favorites>",
+							is_favorite = true,
+							favorited_by = {pn}
+						})
+					else
+						-- Song already in list, add player to favorited_by
+						for _, item in ipairs(favorites_list) do
+							if item.song == song then
+								table.insert(item.favorited_by, pn)
+								break
+							end
 						end
 					end
 				end
@@ -150,6 +157,30 @@ end
 -- Phase 2: Supports open/close groups
 function SL.MusicWheel.BuildWheelData_Group()
 	local items = {}
+	
+	-- 1. Add Favorites Group at the top
+	local favorites = SL.MusicWheel.BuildFavoritesSection()
+	if #favorites > 0 then
+		local is_open = SL.MusicWheel.State.open_groups["<Favorites>"] or false
+		
+		-- Add group header
+		table.insert(items, {
+			type = "group_header",
+			group_name = "<Favorites>",
+			song_count = #favorites,
+			is_open = is_open,
+			index = 0 -- Special index for favorites
+		})
+		
+		-- Add favorite songs if group is open
+		if is_open then
+			for _, item in ipairs(favorites) do
+				table.insert(items, item)
+			end
+		end
+	end
+	
+	-- 2. Add Normal Groups
 	local groups = GetAllGroups()
 	
 	-- Sort groups alphabetically
@@ -1004,7 +1035,6 @@ function SL.MusicWheel.BuildWheelData_TopScores()
 			end
 		end
 	end
-	
 	return items
 end
 
@@ -1051,7 +1081,7 @@ function SL.MusicWheel.BuildWheelData(sort_order)
 	elseif sort_order == "SortOrder_ModeMenu" or sort_order == "Difficulty" then
 		items = SL.MusicWheel.BuildWheelData_Difficulty()
 		if sort_order == "Difficulty" then SL.MusicWheel.State.sort_order = "SortOrder_ModeMenu" end
-		
+	
 	else
 		-- Default to Group sort for unsupported sorts
 		items = SL.MusicWheel.BuildWheelData_Group()

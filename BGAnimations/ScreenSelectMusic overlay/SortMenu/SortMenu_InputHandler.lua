@@ -127,31 +127,9 @@ local input = function(event)
                     PROFILEMAN:SaveMachineProfile()
 
                     overlay:queuecommand("DirectInputToEngineForSelectProfile")
-				elseif focus.new_overlay == "AddFavorite" then
-					addOrRemoveFavorite(event.PlayerNumber)
-					-- Rebuild wheel to update favorite icons
-					SL.MusicWheel.RebuildWheelData()
-					overlay:queuecommand("DirectInputToEngine")
 				elseif focus.new_overlay == "PracticeMode" then
 					SCREENMAN:GetTopScreen():SetNextScreenName("ScreenPractice")
 					SCREENMAN:GetTopScreen():StartTransitioningScreen("SM_GoToNextScreen")
-				elseif focus.new_overlay == "Preferred" then
-					-- Only allow sorting by favorites if there are favorites available
-					if (#SL[ToEnumShortString(event.PlayerNumber)].Favorites > 0) then
-						-- The 2nd argument, isAbsolute, is ITGmania 0.6.0 specific. It
-						-- allows absolute paths to be used for the favorites file which is
-						-- how it works to load from the profile directory.
-						SONGMAN:SetPreferredSongs(getFavoritesPath(event.PlayerNumber), --[[isAbsolute=]]true);
-						if SONGMAN:GetPreferredSortSongs() then
-							-- Rebuild Lua wheel with Preferred sort
-							SL.MusicWheel.RebuildWheelData("SortOrder_Preferred")
-							overlay:queuecommand("DirectInputToEngine")
-						else 
-							SM(ToEnumShortString(event.PlayerNumber).." has no favorites!")
-						end
-					else
-						SM("No Favorites Available")
-					end
 				elseif focus.new_overlay == "SetSummary" then
 					SCREENMAN:GetTopScreen():SetNextScreenName("ScreenEvaluationSummarySet")
 					SCREENMAN:GetTopScreen():StartTransitioningScreen("SM_GoToNextScreen")

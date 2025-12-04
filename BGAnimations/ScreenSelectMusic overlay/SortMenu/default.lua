@@ -181,15 +181,7 @@ end
 
 ------------------------------------------------------------
 
-local function AddFavorites()
-    for player in ivalues(GAMESTATE:GetHumanPlayers()) do
-        local path = getFavoritesPath(player)
-        if FILEMAN:DoesFileExist(path) then
-            return {{"MixTape", "Preferred"}}
-        end
-    end
-    return nil
-end
+
 
 -- Only display the View Downloads option if we're connected to
 -- GrooveStats and Auto-Downloads are enabled.
@@ -208,29 +200,7 @@ local function AddPlayerSortOptions()
     return player_sort_options
 end
 
-local function AddPlaylists()
-	local player_sort_options = {}
-	for player in ivalues(GAMESTATE:GetHumanPlayers()) do
-		local path = getFavoritesPath(player)
-		-- OutFox is not currently compatible with the Favorites system in this theme
-		if FILEMAN:DoesFileExist(path) and not IsOutFox() then
-			table.insert(player_sort_options, {{"MixTape", "Preferred"}})
-			break
-		end
-	end
-	-- Get the name of every file in the Other/Playlists directory
-	local files = FILEMAN:GetDirListing(THEME:GetCurrentThemeDirectory().."Other/Playlists/")
-	-- Add each file to the wheel options
-	for i=1, #files do
-		local file = files[i]
-		-- OutFox is not currently compatible with the Favorites system in this theme
-		if file:match("%.txt$") and not IsOutFox() then
-			local playlist = file:gsub("%.txt$", "")
-			table.insert(player_sort_options, {{"Playlist", playlist}})
-		end
-	end
-	return player_sort_options
-end
+
 local function GetChangeableStyles(style)
 	local available_styles = {}
 	-- Allow players to switch from single to double and from double to single
@@ -350,17 +320,9 @@ local wheel_options = {
 			GetChangeableStyles(style),
 		}
 	},
-	{
-		{"", "CategoryPlaylists"},
-		AddPlaylists()
-	},
 	-- Allow players to switch out to a different SL GameMode if no stages have been played yet,
 	-- but don't add the current SL GameMode as a choice.
 	{ {"ChangeMode", "ITG"}, SL.Global.Stages.PlayedThisGame == 0 and SL.Global.GameMode ~= "ITG" },
-
-	-- OutFox is not currently compatible with the Favorites system in this theme
-	{ {"ImLovinIt", "AddFavorite"}, function() return GAMESTATE:GetCurrentSong() ~= nil and not IsOutFox() end},
-	{ AddFavorites(), not IsOutFox() },
 }
 
 
@@ -576,13 +538,7 @@ local t = Def.ActorFrame {
 			table.insert(wheel_options, {"ImLovinIt", "AddFavorite"})
 		end
 
-		for player in ivalues(GAMESTATE:GetHumanPlayers()) do
-			local path = getFavoritesPath(player)
-			if FILEMAN:DoesFileExist(path) then
-				table.insert(wheel_options, {"MixTape", "Preferred"})
-				break
-			end
-		end
+		-- Legacy favorites check removed
 		
 		-- Override sick_wheel's default focus_pos, which is math.floor(num_items / 2)
 		--

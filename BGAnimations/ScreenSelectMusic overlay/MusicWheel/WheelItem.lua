@@ -135,6 +135,38 @@ function item_mt:create_actors(name)
             end
         }
 
+        -- Heart Icon (Favorites)
+        -- Placed behind the grade
+        playerFrame[#playerFrame+1] = Def.Sprite{
+            Name = "HeartIcon"..pn,
+            Texture = THEME:GetPathG("", "_VisualStyles/Hearts/SelectColor"),
+            InitCommand = function(subself)
+                self["heartIcon"..pn] = subself
+                subself:zoom(0.035) -- Much smaller to fit behind grade
+                subself:diffuse(1, 0, 0, 0.5) -- Red color with 50% transparency
+                subself:x(0):y(-1) -- Match grade sprite position
+                subself:visible(false)
+            end,
+            UpdateGradeCommand=function(subself)
+                -- Use item's song
+                local song = subself:GetParent():GetParent().song
+                if not song then song = SL.MusicWheel.State.last_song end
+                
+                if song then
+                    local profile = PROFILEMAN:GetProfile(player)
+                    if profile and profile:SongIsFavorite(song) then
+                        subself:visible(true)
+                    else
+                        subself:visible(false)
+                    end
+                else
+                    subself:visible(false)
+                end
+            end,
+            ["CurrentSteps"..pn.."ChangedMessageCommand"]=function(subself) subself:queuecommand("UpdateGrade") end,
+            FavoritesChangedMessageCommand=function(subself) subself:queuecommand("UpdateGrade") end
+        }
+
         -- Grade Sprite (replaces Wendy font)
         -- Uses 1x18 sprite sheet from Simply Love
         playerFrame[#playerFrame+1] = Def.Sprite{
@@ -382,6 +414,7 @@ function item_mt:set_song(info)
             if self["gradeSprite"..pn] then self["gradeSprite"..pn]:playcommand("UpdateGrade") end
             if self["lamp"..pn] then self["lamp"..pn]:playcommand("UpdateGrade") end
             if self["count"..pn] then self["count"..pn]:playcommand("UpdateGrade") end
+            if self["heartIcon"..pn] then self["heartIcon"..pn]:playcommand("UpdateGrade") end
         end
     end
 end
@@ -470,6 +503,7 @@ function item_mt:set_group_header(info)
 		if self["gradeSprite"..pn] then self["gradeSprite"..pn]:visible(false) end
 		if self["lamp"..pn] then self["lamp"..pn]:visible(false) end
 		if self["count"..pn] then self["count"..pn]:visible(false) end
+		if self["heartIcon"..pn] then self["heartIcon"..pn]:visible(false) end
 	end
 
     -- Clear item's song reference (group headers don't have songs)

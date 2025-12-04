@@ -11,7 +11,6 @@ local af = Def.ActorFrame{
 	-- time ScreenGameplay loads, it should have a properly animated entrance.
 	InitCommand=function(self)
 		SL.Global.GameplayReloadCheck = false
-		generateFavoritesForMusicWheel()
 
 		-- reset song start time here in case player force-escaped
 		start_time = -1
@@ -28,22 +27,6 @@ local af = Def.ActorFrame{
 		-- to a random song from ITG-Mode-DefaultSongs.txt
 	end,
 
-	OffCommand=function(self)
-		self:linear(0.3):diffusealpha(0)
-	end,
-
-	PlayerProfileSetMessageCommand=function(self, params)
-		if not PROFILEMAN:IsPersistentProfile(params.Player) then
-			LoadGuest(params.Player)
-		end
-		generateFavoritesForMusicWheel()
-		ApplyMods(params.Player)
-	end,
-
-	PlayerJoinedMessageCommand=function(self, params)
-		-- Instead of reloading abruptly, open the profile selection screen
-		MESSAGEMAN:Broadcast("OpenProfileSelectFromJoin")
-	end,
 
 	SSM_RequestReloadMessageCommand=function(self, params)
 		-- Defer one frame to ensure we're still on the profile screen as top
@@ -122,7 +105,6 @@ local af = Def.ActorFrame{
 
 	LoadActor("./SongSearch/default.lua"),
 
-	LoadActor("../ScreenSelectMusic overlay/ToggleFavorite.lua"),
 
 	LoadActor("./footer.lua"),
 
