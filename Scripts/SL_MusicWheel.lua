@@ -151,6 +151,55 @@ function SL.MusicWheel.BuildFavoritesSection()
 	return favorites_list
 end
 
+-- Update state metadata for favorites changes without rebuilding the full wheel.
+-- Returns a table describing which indices changed so the visuals can be refreshed.
+function SL.MusicWheel.UpdateFavoritesMetadata()
+	local state = SL.MusicWheel.State
+	if not state or not state.items or #state.items == 0 then return nil end
+
+	local result = {
+		focused_item_index = nil,
+		favorites_header_index = nil,
+		favorites_count = nil
+	}
+
+	-- Update focused song metadata so heart icons and other per-item data stay in sync.
+	local focused_item = state.items[state.focus_index]
+	if focused_item and focused_item.type == "song" and focused_item.song then
+		local favorited_by = {}
+		for pn in ivalues(GAMESTATE:GetEnabledPlayers()) do
+			local profile = PROFILEMAN:GetProfile(pn)
+			if profile and profile:SongIsFavorite(focused_item.song) then
+				table.insert(favorited_by, pn)
+			end
+		end
+		focused_item.is_favorite = (#favorited_by > 0)
+		focused_item.favorited_by = favorited_by
+		result.focused_item_index = state.focus_index
+	end
+
+	-- When using Group sort, keep the <Favorites> header count in sync.
+	if state.sort_order == "SortOrder_Group" then
+		local favorites = SL.MusicWheel.BuildFavoritesSection()
+		state.favorites_cache = favorites
+		result.favorites_count = #favorites
+
+		for index, item in ipairs(state.items) do
+			if item.type == "group_header" and item.group_name == "<Favorites>" then
+				item.song_count = #favorites
+				result.favorites_header_index = index
+				break
+			end
+		end
+	end
+
+	if not result.focused_item_index and not result.favorites_header_index then
+		return nil
+	end
+
+	return result
+end
+
 -- ============================================================================
 -- Wheel Data Building
 -- ============================================================================

@@ -430,7 +430,16 @@ function item_mt:set_group_header(info)
 	if self.background then
 		self.default_color = group_color
 		self.background:diffuse(self.default_color)
-		self.background:diffusealpha(1)
+		-- Maintain the same translucency behavior used by transform().
+		-- When the header currently has focus we want the brighter (0.8) alpha,
+		-- otherwise stick to the normal translucent 0.5. This prevents targeted
+		-- refreshes (like FavoritesChanged) from leaving the quad fully opaque
+		-- until the wheel scrolls again.
+		if self.is_focused then
+			self.background:diffusealpha(0.8)
+		else
+			self.background:diffusealpha(0.5)
+		end
 	end
 	
 	-- Determine pack type and load icon sprite

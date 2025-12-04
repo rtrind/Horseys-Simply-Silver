@@ -573,6 +573,21 @@ local t = Def.ActorFrame{
 		end
 	end,
 
+	FavoritesChangedMessageCommand = function(self)
+		if not (SL and SL.MusicWheel and SL.MusicWheel.UpdateFavoritesMetadata) then return end
+		local updates = SL.MusicWheel.UpdateFavoritesMetadata()
+		if not updates then return end
+
+		local state = SL.MusicWheel.State
+		if updates.focused_item_index and state.items[updates.focused_item_index] then
+			wheel:set_element_info(updates.focused_item_index, state.items[updates.focused_item_index])
+		end
+
+		if updates.favorites_header_index and state.items[updates.favorites_header_index] then
+			wheel:set_element_info(updates.favorites_header_index, state.items[updates.favorites_header_index])
+		end
+	end,
+
 	-- FavoritesChangedMessageCommand removed - heart icons update themselves via UpdateGrade
 
 	-- Add the wheel actors (this returns an ActorFrame from sick_wheel)
