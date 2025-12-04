@@ -177,6 +177,9 @@ local function input(event)
 
 				-- Check if this is a second Start press within timeout
 				if startPressTime and (now - startPressTime) < optionsPromptTimeout and startPressPlayer == pn then
+					if SL and SL.MusicWheel and SL.MusicWheel.RememberSelectionContext then
+						SL.MusicWheel.RememberSelectionContext()
+					end
 					-- Second press - go to options
 					startPressTime = nil
 					startPressPlayer = nil

@@ -37,6 +37,54 @@ SL.MusicWheel = {
 	}
 }
 
+-- Cache context about the currently focused song so we can restore special
+-- sections (like <Favorites>) after returning from gameplay.
+function SL.MusicWheel.RememberSelectionContext()
+	local state = SL.MusicWheel.State
+	if not state or not state.items or #state.items == 0 then return end
+
+	local focused_item = state.items[state.focus_index]
+	if not focused_item or focused_item.type ~= "song" or not focused_item.song then
+		state.last_selection_context = nil
+		return
+	end
+
+	local song_dir = focused_item.song:GetSongDir()
+	state.last_selection_context = {
+		sort_order = state.sort_order,
+		song_dir = song_dir,
+		is_favorites_song = (focused_item.group == "<Favorites>")
+	}
+end
+
+-- Determine whether we should force the wheel to reopen the <Favorites> section
+-- for the provided song (used when returning from gameplay).
+function SL.MusicWheel.ShouldReopenFavorites(target_song)
+	if not target_song then return false end
+	local song_dir = target_song:GetSongDir()
+	if not song_dir then return false end
+
+	local state = SL.MusicWheel.State
+	local ctx = state and state.last_selection_context
+	if ctx and ctx.sort_order == "SortOrder_Group" and ctx.is_favorites_song and ctx.song_dir == song_dir then
+		return true
+	end
+
+	-- Fall back to session memory populated when we entered gameplay.
+	if SL.Global and SL.Global.LastPlayed then
+		for _, data in pairs(SL.Global.LastPlayed) do
+			if data and data.song and data.is_favorites_song then
+				local data_song_dir = data.song:GetSongDir()
+				if data_song_dir == song_dir then
+					return true
+				end
+			end
+		end
+	end
+
+	return false
+end
+
 -- ============================================================================
 -- Helper Functions
 -- ============================================================================
@@ -1374,6 +1422,21 @@ function SL.MusicWheel.SaveLastPlayedToSession(pn, song, difficulty)
 		difficulty = difficulty,
 		timestamp = GetTimeSinceStart()
 	}
+	
+	-- Store whether this song was chosen from <Favorites> so we can reopen that
+	-- section after returning from gameplay.
+	if SL.MusicWheel and SL.MusicWheel.State then
+		local state = SL.MusicWheel.State
+		local focused = state.items and state.items[state.focus_index]
+		if focused and focused.type == "song" and focused.song == song then
+			SL.Global.LastPlayed[pn].is_favorites_song = (focused.group == "<Favorites>")
+		else
+			local ctx = state.last_selection_context
+			if ctx and ctx.song_dir == song:GetSongDir() then
+				SL.Global.LastPlayed[pn].is_favorites_song = ctx.is_favorites_song
+			end
+		end
+	end
 end
 
 -- Save last played song/difficulty to both session and profile
@@ -1554,10 +1617,15 @@ function SL.MusicWheel.Initialize()
 	-- Store the per-player difficulties for MusicWheel to access
 	SL.MusicWheel.State.initial_difficulties = last_played and last_played.difficulties or {}
 	
-	-- If we have a target song, try to open its group
+	-- If we have a target song, try to open its group (or Favorites if it came from there)
+	local reopen_favorites = SL.MusicWheel.ShouldReopenFavorites(target_song)
 	if target_song then
 		local song_group = target_song:GetGroupName()
-		SL.MusicWheel.State.open_groups[song_group] = true
+		if reopen_favorites then
+			SL.MusicWheel.State.open_groups["<Favorites>"] = true
+		else
+			SL.MusicWheel.State.open_groups[song_group] = true
+		end
 	else
 		-- Fallback: Open first group by default
 		local groups = GetAllGroups()
