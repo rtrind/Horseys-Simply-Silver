@@ -104,28 +104,43 @@ function SL.MusicWheel.BuildFavoritesSection()
 		if profile then
 			-- GetFavorites() returns a table of song paths (strings)
 			local fav_paths = profile:GetFavorites()
-			
+						
 			for _, path in ipairs(fav_paths) do
-				-- Convert path to song object
-				local song = SONGMAN:FindSong(path)
-				
-				if song then
-					if not favorites_set[song] then
-						-- First time seeing this song
-						favorites_set[song] = true
-						table.insert(favorites_list, {
-							type = "song",
-							song = song,
-							group = "<Favorites>",
-							is_favorite = true,
-							favorited_by = {pn}
-						})
-					else
-						-- Song already in list, add player to favorited_by
-						for _, item in ipairs(favorites_list) do
-							if item.song == song then
-								table.insert(item.favorited_by, pn)
-								break
+				-- Path format: /Songs/GroupName/SongName/
+				-- Extract group and song directory names
+				local group_name, song_dir = path:match("/Songs/([^/]+)/([^/]+)/")
+								
+				if group_name and song_dir then
+					-- Get all songs in this group
+					local group_songs = GetSongsInGroup(group_name)
+					
+					-- Find the song by matching directory name
+					local song = nil
+					for _, s in ipairs(group_songs) do
+						if s:GetSongDir():match(song_dir .. "/$") or s:GetSongDir():match(song_dir .. "\\$") then
+							song = s
+							break
+						end
+					end
+										
+					if song then
+						if not favorites_set[song] then
+							-- First time seeing this song
+							favorites_set[song] = true
+							table.insert(favorites_list, {
+								type = "song",
+								song = song,
+								group = "<Favorites>",
+								is_favorite = true,
+								favorited_by = {pn}
+							})
+						else
+							-- Song already in list, just add this player to favorited_by
+							for _, item in ipairs(favorites_list) do
+								if item.song == song then
+									table.insert(item.favorited_by, pn)
+									break
+								end
 							end
 						end
 					end
@@ -133,12 +148,6 @@ function SL.MusicWheel.BuildFavoritesSection()
 			end
 		end
 	end
-	
-	-- Sort favorites alphabetically by title
-	table.sort(favorites_list, function(a, b)
-		return a.song:GetDisplayMainTitle():lower() < b.song:GetDisplayMainTitle():lower()
-	end)
-	
 	return favorites_list
 end
 
