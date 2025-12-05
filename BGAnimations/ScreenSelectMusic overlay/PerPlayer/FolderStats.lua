@@ -90,7 +90,7 @@ af2.BuildSongLampArrayCommand=function(self)
 				Passes = 0
 			}
 			local countSongs = 0
-			local folderName = SCREENMAN:GetTopScreen():GetMusicWheel():GetSelectedSection()
+			local folderName = SL.MusicWheel.GetFocusedGroup() or ""
 			local songs = SONGMAN:GetSongsInGroup(folderName)
 			local stepstype = GAMESTATE:GetCurrentStyle():GetStepsType()
 			local steps = GAMESTATE:GetCurrentSteps(player)

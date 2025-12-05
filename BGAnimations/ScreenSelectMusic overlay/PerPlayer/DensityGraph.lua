@@ -15,14 +15,6 @@ local text_table = {}
 local leaving_screen = false
 local breakdown_table = {}
 
-local function CloseFolder()
-	local wheel = SCREENMAN:GetTopScreen():GetMusicWheel()
-	local section = wheel:GetSelectedSection()
-	wheel:SetOpenSection(""):SetOpenSection(section):SetOpenSection("")
-	wheel:Move(1)
-	wheel:Move(-1)
-	wheel:Move(0)
-end
 -- In 2-players mode, whether the DensityGraph or PatternInfo is shown
 -- Can be toggled by the code "ToggleChartInfo" in metrics.ini
 local showPatternInfo = false

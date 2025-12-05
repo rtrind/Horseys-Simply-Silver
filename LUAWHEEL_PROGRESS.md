@@ -51,6 +51,7 @@
 - [x] Add combo line display (yellow/green/white + number when <10)
 - [x] Implement favorites toggle (sequence: MenuUp MenuDown MenuUp MenuDown)
 - [x] Test favorites workflow
+- [x] Reimplement wheel scroll speed
 
 ### Bug Fixes
 - [x] When changing the sort order, the wheel should be positioned in the same song it was before the change
@@ -63,7 +64,7 @@
 - [ ] Performance testing (large libraries, fast scrolling)
 
 ### Bug Fixes
-- [ ] TBD
+- [ ] Dynamic second player join broken (error on logs)
 
 ## Phase 6: Optimization (Not Started)
 

@@ -147,9 +147,19 @@ function item_mt:create_actors(name)
                 subself:x(0):y(-1) -- Match grade sprite position
                 subself:visible(false)
             end,
-            UpdateGradeCommand=function(subself)
-                -- Use item's song
-                local song = subself:GetParent():GetParent().song
+            UpdateGradeCommand=function(subself, params)
+                -- Use passed song or fall back
+                local song = params and params.song
+                if not song then 
+                    -- Try to find the song from the item container
+                    local item_container = subself:GetParent():GetParent()
+                    if item_container and item_container.song then
+                        song = item_container.song
+                    end
+                end
+                -- Fallback to last_song only if we really can't find anything (e.g. initial load?)
+                -- Actually, for items, we should probably NOT fallback to last_song if we want to avoid the bug.
+                -- But let's keep it as a last resort if item_container.song is nil (which it shouldn't be for song items).
                 if not song then song = SL.MusicWheel.State.last_song end
                 
                 if song then
@@ -179,13 +189,27 @@ function item_mt:create_actors(name)
                 subself:x(0):y(0) -- Centered in the space above the lamp
                 subself:visible(false)
             end,
-            UpdateGradeCommand=function(subself)
-                -- Use item's song, or fall back to last_song for group headers
-                local song = subself:GetParent():GetParent().song
+            UpdateGradeCommand=function(subself, params)
+                -- Use passed params or fall back
+                local song = params and params.song
+                if not song then 
+                    local item_container = subself:GetParent():GetParent()
+                    if item_container and item_container.song then
+                        song = item_container.song
+                    end
+                end
                 if not song then song = SL.MusicWheel.State.last_song end
+                
+                -- Debug
+                -- SM(string.format("GradeSprite UpdateGrade: song=%s, params=%s", tostring(song), tostring(params)))
+                
                 if not song then subself:visible(false) return end
                 
-                local best_lamp, tap_count, best_grade = WheelHelpers.GetLamp(song, player)
+                -- Use passed grade if available, otherwise recalculate (fallback)
+                local best_grade = params and params.grade
+                if not best_grade then
+                     _, _, best_grade = WheelHelpers.GetLamp(song, player)
+                end
                 
                 if best_grade then
                     local grade_str = ToEnumShortString(best_grade)
@@ -219,13 +243,22 @@ function item_mt:create_actors(name)
                 subself:diffuse(Color.White)
                 subself:visible(false)
             end,
-            UpdateGradeCommand=function(subself)
-                -- Use item's song, or fall back to last_song for group headers
-                local song = subself:GetParent():GetParent().song
+            UpdateGradeCommand=function(subself, params)
+                -- Use passed params or fall back
+                local song = params and params.song
+                if not song then 
+                    local item_container = subself:GetParent():GetParent()
+                    if item_container and item_container.song then
+                        song = item_container.song
+                    end
+                end
                 if not song then song = SL.MusicWheel.State.last_song end
                 if not song then subself:visible(false) return end
                 
-                local best_lamp, tap_count, best_grade = WheelHelpers.GetLamp(song, player)
+                local tap_count = params and params.count
+                if not tap_count then
+                     _, tap_count, _ = WheelHelpers.GetLamp(song, player)
+                end
                 
                 if tap_count and tap_count < 10 then
                     subself:settext(tap_count)
@@ -246,13 +279,22 @@ function item_mt:create_actors(name)
                 subself:zoomto(24, 4) -- 4px wider (20 -> 24)
                 subself:halign(0.5)
             end,
-            UpdateGradeCommand=function(subself)
-                -- Use item's song, or fall back to last_song for group headers
-                local song = subself:GetParent():GetParent().song
+            UpdateGradeCommand=function(subself, params)
+                -- Use passed params or fall back
+                local song = params and params.song
+                if not song then 
+                    local item_container = subself:GetParent():GetParent()
+                    if item_container and item_container.song then
+                        song = item_container.song
+                    end
+                end
                 if not song then song = SL.MusicWheel.State.last_song end
                 if not song then subself:visible(false) return end
                 
-                local best_lamp, tap_count, best_grade = WheelHelpers.GetLamp(song, player)
+                local best_lamp = params and params.lamp
+                if not best_lamp then
+                     best_lamp, _, _ = WheelHelpers.GetLamp(song, player)
+                end
                 
                 if best_lamp then
                     subself:visible(true)
@@ -410,11 +452,19 @@ function item_mt:set_song(info)
         
         if self["gradeFrame"..pn] then
             self["gradeFrame"..pn]:visible(true)
-            -- Propagate UpdateGrade to children using playcommand
-            if self["gradeSprite"..pn] then self["gradeSprite"..pn]:playcommand("UpdateGrade") end
-            if self["lamp"..pn] then self["lamp"..pn]:playcommand("UpdateGrade") end
-            if self["count"..pn] then self["count"..pn]:playcommand("UpdateGrade") end
-            if self["heartIcon"..pn] then self["heartIcon"..pn]:playcommand("UpdateGrade") end
+            
+            -- Calculate lamp data once per player
+            local best_lamp, tap_count, best_grade = nil, nil, nil
+            if song then
+                best_lamp, tap_count, best_grade = WheelHelpers.GetLamp(song, player)
+            end
+            local params = { song = song, lamp = best_lamp, count = tap_count, grade = best_grade }
+
+            -- Propagate UpdateGrade to children using playcommand with params
+            if self["gradeSprite"..pn] then self["gradeSprite"..pn]:playcommand("UpdateGrade", params) end
+            if self["lamp"..pn] then self["lamp"..pn]:playcommand("UpdateGrade", params) end
+            if self["count"..pn] then self["count"..pn]:playcommand("UpdateGrade", params) end
+            if self["heartIcon"..pn] then self["heartIcon"..pn]:playcommand("UpdateGrade", params) end
         end
     end
 end

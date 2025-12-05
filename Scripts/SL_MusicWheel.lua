@@ -153,19 +153,29 @@ function SL.MusicWheel.BuildFavoritesSection()
 			-- GetFavorites() returns a table of song paths (strings)
 			local fav_paths = profile:GetFavorites()
 						
-			for _, path in ipairs(fav_paths) do
+		for _, path in ipairs(fav_paths) do
+                -- Normalize path separators
+                path = path:gsub("\\", "/")
+                
 				-- Path format: /Songs/GroupName/SongName/
 				-- Extract group and song directory names
-				local group_name, song_dir = path:match("/Songs/([^/]+)/([^/]+)/")
-								
+				local group_name, song_dir = path:match("/Songs/([^/]+)/([^/]+)/?")
+				
+                if not group_name then
+                    -- Try matching without leading slash
+                    group_name, song_dir = path:match("Songs/([^/]+)/([^/]+)/?")
+                end
+
 				if group_name and song_dir then
 					-- Get all songs in this group
 					local group_songs = GetSongsInGroup(group_name)
 					
-					-- Find the song by matching directory name
+					-- Find the song by matching directory name (case-insensitive, plain text)
 					local song = nil
+                    local search_dir = song_dir:lower()
 					for _, s in ipairs(group_songs) do
-						if s:GetSongDir():match(song_dir .. "/$") or s:GetSongDir():match(song_dir .. "\\$") then
+                        local s_dir = s:GetSongDir():lower()
+						if s_dir:find(search_dir, 1, true) then
 							song = s
 							break
 						end

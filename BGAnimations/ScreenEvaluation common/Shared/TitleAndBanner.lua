@@ -222,7 +222,7 @@ af[#af+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 					if song then
 						duration = song:MusicLengthSeconds()
 					else
-						local group_name = SCREENMAN:GetTopScreen():GetMusicWheel():GetSelectedSection()
+						local group_name = SL.MusicWheel.GetFocusedGroup()
 						if group_name then
 							duration = group_durations[group_name]
 						end
