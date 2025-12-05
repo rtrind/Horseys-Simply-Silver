@@ -45,16 +45,15 @@
 ## Phase 4: Favorites & Grades (Not Started)
 
 ### Planned Tasks
-- [ ] Implement favorites section with deduplication
-- [ ] Add favorites icon to wheel items
+- [x] Implement favorites section with deduplication
+- [x] Add favorites icon to wheel items
 - [x] Add grade display (P1/P2) to wheel items
 - [x] Add combo line display (yellow/green/white + number when <10)
-- [ ] Implement favorites toggle (sequence: MenuUp MenuDown MenuUp MenuDown)
-- [ ] Implement highscore caching with context awareness
-- [ ] Test favorites workflow
+- [x] Implement favorites toggle (sequence: MenuUp MenuDown MenuUp MenuDown)
+- [x] Test favorites workflow
 
 ### Bug Fixes
-- [ ] When changing the sort order, the wheel should be positioned in the same song it was before the change
+- [x] When changing the sort order, the wheel should be positioned in the same song it was before the change
 
 ## Phase 5: Integration & Polish (Not Started)
 

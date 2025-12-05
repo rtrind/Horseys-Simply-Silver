@@ -1213,16 +1213,191 @@ function SL.MusicWheel.BuildWheelData(sort_order)
 	return items
 end
 
+-- Helper to determine which group a song belongs to in a specific sort order
+local function GetGroupForSong(song, sort_order)
+	if not song then return nil end
+	
+	-- Handle friendly names
+	if sort_order == "Group" then sort_order = "SortOrder_Group" end
+	if sort_order == "Title" then sort_order = "SortOrder_Title" end
+	if sort_order == "Artist" then sort_order = "SortOrder_Artist" end
+	if sort_order == "BPM" then sort_order = "SortOrder_BPM" end
+	if sort_order == "Length" then sort_order = "SortOrder_Length" end
+	if sort_order == "MostPlayed" then sort_order = "SortOrder_Popularity" end
+	if sort_order == "Difficulty" then sort_order = "SortOrder_ModeMenu" end
+	
+	if sort_order == "SortOrder_Group" then
+		return song:GetGroupName()
+		
+	elseif sort_order == "SortOrder_Title" then
+		local title = song:GetDisplayMainTitle()
+		local first_char = title:sub(1, 1):upper()
+		if not first_char:match("[A-Z]") then return "#" end
+		return first_char
+		
+	elseif sort_order == "SortOrder_Artist" then
+		local artist = song:GetDisplayArtist()
+		local first_char = artist:sub(1, 1):upper()
+		if not first_char:match("[A-Z]") then return "#" end
+		return first_char
+		
+	elseif sort_order == "SortOrder_BPM" then
+		local bpm = GetRepresentativeBPM(song)
+		if bpm >= 1000 then return "1000+" end
+		if bpm >= 301 then
+			local base = math.floor((bpm - 301) / 100) * 100 + 301
+			return base .. "-" .. (base + 99)
+		end
+		local base = math.floor((bpm - 1) / 20) * 20 + 1
+		return base .. "-" .. (base + 19)
+		
+	elseif sort_order == "SortOrder_Length" then
+		local length = song:GetLastSecond()
+		if length > 1200 then return "20:01+" end
+		if length > 600 then
+			local base = math.floor((length - 601) / 300) * 300 + 601
+			local min_sec = base
+			local max_sec = base + 299
+			return string.format("%d:%02d-%d:%02d", math.floor(min_sec / 60), min_sec % 60, math.floor(max_sec / 60), max_sec % 60)
+		end
+		if length > 180 then
+			local base = math.floor((length - 181) / 60) * 60 + 181
+			local min_sec = base
+			local max_sec = base + 59
+			return string.format("%d:%02d-%d:%02d", math.floor(min_sec / 60), min_sec % 60, math.floor(max_sec / 60), max_sec % 60)
+		end
+		local base = math.floor((length - 1) / 30) * 30 + 1
+		local min_sec = base
+		local max_sec = base + 29
+		return string.format("%d:%02d-%d:%02d", math.floor(min_sec / 60), min_sec % 60, math.floor(max_sec / 60), max_sec % 60)
+		
+	elseif sort_order == "SortOrder_ModeMenu" then
+		-- Difficulty sort
+		local steps = GAMESTATE:GetCurrentSteps(PLAYER_1)
+		if not steps then return nil end
+		return tostring(steps:GetMeter())
+		
+	elseif sort_order == "TopScores" then
+		-- Duplicate logic from BuildWheelData_TopScores
+		local steps_type = GAMESTATE:GetCurrentStyle():GetStepsType()
+		local grade_map = {
+			["Grade_Tier01"] = {label = "★★★★", order = 1},
+			["Grade_Tier02"] = {label = "★★★", order = 2},
+			["Grade_Tier03"] = {label = "★★", order = 3},
+			["Grade_Tier04"] = {label = "★", order = 4},
+			["Grade_Tier05"] = {label = "S", order = 5},
+			["Grade_Tier06"] = {label = "S", order = 5},
+			["Grade_Tier07"] = {label = "S", order = 5},
+			["Grade_Tier08"] = {label = "A", order = 6},
+			["Grade_Tier09"] = {label = "A", order = 6},
+			["Grade_Tier10"] = {label = "A", order = 6},
+			["Grade_Tier11"] = {label = "B", order = 7},
+			["Grade_Tier12"] = {label = "B", order = 7},
+			["Grade_Tier13"] = {label = "B", order = 7},
+			["Grade_Tier14"] = {label = "C", order = 8},
+			["Grade_Tier15"] = {label = "C", order = 8},
+			["Grade_Tier16"] = {label = "C", order = 8},
+			["Grade_Tier17"] = {label = "D", order = 9},
+			["Grade_Tier18"] = {label = "D", order = 9},
+			["Grade_Tier19"] = {label = "D", order = 9},
+			["Grade_Tier20"] = {label = "D", order = 9},
+			["Grade_Failed"] = {label = "F", order = 10}
+		}
+		
+		local best_grade_order = 999
+		local best_grade_info = nil
+		
+		for pn in ivalues(GAMESTATE:GetEnabledPlayers()) do
+			local profile = PROFILEMAN:GetProfile(pn)
+			if profile then
+				local all_steps = song:GetStepsByStepsType(steps_type)
+				for _, steps in ipairs(all_steps) do
+					local score_list = profile:GetHighScoreListIfExists(song, steps)
+					if score_list then
+						local scores = score_list:GetHighScores()
+						for _, score in ipairs(scores) do
+							local grade = score:GetGrade()
+							local info = grade_map[tostring(grade)]
+							if info and info.order < best_grade_order then
+								best_grade_order = info.order
+								best_grade_info = info
+							end
+						end
+					end
+				end
+			end
+		end
+		
+		if best_grade_info then
+			return best_grade_info.label
+		else
+			return "Unplayed"
+		end
+	end
+	
+	return nil
+end
+
 -- Rebuild wheel data and update state
 function SL.MusicWheel.RebuildWheelData(sort_order)
 	sort_order = sort_order or SL.MusicWheel.State.sort_order
 	
+	-- Capture current selection before rebuilding
+	local target_song = SL.MusicWheel.GetFocusedSong()
+	local target_steps = GAMESTATE:GetCurrentSteps(PLAYER_1)
+	
+	SM("RebuildWheelData: Switching to " .. tostring(sort_order))
+	if target_song then
+		SM("Target Song: " .. target_song:GetDisplayMainTitle())
+	else
+		SM("Target Song: nil")
+	end
+	
 	SL.MusicWheel.State.sort_order = sort_order
+	
+	-- Reset open groups for the new sort order
+	SL.MusicWheel.State.open_groups = {}
+	
+	-- If we have a target song, ensure its group is open in the new sort
+	if target_song then
+		local group_name = GetGroupForSong(target_song, sort_order)
+		SM("Calculated Group: " .. tostring(group_name))
+		if group_name then
+			SL.MusicWheel.State.open_groups[group_name] = true
+		end
+	end
+	
 	SL.MusicWheel.State.items = SL.MusicWheel.BuildWheelData(sort_order)
 	SL.MusicWheel.State.last_rebuild_time = GetTimeSinceStart()
 	
-	-- Reset focus to first item
-	SL.MusicWheel.State.focus_index = 1
+	-- Try to restore focus to the target song
+	local found_index = nil
+	
+	if target_song then
+		local target_dir = target_song:GetSongDir()
+		for i, item in ipairs(SL.MusicWheel.State.items) do
+			if item.type == "song" and (item.song == target_song or (target_dir and item.song:GetSongDir() == target_dir)) then
+				-- For Difficulty sort, also check if steps match (if we have target steps)
+				if sort_order == "SortOrder_ModeMenu" or sort_order == "Difficulty" then
+					if target_steps and item.steps == target_steps then
+						found_index = i
+						break
+					elseif not found_index then
+						-- Partial match (same song, different steps), keep as fallback
+						found_index = i
+					end
+				else
+					found_index = i
+					break
+				end
+			end
+		end
+	end
+	
+	SM("Found Index: " .. tostring(found_index))
+	
+	-- Set focus index (default to 1 if not found)
+	SL.MusicWheel.State.focus_index = found_index or 1
 	
 	-- Broadcast rebuild message
 	MESSAGEMAN:Broadcast("MusicWheelRebuilt", {sort_order = sort_order})
