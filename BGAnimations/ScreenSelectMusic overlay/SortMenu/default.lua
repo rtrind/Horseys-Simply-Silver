@@ -374,9 +374,18 @@ local t = Def.ActorFrame {
 		-- in this particular usage.  Thus, set the focus to the wheel's current 4th Actor.
 		sort_wheel.focus_pos = 4
 		-- get the currently active SortOrder and truncate the "SortOrder_" from the beginning
-		-- Handle case where there's no music wheel (returns nil)
-		local sortOrder = GAMESTATE:GetSortOrder()
-		local current_sort_order = sortOrder and ToEnumShortString(sortOrder) or "Group"
+		-- Use SL.MusicWheel.State.sort_order if available, otherwise fallback to GAMESTATE
+		local sortOrder = SL.MusicWheel and SL.MusicWheel.State and SL.MusicWheel.State.sort_order or GAMESTATE:GetSortOrder()
+		-- Handle both enum strings (SortOrder_Group) and friendly names (Group)
+		local raw_sort = tostring(sortOrder):gsub("SortOrder_", "")
+		
+		-- Map internal engine names to Sort Menu friendly names
+		local sort_mapping = {
+			ModeMenu = "Difficulty",
+			Popularity = "MostPlayed"
+		}
+		
+		local current_sort_order = sort_mapping[raw_sort] or raw_sort
 		local current_sort_order_index = 1
 		--SM(filtered_wheel_options)
 		-- find the sick_wheel index of the item we want to display first when the player activates this SortMenu

@@ -1346,13 +1346,6 @@ function SL.MusicWheel.RebuildWheelData(sort_order)
 	local target_song = SL.MusicWheel.GetFocusedSong()
 	local target_steps = GAMESTATE:GetCurrentSteps(PLAYER_1)
 	
-	SM("RebuildWheelData: Switching to " .. tostring(sort_order))
-	if target_song then
-		SM("Target Song: " .. target_song:GetDisplayMainTitle())
-	else
-		SM("Target Song: nil")
-	end
-	
 	SL.MusicWheel.State.sort_order = sort_order
 	
 	-- Reset open groups for the new sort order
@@ -1361,7 +1354,6 @@ function SL.MusicWheel.RebuildWheelData(sort_order)
 	-- If we have a target song, ensure its group is open in the new sort
 	if target_song then
 		local group_name = GetGroupForSong(target_song, sort_order)
-		SM("Calculated Group: " .. tostring(group_name))
 		if group_name then
 			SL.MusicWheel.State.open_groups[group_name] = true
 		end
@@ -1393,8 +1385,6 @@ function SL.MusicWheel.RebuildWheelData(sort_order)
 			end
 		end
 	end
-	
-	SM("Found Index: " .. tostring(found_index))
 	
 	-- Set focus index (default to 1 if not found)
 	SL.MusicWheel.State.focus_index = found_index or 1
