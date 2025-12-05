@@ -92,6 +92,96 @@ local function FindBestSteps(song, stepsType, preferredDiff)
 	return bestSteps
 end
 
+-- Helper to get sort menu buttons from metrics
+local function GetSortMenuButtons()
+	local buttons = {}
+	-- Check SortList 1 and 2
+	for i = 1, 2 do
+		local codeName = i == 1 and "CodeSortList" or ("CodeSortList" .. i)
+		local code = THEME:GetMetric("ScreenSelectMusic", codeName)
+		if code and code ~= "" and code ~= "false" then
+			-- Parse buttons from code string (e.g. "MenuLeft-MenuRight")
+			for button in code:gmatch("([^-]+)") do
+				buttons[button] = true
+			end
+		end
+	end
+	return buttons
+end
+
+local sortMenuButtons = GetSortMenuButtons()
+
+-- Perform the actual scroll action
+local function PerformScroll(direction, pn)
+	-- Final check: don't scroll if input is redirected (Sort Menu open)
+	if SCREENMAN:get_input_redirected(pn) then return end
+
+	-- MenuLeft - Scroll up (previous song)
+	SL.MusicWheel.Scroll(direction)
+
+	-- Update wheel display
+	wheel:scroll_by_amount(direction)
+
+	-- Update GAMESTATE with focused song or group
+	local focused_song = SL.MusicWheel.GetFocusedSong()
+	local focused_group = SL.MusicWheel.GetFocusedGroup()
+
+	if focused_song then
+		GAMESTATE:SetCurrentSong(focused_song)
+		
+		-- Track last song for grade display when on group headers
+		SL.MusicWheel.State.last_song = focused_song
+
+		-- Get the focused item to check if it has specific steps (Difficulty sort)
+		local focused_item = SL.MusicWheel.GetFocusedItem()
+
+		-- Set steps for each player
+		for player in ivalues(GAMESTATE:GetHumanPlayers()) do
+			local stepsToSet = nil
+
+			-- If the item has specific steps (Difficulty sort), use those
+			if focused_item and focused_item.steps then
+				stepsToSet = focused_item.steps
+			else
+				-- Otherwise, find best matching steps for player's preferred difficulty
+				local stepsType = GAMESTATE:GetCurrentStyle():GetStepsType()
+				stepsToSet = FindBestSteps(focused_song, stepsType, preferredDifficulty[player])
+
+				-- Update preference if we found steps
+				if stepsToSet and not preferredDifficulty[player] then
+					preferredDifficulty[player] = stepsToSet:GetDifficulty()
+				end
+			end
+
+			if stepsToSet then
+				GAMESTATE:SetCurrentSteps(player, stepsToSet)
+				-- Track last steps for grade display when on group headers
+				SL.MusicWheel.State.last_steps[player] = stepsToSet
+			else
+				-- No steps available for this song/style
+				GAMESTATE:SetCurrentSteps(player, nil)
+			end
+
+			-- Broadcast steps changed for NoteField preview
+			MESSAGEMAN:Broadcast("CurrentStepsP" .. (player == PLAYER_1 and "1" or "2") .. "Changed")
+		end
+
+		MESSAGEMAN:Broadcast("CurrentSongChanged")
+	elseif focused_group then
+		-- Clear current song when on group header
+		GAMESTATE:SetCurrentSong(nil)
+
+		-- Clear steps for each player
+		for player in ivalues(GAMESTATE:GetHumanPlayers()) do
+			GAMESTATE:SetCurrentSteps(player, nil)
+		end
+
+		MESSAGEMAN:Broadcast("CurrentSongChanged")
+		-- Broadcast group focus for banner display
+		MESSAGEMAN:Broadcast("FocusedGroupChanged", {group = focused_group})
+	end
+end
+
 local function input(event)
 	if not event or not event.PlayerNumber or not event.button then
 		return false
@@ -117,7 +207,14 @@ local function input(event)
 	if event.type == "InputEventType_FirstPress" then
 		if (button == "MenuLeft" or button == "MenuRight") and
 			heldButtons[pn]["MenuLeft"] and heldButtons[pn]["MenuRight"] then
-			-- Both buttons pressed - let it pass through to open SortMenu
+			
+			-- Both buttons pressed - Cancel any pending scroll buffer
+			local buffer = wheel.input_buffer
+			if buffer then
+				buffer:stoptweening()
+			end
+			
+			-- Let it pass through to open SortMenu
 			return false
 		end
 	end
@@ -310,77 +407,26 @@ local function input(event)
 	-- Handle both FirstPress and Repeat for continuous scrolling
 	if event.type == "InputEventType_FirstPress" or event.type == "InputEventType_Repeat" then
 		if event.GameButton == "MenuLeft" or event.GameButton == "MenuRight" then
-			local scrollDirection = 0
-			if event.GameButton == "MenuLeft" then
-				scrollDirection = -1
+			local scrollDirection = (event.GameButton == "MenuLeft") and -1 or 1
+			
+			-- Check if this button is part of the Sort Menu combo
+			-- If so, buffer the input to check for chords
+			if event.type == "InputEventType_FirstPress" and sortMenuButtons[event.GameButton] then
+				local buffer = wheel.input_buffer
+				if buffer then
+					-- Buffer the scroll command
+					-- If the other button is pressed within 0.05s, this will be cancelled
+					buffer:stoptweening()
+					buffer:sleep(0.05)
+					buffer:queuecommand("TriggerScroll" .. (scrollDirection == -1 and "Left" or "Right"))
+					-- Store player number for the command
+					buffer.pn = pn
+				end
 			else
-				scrollDirection = 1
+				-- Not a sort menu button or is repeat - scroll immediately
+				PerformScroll(scrollDirection, pn)
 			end
-
-			-- MenuLeft - Scroll up (previous song)
-			SL.MusicWheel.Scroll(scrollDirection)
-
-			-- Update wheel display
-			wheel:scroll_by_amount(scrollDirection)
-
-			-- Update GAMESTATE with focused song or group
-			local focused_song = SL.MusicWheel.GetFocusedSong()
-			local focused_group = SL.MusicWheel.GetFocusedGroup()
-
-			if focused_song then
-				GAMESTATE:SetCurrentSong(focused_song)
-				
-				-- Track last song for grade display when on group headers
-				SL.MusicWheel.State.last_song = focused_song
-
-				-- Get the focused item to check if it has specific steps (Difficulty sort)
-				local focused_item = SL.MusicWheel.GetFocusedItem()
-
-				-- Set steps for each player
-				for player in ivalues(GAMESTATE:GetHumanPlayers()) do
-					local stepsToSet = nil
-
-					-- If the item has specific steps (Difficulty sort), use those
-					if focused_item and focused_item.steps then
-						stepsToSet = focused_item.steps
-					else
-						-- Otherwise, find best matching steps for player's preferred difficulty
-						local stepsType = GAMESTATE:GetCurrentStyle():GetStepsType()
-						stepsToSet = FindBestSteps(focused_song, stepsType, preferredDifficulty[player])
-
-						-- Update preference if we found steps
-						if stepsToSet and not preferredDifficulty[player] then
-							preferredDifficulty[player] = stepsToSet:GetDifficulty()
-						end
-					end
-
-					if stepsToSet then
-						GAMESTATE:SetCurrentSteps(player, stepsToSet)
-						-- Track last steps for grade display when on group headers
-						SL.MusicWheel.State.last_steps[player] = stepsToSet
-					else
-						-- No steps available for this song/style
-						GAMESTATE:SetCurrentSteps(player, nil)
-					end
-
-					-- Broadcast steps changed for NoteField preview
-					MESSAGEMAN:Broadcast("CurrentStepsP" .. (player == PLAYER_1 and "1" or "2") .. "Changed")
-				end
-
-				MESSAGEMAN:Broadcast("CurrentSongChanged")
-			elseif focused_group then
-				-- Clear current song when on group header
-				GAMESTATE:SetCurrentSong(nil)
-
-				-- Clear steps for each player
-				for player in ivalues(GAMESTATE:GetHumanPlayers()) do
-					GAMESTATE:SetCurrentSteps(player, nil)
-				end
-
-				MESSAGEMAN:Broadcast("CurrentSongChanged")
-				-- Broadcast group focus for banner display
-				MESSAGEMAN:Broadcast("FocusedGroupChanged", {group = focused_group})
-			end
+			
 			return false -- Return false to let InputHandler see the event (for chord detection)
 		end
 	end
@@ -594,7 +640,15 @@ local t = Def.ActorFrame{
 	-- FavoritesChangedMessageCommand removed - heart icons update themselves via UpdateGrade
 
 	-- Add the wheel actors (this returns an ActorFrame from sick_wheel)
-	wheel:create_actors("WheelContainer", num_items, WheelItem, wheel_x, wheel_y)
+	wheel:create_actors("WheelContainer", num_items, WheelItem, wheel_x, wheel_y),
+	
+	-- Input Buffer Actor
+	Def.Actor{
+		Name="InputBuffer",
+		InitCommand=function(self) wheel.input_buffer = self end,
+		TriggerScrollLeftCommand=function(self) PerformScroll(-1, self.pn) end,
+		TriggerScrollRightCommand=function(self) PerformScroll(1, self.pn) end
+	}
 }
 
 return t
