@@ -8,34 +8,37 @@
 
 if not SL then SL = {} end
 
-SL.MusicWheel = {
-	-- Current wheel state
-	State = {
-		items = {},                    -- Flat list of wheel items (songs + groups)
-		focus_index = 1,               -- Current focus position in items array
-		sort_order = "SortOrder_Group", -- Current sort order
-		open_groups = {},              -- Table of open group names {["Group Name"] = true}
+-- Only initialize if not already present (preserve state across reloads)
+if not SL.MusicWheel then
+	SL.MusicWheel = {
+		-- Current wheel state
+		State = {
+			items = {},                    -- Flat list of wheel items (songs + groups)
+			focus_index = 1,               -- Current focus position in items array
+			sort_order = "SortOrder_Group", -- Current sort order
+			open_groups = {},              -- Table of open group names {["Group Name"] = true}
+			
+			-- Last selected song/steps (persists when on group headers)
+			last_song = nil,               -- Last selected song (for grade display)
+			last_steps = {},               -- Last selected steps per player {[player] = steps}
+			
+			-- Caching
+			highscore_cache = {},          -- Cached highscores with context
+			favorites_cache = {},          -- Deduplicated favorites
+			
+			-- Performance
+			last_rebuild_time = 0,         -- Timestamp of last rebuild
+			preload_queue = {},            -- Items queued for preloading
+		},
 		
-		-- Last selected song/steps (persists when on group headers)
-		last_song = nil,               -- Last selected song (for grade display)
-		last_steps = {},               -- Last selected steps per player {[player] = steps}
-		
-		-- Caching
-		highscore_cache = {},          -- Cached highscores with context
-		favorites_cache = {},          -- Deduplicated favorites
-		
-		-- Performance
-		last_rebuild_time = 0,         -- Timestamp of last rebuild
-		preload_queue = {},            -- Items queued for preloading
-	},
-	
-	-- Configuration
-	Config = {
-		num_visible_items = 11,        -- 9 visible + 1 above + 1 below
-		preload_buffer = 10,           -- Number of items to preload ahead
-		batch_size = 20,               -- Items to load per batch
+		-- Configuration
+		Config = {
+			num_visible_items = 11,        -- 9 visible + 1 above + 1 below
+			preload_buffer = 10,           -- Number of items to preload ahead
+			batch_size = 20,               -- Items to load per batch
+		}
 	}
-}
+end
 
 -- Cache context about the currently focused song so we can restore special
 -- sections (like <Favorites>) after returning from gameplay.
@@ -1358,8 +1361,16 @@ function SL.MusicWheel.RebuildWheelData(sort_order)
 	
 	SL.MusicWheel.State.sort_order = sort_order
 	
+	-- Preserve Favorites group if it was open
+	local favorites_was_open = SL.MusicWheel.State.open_groups["<Favorites>"]
+	
 	-- Reset open groups for the new sort order
 	SL.MusicWheel.State.open_groups = {}
+	
+	-- Restore Favorites if it was open (for returning from gameplay to same section)
+	if favorites_was_open then
+		SL.MusicWheel.State.open_groups["<Favorites>"] = true
+	end
 	
 	-- If we have a target song, ensure its group is open in the new sort
 	if target_song then
@@ -1764,10 +1775,26 @@ function SL.MusicWheel.FindSongIndex(target_song)
 	local state = SL.MusicWheel.State
 	
 	-- First, check if the song is already visible in current items
+	-- If Favorites group is open, prefer finding the song there
+	local favorites_open = state.open_groups["<Favorites>"]
+	local fallback_index = nil
+	
 	for i, item in ipairs(state.items) do
 		if item.type == "song" and item.song == target_song then
-			return i
+			-- If Favorites is open and this is the Favorites version, return it immediately
+			if favorites_open and item.group == "<Favorites>" then
+				return i
+			end
+			-- Otherwise, remember this index as a fallback
+			if not fallback_index then
+				fallback_index = i
+			end
 		end
+	end
+	
+	-- If we found the song (in any group), return it
+	if fallback_index then
+		return fallback_index
 	end
 	
 	-- Song not visible - need to find and open its group
@@ -1775,21 +1802,32 @@ function SL.MusicWheel.FindSongIndex(target_song)
 	local song_group = target_song:GetGroupName()
 	
 	-- Close all groups and open the target group
-	state.open_groups = {}
-	state.open_groups[song_group] = true
+	-- But preserve Favorites if it was open
+	if not favorites_open then
+		state.open_groups = {}
+		state.open_groups[song_group] = true
+	else
+		-- Favorites is open - keep it open and also open the song's group
+		state.open_groups[song_group] = true
+	end
 	
 	-- Rebuild wheel data with the new group open
 	state.items = SL.MusicWheel.BuildWheelData(state.sort_order)
 	
-	-- Now find the song in the rebuilt items
+	-- Now find the song in the rebuilt items, preferring Favorites if open
+	fallback_index = nil
 	for i, item in ipairs(state.items) do
 		if item.type == "song" and item.song == target_song then
-			return i
+			if favorites_open and item.group == "<Favorites>" then
+				return i
+			end
+			if not fallback_index then
+				fallback_index = i
+			end
 		end
 	end
 	
-	-- Still not found (song might not exist in current sort/filter)
-	return nil
+	return fallback_index
 end
 
 -- ============================================================================

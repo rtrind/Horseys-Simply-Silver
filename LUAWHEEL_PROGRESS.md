@@ -65,6 +65,8 @@
 
 ### Bug Fixes
 - [ ] Dynamic second player join broken (error on logs)
+- [ ] **Grades not showing on wheel at startup** - Profile scores aren't loaded into memory at wheel init time. The engine's MusicWheel gets grades via `SetGrade` messages, but our LuaWheel calls `GetHighScoreList` which returns empty. Scores work AFTER playing a song (gameplay triggers loading). Needs investigation into how to trigger profile score loading earlier.
+- [ ] GetLamp should be called once per song in the wheel (performance)
 
 ## Phase 6: Optimization (Not Started)
 

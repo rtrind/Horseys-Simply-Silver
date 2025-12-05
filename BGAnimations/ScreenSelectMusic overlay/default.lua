@@ -171,6 +171,11 @@ local af = Def.ActorFrame{
 		GoToGameplayCommand=function(self)
 			-- Verify we have a valid song selected in GAMESTATE
 			if GAMESTATE:GetCurrentSong() then
+				-- Remember the selection context (for restoring <Favorites> after gameplay)
+				if SL and SL.MusicWheel and SL.MusicWheel.RememberSelectionContext then
+					SL.MusicWheel.RememberSelectionContext()
+				end
+				
 				-- Set PlayMode to Regular (prevents crash)
 				GAMESTATE:SetCurrentPlayMode("PlayMode_Regular")
 
