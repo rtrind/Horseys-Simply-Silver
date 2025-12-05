@@ -111,6 +111,30 @@ end
 
 local sortMenuButtons = GetSortMenuButtons()
 
+-- Track scroll timing for variable speed
+local nextScrollTime = {
+	[PLAYER_1] = 0,
+	[PLAYER_2] = 0
+}
+local initialScrollDelay = 0.3
+local scrollInterval = 0.1 -- Default, will be updated from prefs
+
+-- Helper to update scroll interval from prefs
+local function UpdateScrollInterval()
+	local speed = PREFSMAN:GetPreference("MusicWheelSwitchSpeed") or 15
+	-- Protect against divide by zero or negative
+	if speed < 1 then speed = 1 end
+	
+	-- Use square root curve to compress high speeds
+	-- Formula: ItemsPerSec = sqrt(Speed) * 3
+	-- 10 (Normal) -> ~9.5 items/sec
+	-- 15 (Fast) -> ~11.6 items/sec
+	-- 25 (Faster) -> 15 items/sec
+	-- 100 (Plaid) -> 30 items/sec
+	local itemsPerSec = math.sqrt(speed) * 3
+	scrollInterval = 1 / itemsPerSec
+end
+
 -- Perform the actual scroll action
 local function PerformScroll(direction, pn)
 	-- Final check: don't scroll if input is redirected (Sort Menu open)
@@ -404,14 +428,14 @@ local function input(event)
 		end
 	end
 
-	-- Handle both FirstPress and Repeat for continuous scrolling
-	if event.type == "InputEventType_FirstPress" or event.type == "InputEventType_Repeat" then
+	-- Handle FirstPress for scrolling (Repeat handled by Update loop)
+	if event.type == "InputEventType_FirstPress" then
 		if event.GameButton == "MenuLeft" or event.GameButton == "MenuRight" then
 			local scrollDirection = (event.GameButton == "MenuLeft") and -1 or 1
 			
 			-- Check if this button is part of the Sort Menu combo
 			-- If so, buffer the input to check for chords
-			if event.type == "InputEventType_FirstPress" and sortMenuButtons[event.GameButton] then
+			if sortMenuButtons[event.GameButton] then
 				local buffer = wheel.input_buffer
 				if buffer then
 					-- Buffer the scroll command
@@ -421,10 +445,15 @@ local function input(event)
 					buffer:queuecommand("TriggerScroll" .. (scrollDirection == -1 and "Left" or "Right"))
 					-- Store player number for the command
 					buffer.pn = pn
+					
+					-- Set next scroll time (initial delay)
+					nextScrollTime[pn] = GetTimeSinceStart() + initialScrollDelay
 				end
 			else
-				-- Not a sort menu button or is repeat - scroll immediately
+				-- Not a sort menu button - scroll immediately
 				PerformScroll(scrollDirection, pn)
+				-- Set next scroll time (initial delay)
+				nextScrollTime[pn] = GetTimeSinceStart() + initialScrollDelay
 			end
 			
 			return false -- Return false to let InputHandler see the event (for chord detection)
@@ -451,6 +480,9 @@ local t = Def.ActorFrame{
 			SM("ERROR: SL.MusicWheel not loaded! Check Scripts/SL_MusicWheel.lua")
 			return
 		end
+		
+		-- Initialize scroll interval from preferences
+		UpdateScrollInterval()
 
 		-- Initialize preferred difficulty from session data or profile
 		-- Priority: 1. Session data, 2. Initial difficulties from Initialize(), 3. Current steps, 4. Engine preference
@@ -496,6 +528,32 @@ local t = Def.ActorFrame{
 		if screen then
 			screen:AddInputCallback(input)
 		end
+		
+		-- Start update loop for continuous scrolling
+		self:SetUpdateFunction(function(self)
+			local now = GetTimeSinceStart()
+			
+			for pn in ivalues(GAMESTATE:GetHumanPlayers()) do
+				-- Check for held buttons
+				local leftHeld = heldButtons[pn]["MenuLeft"]
+				local rightHeld = heldButtons[pn]["MenuRight"]
+				
+				-- Only scroll if exactly one direction is held (prevent fighting)
+				if (leftHeld and not rightHeld) or (rightHeld and not leftHeld) then
+					if now >= nextScrollTime[pn] then
+						local direction = leftHeld and -1 or 1
+						
+						-- Check if Sort Menu is open (don't scroll)
+						if not SCREENMAN:get_input_redirected(pn) then
+							PerformScroll(direction, pn)
+							nextScrollTime[pn] = now + scrollInterval
+						end
+					end
+				else
+					-- Reset scroll time when button released (handled by InputEventType_Release, but safe to do here too)
+				end
+			end
+		end)
 
 		-- Ensure initial selection is broadcast to UI (Banner, NoteField, etc.)
 		-- Add a small delay to ensure everything is ready before playing audio
@@ -646,8 +704,16 @@ local t = Def.ActorFrame{
 	Def.Actor{
 		Name="InputBuffer",
 		InitCommand=function(self) wheel.input_buffer = self end,
-		TriggerScrollLeftCommand=function(self) PerformScroll(-1, self.pn) end,
-		TriggerScrollRightCommand=function(self) PerformScroll(1, self.pn) end
+		TriggerScrollLeftCommand=function(self) 
+			PerformScroll(-1, self.pn)
+			-- Reset next scroll time to allow continuous scroll to pick up
+			nextScrollTime[self.pn] = GetTimeSinceStart() + initialScrollDelay
+		end,
+		TriggerScrollRightCommand=function(self) 
+			PerformScroll(1, self.pn)
+			-- Reset next scroll time to allow continuous scroll to pick up
+			nextScrollTime[self.pn] = GetTimeSinceStart() + initialScrollDelay
+		end
 	}
 }
 
