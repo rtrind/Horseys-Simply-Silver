@@ -18,47 +18,32 @@ function WheelHelpers.GetLamp(song, player)
 	local pn = ToEnumShortString(player)
 	if not GAMESTATE:IsPlayerEnabled(player) then return nil end
 	
-	local profile = PROFILEMAN:GetProfile(player)
-	if not profile then return nil end
-	
-	-- Get the target difficulty from current steps
+	-- Get current steps for this player to match difficulty
+	-- Fall back to last_steps from wheel state when on group header
 	local currentSteps = GAMESTATE:GetCurrentSteps(player)
 	if not currentSteps and SL.MusicWheel and SL.MusicWheel.State.last_steps then
 		currentSteps = SL.MusicWheel.State.last_steps[player]
 	end
+	if not currentSteps then return nil end
 	
-	local targetDiff = currentSteps and currentSteps:GetDifficulty() or nil
+	local diff = currentSteps:GetDifficulty()
 	local st = GAMESTATE:GetCurrentStyle():GetStepsType()
 	
 	-- Find steps in song matching current difficulty
-	local stepsList = song:GetAllSteps()
 	local steps = nil
-	local fallbackSteps = nil
-	
+	local stepsList = song:GetAllSteps()
 	for check in ivalues(stepsList) do
-		if check:GetStepsType() == st then
-			if targetDiff and check:GetDifficulty() == targetDiff then
-				steps = check
-				break
-			end
-			-- Keep track of a fallback in case we don't find the exact difficulty
-			if not fallbackSteps then
-				fallbackSteps = check
-			end
+		if check:GetDifficulty() == diff and check:GetStepsType() == st then
+			steps = check
+			break
 		end
 	end
 	
-	-- Use fallback if no exact match
-	if not steps then steps = fallbackSteps end
-	if not steps then return nil end
+	if steps == nil then return nil end
 	
-	-- NOTE: GetHighScoreList returns an empty HighScoreList at wheel init time
-	-- because profile scores haven't been loaded yet. This is a known limitation
-	-- of using a custom LuaWheel vs the engine's MusicWheel which gets grades
-	-- via the SetGrade engine message. Scores work after playing a song because
-	-- gameplay triggers the score loading.
+	local profile = PROFILEMAN:GetProfile(player)
 	local high_score_list = profile:GetHighScoreListIfExists(song, steps)
-	
+
 	if high_score_list == nil or #high_score_list:GetHighScores() == 0 then
 		return nil
 	end

@@ -199,10 +199,6 @@ function item_mt:create_actors(name)
                     end
                 end
                 if not song then song = SL.MusicWheel.State.last_song end
-                
-                -- Debug
-                -- SM(string.format("GradeSprite UpdateGrade: song=%s, params=%s", tostring(song), tostring(params)))
-                
                 if not song then subself:visible(false) return end
                 
                 -- Use passed grade if available, otherwise recalculate (fallback)
