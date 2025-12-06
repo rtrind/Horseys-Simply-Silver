@@ -140,6 +140,8 @@ local InputCodes = {
 	SortList2 = ParseMetricCode(GetCode("SortList2")),
 	ToggleGroup = ParseMetricCode(GetCode("CloseFolder")),
 	ToggleFavorite = ParseMetricCode(GetCode("ToggleFavorite")),
+	DifficultyEasier = ParseMetricCode(GetCode("DifficultyEasier")),
+	DifficultyHarder = ParseMetricCode(GetCode("DifficultyHarder")),
 	-- Add more as needed
 }
 
@@ -350,14 +352,20 @@ local input = function(event)
 			end
 		end
 
-		-- 2. Difficulty Change (Hardcoded "Double Tap" logic for now, or could make dynamic if metrics exist)
-		-- Metrics usually define dedicated buttons for NextDifficulty/PrevDifficulty, but double-tap is a custom mechanic.
-		-- Keeping hardcoded for now unless user asks.
-		-- TODO: Make dynamic, even creating a new Metric if it does not exists
-		if (button == "MenuUp" or button == "MenuDown") then
-			if #seq >= 2 and seq[#seq].button == seq[#seq-1].button then
-				local dir = (button == "MenuUp") and -1 or 1 -- Up = Easier (- index), Down = Harder (+ index)
-				if wheel then wheel:playcommand("MW_DifficultyChange", {PlayerNumber=pn, Direction=dir}) end
+		-- 2. Difficulty Change (Dynamic Sequence)
+		-- Easier (e.g. Up, Up)
+		if InputCodes.DifficultyEasier and InputCodes.DifficultyEasier.type == "sequence" then
+			if IsSequenceSatisfied(InputCodes.DifficultyEasier.buttons, seq) then
+				if wheel then wheel:playcommand("MW_DifficultyChange", {PlayerNumber=pn, Direction=-1}) end
+				buttonSequence[pn] = {}
+				return true
+			end
+		end
+		
+		-- Harder (e.g. Down, Down)
+		if InputCodes.DifficultyHarder and InputCodes.DifficultyHarder.type == "sequence" then
+			if IsSequenceSatisfied(InputCodes.DifficultyHarder.buttons, seq) then
+				if wheel then wheel:playcommand("MW_DifficultyChange", {PlayerNumber=pn, Direction=1}) end
 				buttonSequence[pn] = {}
 				return true
 			end
