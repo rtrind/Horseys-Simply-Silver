@@ -12,6 +12,13 @@ local AwardMap = {
 	["StageAward_FullComboW4"] = 4,
 }
 
+
+local LampCache = {}
+
+function WheelHelpers.ClearCache()
+	LampCache = {}
+end
+
 function WheelHelpers.GetLamp(song, player)
 	if not song then return nil end
 	
@@ -25,9 +32,17 @@ function WheelHelpers.GetLamp(song, player)
 		currentSteps = SL.MusicWheel.State.last_steps[player]
 	end
 	if not currentSteps then return nil end
-	
+
 	local diff = currentSteps:GetDifficulty()
-	local st = GAMESTATE:GetCurrentStyle():GetStepsType()
+    local st = GAMESTATE:GetCurrentStyle():GetStepsType()
+
+    -- Cache Key: Player + SongDir + Difficulty + StepsType
+    local sDir = song:GetSongDir()
+    local key = string.format("%s_%s_%s_%s", pn, sDir or "NoDir", ToEnumShortString(diff), ToEnumShortString(st))
+
+    if LampCache[key] then
+        return unpack(LampCache[key])
+    end
 	
 	-- Find steps in song matching current difficulty
 	local steps = nil
@@ -103,6 +118,7 @@ function WheelHelpers.GetLamp(song, player)
         end
 	end
 
+	LampCache[key] = {best_lamp, tap_count, best_grade}
 	return best_lamp, tap_count, best_grade
 end
 

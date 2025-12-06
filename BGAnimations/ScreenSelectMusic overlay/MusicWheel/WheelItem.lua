@@ -132,6 +132,26 @@ function item_mt:create_actors(name)
                 self["gradeFrame"..pn] = subself
                 subself:x(x_pos)
                 subself:visible(false)
+            end,
+            ["CurrentSteps"..pn.."ChangedMessageCommand"]=function(subself)
+                local song = nil
+                -- Try to find the song from the item container
+                 if self.container and self.container.song then
+                    song = self.container.song
+                end
+                
+                -- Fallback to last_song
+                if not song then song = SL.MusicWheel.State.last_song end
+                
+                if song then
+                     local best_lamp, tap_count, best_grade = WheelHelpers.GetLamp(song, player)
+                     local params = { song = song, lamp = best_lamp, count = tap_count, grade = best_grade }
+                     
+                     if self["gradeSprite"..pn] then self["gradeSprite"..pn]:playcommand("UpdateGrade", params) end
+                     if self["lamp"..pn] then self["lamp"..pn]:playcommand("UpdateGrade", params) end
+                     if self["count"..pn] then self["count"..pn]:playcommand("UpdateGrade", params) end
+                     if self["heartIcon"..pn] then self["heartIcon"..pn]:playcommand("UpdateGrade", params) end
+                end
             end
         }
 
@@ -173,7 +193,6 @@ function item_mt:create_actors(name)
                     subself:visible(false)
                 end
             end,
-            ["CurrentSteps"..pn.."ChangedMessageCommand"]=function(subself) subself:queuecommand("UpdateGrade") end,
             FavoritesChangedMessageCommand=function(subself) subself:queuecommand("UpdateGrade") end
         }
 
@@ -221,15 +240,14 @@ function item_mt:create_actors(name)
                 else
                     subself:visible(false)
                 end
-            end,
-            ["CurrentSteps"..pn.."ChangedMessageCommand"]=function(subself) subself:queuecommand("UpdateGrade") end
+            end
         }
 
         -- Count Text (Small text overlay for FC counts)
         -- Use BitmapText with ScreenEval font for better readability
         playerFrame[#playerFrame+1] = Def.BitmapText{
-            Font="Wendy/_ScreenEvaluation numbers",
             Name = "Count"..pn,
+            Font="Wendy/_ScreenEvaluation numbers",
             Text="5",
             InitCommand = function(subself)
                 self["count"..pn] = subself
@@ -262,8 +280,7 @@ function item_mt:create_actors(name)
                 else
                     subself:visible(false)
                 end
-            end,
-            ["CurrentSteps"..pn.."ChangedMessageCommand"]=function(subself) subself:queuecommand("UpdateGrade") end
+            end
         }
 
         -- Lamp (Horizontal Bar below grade)
@@ -310,8 +327,7 @@ function item_mt:create_actors(name)
                 else
                     subself:visible(false)
                 end
-            end,
-            ["CurrentSteps"..pn.."ChangedMessageCommand"]=function(subself) subself:queuecommand("UpdateGrade") end
+            end
         }
         
         af[#af+1] = playerFrame

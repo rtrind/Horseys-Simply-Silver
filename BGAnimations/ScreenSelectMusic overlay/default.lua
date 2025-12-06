@@ -10,6 +10,11 @@ local af = Def.ActorFrame{
 	-- If we're here in SelectMusic, set GameplayReloadCheck to false, signifying that the next
 	-- time ScreenGameplay loads, it should have a properly animated entrance.
 	InitCommand=function(self)
+		-- Clear the GetLamp cache to ensure fresh data
+		if WheelHelpers.ClearCache then
+			WheelHelpers.ClearCache()
+		end
+
 		SL.Global.GameplayReloadCheck = false
 
 		-- reset song start time here in case player force-escaped
