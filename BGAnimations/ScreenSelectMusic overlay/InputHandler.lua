@@ -117,6 +117,15 @@ local input = function(event)
 		
 		-- Handle Start button (for future use, e.g., song selection)
 		if button == "Start" then
+			-- If the player is NOT joined, join them and open profile select
+			if not GAMESTATE:IsSideJoined(pn) then
+				GAMESTATE:JoinPlayer(pn)
+				-- "OpenProfileSelectFromJoin" is handled by SortMenu/default.lua
+				-- It sets flags for fast profile switching and opens ScreenSelectProfile on top
+				MESSAGEMAN:Broadcast("OpenProfileSelectFromJoin")
+				return true -- Consume input
+			end
+
 			BroadcastMessage("Start", pn)
 			-- Don't consume start, let it pass through
 		end

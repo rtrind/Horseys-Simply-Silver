@@ -466,7 +466,8 @@ local t = Def.ActorFrame {
 			-- Mark as fast profile switch so finish flow triggers reload
 			SL.Global.FastProfileSwitchInProgress = true
 			SL.Global.ReloadAfterProfileSSM = true
-			self:playcommand("DirectInputToEngineForSelectProfile")
+			-- Defer to next frame to avoid potential conflicts with InputHandler execution
+			self:sleep(0.01):queuecommand("DirectInputToEngineForSelectProfile")
 		end
 	end,
 
