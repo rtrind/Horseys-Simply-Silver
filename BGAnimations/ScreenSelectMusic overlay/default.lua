@@ -44,7 +44,6 @@ local af = Def.ActorFrame{
 		-- no other screen is on top of it. Then reload the entire screen...
 		local s = SCREENMAN:GetTopScreen()
 		if s then
-			SM("Reloading screen...")
 			s:SetNextScreenName("ScreenReloadSSM")
 			s:StartTransitioningScreen("SM_GoToNextScreen")
 		end

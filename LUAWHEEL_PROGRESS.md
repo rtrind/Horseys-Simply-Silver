@@ -60,8 +60,8 @@
 
 ### Planned Tasks
 - [x] Remove all remaining `GetMusicWheel()` calls from theme
-- [ ] Cleanup metrics.ini SSM
-- [ ] Change "Reloading screen" message to a proper "loading", just like the transition from profile/style selection to SSM screen
+- [x] Cleanup metrics.ini SSM
+- [x] Change "Reloading screen" message to a proper "loading", just like the transition from profile/style selection to SSM screen
 - [ ] Change "Title screen" from Simply Love to Simply DDR
 - [ ] Implement pattern info toggle
 - [x] Test with both P1 and P2 profiles
@@ -73,6 +73,7 @@
 - [x] I can still activate the sort menu while the starting gameplay screen is awaiting for a possible start to go to the options
 - [x] Make the difficulty change as a metric on metrics.ini and adjust input handler accordingly
 - [x] Do we need to keep SSM codenames on metrics.ini? We either use them on the input handler, or we let them hardcoded there and remove them from the metrics.
+- [ ] Gameplay does not start when timer reaches zero.
 - [ ] When scrolling fast thru the songs on the wheel, sometimes it stops changing the audio to the current song and continues to play one of the other songs from before. When it finishes, you change to another song and the audio fixes itself.
 
 ## Phase 6: More efficient debugging and testing (Not Started)
@@ -81,19 +82,18 @@
 ## Phase 7: Optimization (Not Started)
 
 ### Planned Tasks
+- [ ] Identify more elements not used in the dedicab and remove them to make build leaner (remove course mode, ITL, unused graphics, ...)
+- [ ] Minimize unused items in metrics.ini
 - [ ] Optimize lazy loading to prevent stuttering
 - [ ] Optimize memory usage (unload off-screen items)
 - [ ] Test edge cases (empty favorites, single song, etc.)
 - [ ] Add error handling for missing songs/steps
 - [ ] Performance profiling and optimization
 - [ ] Optimize all touched files in the project and extract common code to functions
-- [ ] Identify more elements not used in the dedicab and remove them to make build leaner (remove course mode, ITL, unused graphics, ...)
 - [ ] Add debug instrumentation to have more information if the build crashes (on previous build, after 90 minutes there was a usual crash)
 
 ### Bug Fixes
 - [ ] TBD
 
-## Notes
-
-### Critical Path
-**Phase 3 is CRITICAL** - Audio preview and NoteField synchronization are essential for the project to succeed. All other features are secondary.
+## Won't fix
+- [ ] Timer is broken on SSM, but I won't ever use it.

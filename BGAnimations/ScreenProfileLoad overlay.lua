@@ -31,9 +31,9 @@ return Def.ActorFrame{
 				:zoomto(_screen.w + 100,50):faderight(0.1):fadeleft(0.1):cropright(1)
 		end,
 		OnCommand=function(self)
+			-- Animate in, then stay visible until next screen takes over
 			self:linear(tweentime):cropright(0):sleep(tweentime)
-			self:linear(tweentime):cropleft(1)
-			self:sleep(0.1):queuecommand("Load")
+			self:queuecommand("Load")
 		end,
 		LoadCommand=function(self)
 			SCREENMAN:GetTopScreen():Continue()
