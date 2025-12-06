@@ -60,15 +60,16 @@
 
 ### Planned Tasks
 - [x] Remove all remaining `GetMusicWheel()` calls from theme
-- [ ] Test with both P1 and P2 profiles
-- [ ] Performance testing (large libraries, fast scrolling)
 - [ ] Change "Reloading screen" message to a proper "loading", just like the transition from profile/style selection to SSM screen
 - [ ] Change "Title screen" from Simply Love to Simply DDR
+- [ ] Test with both P1 and P2 profiles
+- [ ] Performance testing (large libraries, fast scrolling)
 
 ### Bug Fixes
-- [x] Dynamic second player join (pressing enter on an unjoined player) broken (should open the profile selection with the extra player for selection). Right now, it silently adds the player, on the second enter it tries to start gameplay and crashes.
-- [ ] Failed songs not always appearing in wheel
-- [ ] GetLamp should be called once per song in the wheel
+- [ ] Dynamic second player join (pressing enter on an unjoined player) broken (should open the profile selection with the extra player for selection). Right now, it silently adds the player, on the second enter it tries to start gameplay and crashes.
+- [x] GetLamp should be called once per song in the wheel
+- [ ] I can still activate the sort menu while the starting gameplay screen is awaiting for a possible start to go to the options
+- [ ] Do we need to keep SSM codenames on metrics.ini? We either use them on the input handler, or we let them hardcoded there and remove them from the metrics.
 
 ## Phase 6: Optimization (Not Started)
 

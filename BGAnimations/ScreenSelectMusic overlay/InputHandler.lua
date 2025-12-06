@@ -115,11 +115,15 @@ local input = function(event)
 			end
 		end
 		
-		-- Handle Start button (for future use, e.g., song selection)
 		if button == "Start" then
+			-- If overlay is active, block Start input to prevent race conditions (e.g. while profile screen is opening)
+			if _G.SSM_OverlayActive then return true end
+
 			-- If the player is NOT joined, join them and open profile select
 			if not GAMESTATE:IsSideJoined(pn) then
 				GAMESTATE:JoinPlayer(pn)
+				-- Lock input to prevent "Start" mashing from crashing the game before the screen opens
+				_G.SSM_OverlayActive = true
 				-- "OpenProfileSelectFromJoin" is handled by SortMenu/default.lua
 				-- It sets flags for fast profile switching and opens ScreenSelectProfile on top
 				MESSAGEMAN:Broadcast("OpenProfileSelectFromJoin")

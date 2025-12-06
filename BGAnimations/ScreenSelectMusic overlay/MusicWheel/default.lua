@@ -276,8 +276,10 @@ local function input(event)
 			-- Check if this is a non-enabled player trying to join
 			if not GAMESTATE:IsPlayerEnabled(pn) then
 				-- Join player and allow existing overlay logic to open profile select
-				GAMESTATE:JoinPlayer(pn)
-				return true
+				-- GAMESTATE:JoinPlayer(pn)
+				-- return true
+				-- LET INPUT HANDLER HANDLE THIS
+				return false
 			end
 
 			-- Player is already enabled - check if we're on a group header or song
