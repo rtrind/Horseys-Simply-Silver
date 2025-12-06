@@ -62,7 +62,7 @@
 - [x] Remove all remaining `GetMusicWheel()` calls from theme
 - [ ] Change "Reloading screen" message to a proper "loading", just like the transition from profile/style selection to SSM screen
 - [ ] Change "Title screen" from Simply Love to Simply DDR
-- [ ] Test with both P1 and P2 profiles
+- [x] Test with both P1 and P2 profiles
 - [ ] Performance testing (large libraries, fast scrolling)
 
 ### Bug Fixes
@@ -72,7 +72,10 @@
 - [ ] Do we need to keep SSM codenames on metrics.ini? We either use them on the input handler, or we let them hardcoded there and remove them from the metrics.
 - [ ] When scrolling fast thru the songs on the wheel, sometimes it stops changing the audio to the current song and continues to play one of the other songs from before. When it finishes, you change to another song and the audio fixes itself.
 
-## Phase 6: Optimization (Not Started)
+## Phase 6: More efficient debugging and testing (Not Started)
+- [ ] Is there a way for automated tests to happen, considering the game is closed source? This way I could provide a specific testing config and run the tests in a consistent fashion, trying to detect regressions much faster than testing manually, pointing the error to the LLM and finding a fix, creating an easier development loop.
+
+## Phase 7: Optimization (Not Started)
 
 ### Planned Tasks
 - [ ] Optimize lazy loading to prevent stuttering

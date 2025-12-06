@@ -236,65 +236,6 @@ local t = Def.ActorFrame{
 		end
 	end,
 
-	MW_StartCommand = function(self, params)
-		local pn = params.PlayerNumber
-		-- Check if we're on a group header or song
-		local focused_item = SL.MusicWheel.State.items[SL.MusicWheel.State.focus_index]
-
-		-- If on group header, try to toggle it
-		if focused_item and focused_item.type == "group_header" then
-			if SL.MusicWheel.ToggleGroup(false) then
-				-- Group was toggled, update wheel display
-				wheel:set_info_set(SL.MusicWheel.State.items, SL.MusicWheel.State.focus_index)
-			end
-			return
-		end
-
-		-- If on a song, handle song selection with options prompt
-		if focused_item and focused_item.type == "song" then
-			local now = GetTimeSinceStart()
-
-			-- Check if this is a second Start press within timeout
-			if startPressTime and (now - startPressTime) < optionsPromptTimeout and startPressPlayer == pn then
-				if SL and SL.MusicWheel and SL.MusicWheel.RememberSelectionContext then
-					SL.MusicWheel.RememberSelectionContext()
-				end
-				-- Second press - go to options
-				startPressTime = nil
-				startPressPlayer = nil
-
-				-- Verify we have a valid song selected in GAMESTATE
-				if GAMESTATE:GetCurrentSong() then
-					-- Show "Entering Options..." and navigate to options
-					local screen = SCREENMAN:GetTopScreen()
-					if screen then
-						-- Set PlayMode to Regular (prevents crash)
-						GAMESTATE:SetCurrentPlayMode("PlayMode_Regular")
-
-						MESSAGEMAN:Broadcast("ShowEnteringOptions")
-						-- Queue transition on overlay (wait for "Entering Options" message)
-						local overlay = screen:GetChild("Overlay")
-						if overlay then
-							overlay:sleep(0.5):queuecommand("GoToOptions")
-						end
-					end
-				end
-			else
-				-- First press - show prompt and start timer
-				startPressTime = now
-				startPressPlayer = pn
-
-				-- Show "Press Start for Options" overlay
-				MESSAGEMAN:Broadcast("ShowPressStartForOptions")
-
-				-- Schedule timeout to go directly to gameplay
-				local overlay = SCREENMAN:GetTopScreen():GetChild("Overlay")
-				if overlay then
-					overlay:queuecommand("StartTimeout")
-				end
-			end
-		end
-	end,
 
 	MW_ToggleFavoriteCommand = function(self, params)
 		local pn = params.PlayerNumber

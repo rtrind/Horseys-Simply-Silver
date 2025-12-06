@@ -75,6 +75,12 @@ local buttonSequence = {
 }
 local sequenceTimeout = 0.5
 
+-- Track Start button timing for options prompt
+local startPressTime = nil
+local startPressPlayer = nil
+local optionsPromptTimeout = 3.0  -- seconds to wait for second Start press
+local waitingForOptions = false
+
 -- Get the MusicWheel actor
 local function GetMusicWheel()
 	local screen = SCREENMAN:GetTopScreen()
@@ -106,6 +112,30 @@ local input = function(event)
 	-- Don't handle input if input is redirected (e.g. SortMenu is open or closing)
 	if SCREENMAN:get_input_redirected(pn) then
 		return false
+	end
+
+	-- If waiting for options, block most inputs
+	if waitingForOptions then
+		if event.type == "InputEventType_FirstPress" then
+			-- Allow Start (to confirm options) or Back (to cancel)
+			if button == "Start" then
+				-- Handle 2nd press (Go to options) logic below
+			elseif button == "Back" then
+				-- Cancel wait
+				waitingForOptions = false
+				startPressTime = nil
+				startPressPlayer = nil
+				MESSAGEMAN:Broadcast("HidePressStartForOptions")
+				-- Cancel timeout on overlay
+				if overlay then overlay:stoptweening() end
+				return true -- Consume back
+			else
+				-- Block everything else (SortMenu, Scroll, etc.)
+				return true 
+			end
+		else
+			return false
+		end
 	end
 
 	if event.type == "InputEventType_FirstPress" then
@@ -166,11 +196,65 @@ local input = function(event)
 				return true -- Consume input
 			end
 
-			-- Normal Start behavior -> Delegate to MusicWheel
-			if wheel then
-				wheel:playcommand("MW_Start", {PlayerNumber=pn})
+			-- Song Selection / Options Logic
+			
+			-- Check if we're on a group header or song
+			local focused_item = SL.MusicWheel.State.items[SL.MusicWheel.State.focus_index]
+
+			-- If on group header, try to toggle it
+			if focused_item and focused_item.type == "group_header" then
+				if wheel then wheel:playcommand("MW_ToggleGroup") end
+				return true
 			end
-			return true -- Consume start
+
+			-- If on a song, handle song selection with options prompt
+			if focused_item and focused_item.type == "song" then
+				local now = GetTimeSinceStart()
+
+				-- Check if this is a second Start press within timeout
+				if startPressTime and (now - startPressTime) < optionsPromptTimeout and startPressPlayer == pn then
+					if SL and SL.MusicWheel and SL.MusicWheel.RememberSelectionContext then
+						SL.MusicWheel.RememberSelectionContext()
+					end
+					-- Second press - go to options
+					startPressTime = nil
+					startPressPlayer = nil
+					waitingForOptions = false
+
+					-- Verify we have a valid song selected in GAMESTATE
+					if GAMESTATE:GetCurrentSong() then
+						-- Show "Entering Options..." and navigate to options
+						if screen then
+							-- Set PlayMode to Regular (prevents crash)
+							GAMESTATE:SetCurrentPlayMode("PlayMode_Regular")
+
+							MESSAGEMAN:Broadcast("ShowEnteringOptions")
+							-- Queue transition on overlay (wait for "Entering Options" message)
+							if overlay then
+								overlay:sleep(0.5):queuecommand("GoToOptions")
+							end
+						end
+					end
+					return true
+				else
+					-- First press - show prompt and start timer
+					startPressTime = now
+					startPressPlayer = pn
+					waitingForOptions = true
+
+					-- Show "Press Start for Options" overlay
+					MESSAGEMAN:Broadcast("ShowPressStartForOptions")
+
+					-- Schedule timeout to go directly to gameplay
+					if overlay then
+						overlay:queuecommand("StartTimeout") -- This will fire GoToGameplay after 3s
+					end
+					return true
+				end
+			end
+			
+			-- Fallback
+			return true 
 		end
 		
 		-- Handle Select button
@@ -246,6 +330,9 @@ local function Update(self)
 	local now = GetTimeSinceStart()
 	local wheel = GetMusicWheel()
 	if not wheel then return end
+	
+	-- Stop scrolling if waiting for options
+	if waitingForOptions then return end
 
 	for pn in ivalues(GAMESTATE:GetHumanPlayers()) do
 		-- Only scroll if input is NOT redirected
