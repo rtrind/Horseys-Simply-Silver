@@ -92,50 +92,6 @@ local function FindBestSteps(song, stepsType, preferredDiff)
 	return bestSteps
 end
 
--- Helper to get sort menu buttons from metrics
-local function GetSortMenuButtons()
-	local buttons = {}
-	-- Check SortList 1 and 2
-	for i = 1, 2 do
-		local codeName = i == 1 and "CodeSortList" or ("CodeSortList" .. i)
-		local code = THEME:GetMetric("ScreenSelectMusic", codeName)
-		if code and code ~= "" and code ~= "false" then
-			-- Parse buttons from code string (e.g. "MenuLeft-MenuRight")
-			for button in code:gmatch("([^-]+)") do
-				buttons[button] = true
-			end
-		end
-	end
-	return buttons
-end
-
-local sortMenuButtons = GetSortMenuButtons()
-
--- Track scroll timing for variable speed
-local nextScrollTime = {
-	[PLAYER_1] = 0,
-	[PLAYER_2] = 0
-}
-local initialScrollDelay = 0.3
-local scrollInterval = 0.1 -- Default, will be updated from prefs
-
--- Helper to update scroll interval from prefs
-local function UpdateScrollInterval()
-	local speed = PREFSMAN:GetPreference("MusicWheelSwitchSpeed") or 15
-	-- Protect against divide by zero or negative
-	if speed < 1 then speed = 1 end
-	
-	-- Use square root curve to compress high speeds
-	-- Formula: ItemsPerSec = sqrt(Speed) * 3
-	-- 10 (Normal) -> ~9.5 items/sec
-	-- 15 (Fast) -> ~11.6 items/sec
-	-- 25 (Faster) -> 15 items/sec
-	-- 100 (Plaid) -> 30 items/sec
-	local itemsPerSec = math.sqrt(speed) * 3
-	scrollInterval = 1 / itemsPerSec
-end
-
--- Perform the actual scroll action
 local function PerformScroll(direction, pn)
 	-- Final check: don't scroll if input is redirected (Sort Menu open)
 	if SCREENMAN:get_input_redirected(pn) then return end
@@ -206,265 +162,6 @@ local function PerformScroll(direction, pn)
 	end
 end
 
-local function input(event)
-	if not event or not event.PlayerNumber or not event.button then
-		return false
-	end
-
-	local pn = event.PlayerNumber
-	local button = event.GameButton
-
-	-- Track button state for chord detection
-	if event.type == "InputEventType_FirstPress" then
-		heldButtons[pn][button] = true
-	elseif event.type == "InputEventType_Release" then
-		heldButtons[pn][button] = nil
-	end
-
-	-- Only handle if wheel is active
-	if not wheel or not wheel.container then
-		return false
-	end
-
-	-- Check for SortMenu chord FIRST (before redirect check)
-	-- Don't consume MenuLeft/MenuRight if both are pressed (SortMenu chord)
-	if event.type == "InputEventType_FirstPress" then
-		if (button == "MenuLeft" or button == "MenuRight") and
-			heldButtons[pn]["MenuLeft"] and heldButtons[pn]["MenuRight"] then
-			
-			-- Both buttons pressed - Cancel any pending scroll buffer
-			local buffer = wheel.input_buffer
-			if buffer then
-				buffer:stoptweening()
-			end
-			
-			-- Let it pass through to open SortMenu
-			return false
-		end
-	end
-
-	-- Don't handle input if input is redirected (e.g. SortMenu, QuitPrompt)
-	if SCREENMAN:get_input_redirected(pn) then
-		return false
-	end
-
-	-- Don't handle input if SortMenu is visible (legacy check, kept for safety)
-	local screen = SCREENMAN:GetTopScreen()
-	if screen then
-		local sort_menu = screen:GetChild("Overlay"):GetChild("SortMenu")
-		if sort_menu and sort_menu:GetVisible() then
-			return false
-		end
-	end
-
-	-- Handle FirstPress for Start button (toggle group or player join)
-	if event.type == "InputEventType_FirstPress" then
-		-- Check for MenuUp+MenuDown chord to close/open folder
-		-- Only trigger if the current button is MenuUp or MenuDown AND both are now held
-		if (button == "MenuUp" or button == "MenuDown") and
-			heldButtons[pn]["MenuUp"] and heldButtons[pn]["MenuDown"] then
-			-- Both MenuUp and MenuDown pressed - toggle group (allow from song)
-			if SL.MusicWheel.ToggleGroup(true) then
-				-- Group was toggled, update wheel display
-				wheel:set_info_set(SL.MusicWheel.State.items, SL.MusicWheel.State.focus_index)
-			end
-			-- Consume the input to prevent scrolling
-			return true
-		end
-
-		if event.GameButton == "Start" then
-			-- Check if this is a non-enabled player trying to join
-			if not GAMESTATE:IsPlayerEnabled(pn) then
-				-- Join player and allow existing overlay logic to open profile select
-				-- GAMESTATE:JoinPlayer(pn)
-				-- return true
-				-- LET INPUT HANDLER HANDLE THIS
-				return false
-			end
-
-			-- Player is already enabled - check if we're on a group header or song
-			local focused_item = SL.MusicWheel.State.items[SL.MusicWheel.State.focus_index]
-
-			-- If on group header, try to toggle it
-			if focused_item and focused_item.type == "group_header" then
-				if SL.MusicWheel.ToggleGroup(false) then
-					-- Group was toggled, update wheel display
-					wheel:set_info_set(SL.MusicWheel.State.items, SL.MusicWheel.State.focus_index)
-					return true
-				end
-			end
-
-			-- If on a song, handle song selection with options prompt
-			if focused_item and focused_item.type == "song" then
-				local now = GetTimeSinceStart()
-
-				-- Check if this is a second Start press within timeout
-				if startPressTime and (now - startPressTime) < optionsPromptTimeout and startPressPlayer == pn then
-					if SL and SL.MusicWheel and SL.MusicWheel.RememberSelectionContext then
-						SL.MusicWheel.RememberSelectionContext()
-					end
-					-- Second press - go to options
-					startPressTime = nil
-					startPressPlayer = nil
-
-					-- Verify we have a valid song selected in GAMESTATE
-					if GAMESTATE:GetCurrentSong() then
-						-- Show "Entering Options..." and navigate to options
-						local screen = SCREENMAN:GetTopScreen()
-						if screen then
-							-- Set PlayMode to Regular (prevents crash)
-							GAMESTATE:SetCurrentPlayMode("PlayMode_Regular")
-
-							MESSAGEMAN:Broadcast("ShowEnteringOptions")
-							-- Queue transition on overlay (wait for "Entering Options" message)
-							local overlay = screen:GetChild("Overlay")
-							if overlay then
-								overlay:sleep(0.5):queuecommand("GoToOptions")
-							end
-						end
-					end
-					return true
-				else
-					-- First press - show prompt and start timer
-					startPressTime = now
-					startPressPlayer = pn
-
-					-- Show "Press Start for Options" overlay
-					MESSAGEMAN:Broadcast("ShowPressStartForOptions")
-
-					-- Schedule timeout to go directly to gameplay
-					local overlay = SCREENMAN:GetTopScreen():GetChild("Overlay")
-					if overlay then
-						overlay:queuecommand("StartTimeout")
-					end
-					return true
-				end
-			end
-
-			-- Not on a song or group - let it pass through
-			return false
-		end
-
-		-- Handle difficulty changes (Up,Up = easier, Down,Down = harder)
-		if button == "MenuUp" or button == "MenuDown" then
-			local currentTime = GetTimeSinceStart()
-			local seq = buttonSequence[pn]
-
-			-- Clear old sequence if timeout expired
-			if #seq > 0 and (currentTime - seq[#seq].time) > sequenceTimeout then
-				buttonSequence[pn] = {}
-				seq = buttonSequence[pn]
-			end
-
-			-- Add button to sequence
-			table.insert(seq, {button = button, time = currentTime})
-
-			-- Check for favorites toggle sequence (Up,Down,Up,Down)
-			if #seq >= 4 then
-				if seq[#seq-3].button == "MenuUp" and 
-				   seq[#seq-2].button == "MenuDown" and 
-				   seq[#seq-1].button == "MenuUp" and 
-				   seq[#seq].button == "MenuDown" then
-					-- Match found! Toggle favorite using Profile API
-					local song = GAMESTATE:GetCurrentSong()
-					if song then
-						local profile = PROFILEMAN:GetProfile(pn)
-						if profile then
-							if profile:SongIsFavorite(song) then
-								profile:RemoveSongFromFavorites(song)
-							else
-								profile:AddSongToFavorites(song)
-							end
-							-- Broadcast to update heart icons
-							MESSAGEMAN:Broadcast("FavoritesChanged")
-						end
-					end
-					-- Clear sequence after processing
-					buttonSequence[pn] = {}
-					return true
-				end
-			end
-
-			-- Check for difficulty change sequences (need 2 of the same button)
-			if #seq >= 2 and seq[#seq].button == seq[#seq-1].button then
-				local focused_song = SL.MusicWheel.GetFocusedSong()
-				if focused_song then
-					local stepsType = GAMESTATE:GetCurrentStyle():GetStepsType()
-					local allSteps = focused_song:GetStepsByStepsType(stepsType)
-					local currentSteps = GAMESTATE:GetCurrentSteps(pn)
-
-					if #allSteps > 0 and currentSteps then
-						-- Find current difficulty index
-						local currentIndex = 1
-						for i, steps in ipairs(allSteps) do
-							if steps == currentSteps then
-								currentIndex = i
-								break
-							end
-						end
-
-						-- Change difficulty
-						local newIndex = currentIndex
-						if button == "MenuUp" then
-							-- Easier (lower index)
-							newIndex = math.max(1, currentIndex - 1)
-						else
-							-- Harder (higher index)
-							newIndex = math.min(#allSteps, currentIndex + 1)
-						end
-
-						if newIndex ~= currentIndex then
-							local newSteps = allSteps[newIndex]
-							GAMESTATE:SetCurrentSteps(pn, newSteps)
-							-- Save this as the player's preferred difficulty
-							preferredDifficulty[pn] = newSteps:GetDifficulty()
-							MESSAGEMAN:Broadcast("CurrentStepsP" .. (pn == PLAYER_1 and "1" or "2") .. "Changed")
-						end
-					end
-				end
-
-				-- Clear sequence after processing
-				buttonSequence[pn] = {}
-				return true
-			end
-		end
-	end
-
-	-- Handle FirstPress for scrolling (Repeat handled by Update loop)
-	if event.type == "InputEventType_FirstPress" then
-		if event.GameButton == "MenuLeft" or event.GameButton == "MenuRight" then
-			local scrollDirection = (event.GameButton == "MenuLeft") and -1 or 1
-			
-			-- Check if this button is part of the Sort Menu combo
-			-- If so, buffer the input to check for chords
-			if sortMenuButtons[event.GameButton] then
-				local buffer = wheel.input_buffer
-				if buffer then
-					-- Buffer the scroll command
-					-- If the other button is pressed within 0.05s, this will be cancelled
-					buffer:stoptweening()
-					buffer:sleep(0.05)
-					buffer:queuecommand("TriggerScroll" .. (scrollDirection == -1 and "Left" or "Right"))
-					-- Store player number for the command
-					buffer.pn = pn
-					
-					-- Set next scroll time (initial delay)
-					nextScrollTime[pn] = GetTimeSinceStart() + initialScrollDelay
-				end
-			else
-				-- Not a sort menu button - scroll immediately
-				PerformScroll(scrollDirection, pn)
-				-- Set next scroll time (initial delay)
-				nextScrollTime[pn] = GetTimeSinceStart() + initialScrollDelay
-			end
-			
-			return false -- Return false to let InputHandler see the event (for chord detection)
-		end
-	end
-
-	return false
-end
-
 -- ============================================================================
 -- ActorFrame Definition
 -- ============================================================================
@@ -483,8 +180,8 @@ local t = Def.ActorFrame{
 			return
 		end
 		
-		-- Initialize scroll interval from preferences
-		UpdateScrollInterval()
+		-- Initialize scroll interval (Consumed by InputHandler mostly, but kept here for reference if needed)
+		-- UpdateScrollInterval() -- Removed, logic moved to InputHandler
 
 		-- Initialize preferred difficulty from session data or profile
 		-- Priority: 1. Session data, 2. Initial difficulties from Initialize(), 3. Current steps, 4. Engine preference
@@ -517,49 +214,144 @@ local t = Def.ActorFrame{
 		end
 
 		-- Initialize wheel data
-		-- SL.MusicWheel.Initialize() is now called in overlay/default.lua
-		-- to ensure GAMESTATE is ready before NoteField creation
-
-		-- Set initial wheel data
 		wheel:set_info_set(SL.MusicWheel.State.items, SL.MusicWheel.State.focus_index)
 	end,
 
 	OnCommand = function(self)
-		-- Register input handler (do this in OnCommand when screen is ready)
-		local screen = SCREENMAN:GetTopScreen()
-		if screen then
-			screen:AddInputCallback(input)
-		end
-		
-		-- Start update loop for continuous scrolling
-		self:SetUpdateFunction(function(self)
-			local now = GetTimeSinceStart()
-			
-			for pn in ivalues(GAMESTATE:GetHumanPlayers()) do
-				-- Check for held buttons
-				local leftHeld = heldButtons[pn]["MenuLeft"]
-				local rightHeld = heldButtons[pn]["MenuRight"]
-				
-				-- Only scroll if exactly one direction is held (prevent fighting)
-				if (leftHeld and not rightHeld) or (rightHeld and not leftHeld) then
-					if now >= nextScrollTime[pn] then
-						local direction = leftHeld and -1 or 1
-						
-						-- Check if Sort Menu is open (don't scroll)
-						if not SCREENMAN:get_input_redirected(pn) then
-							PerformScroll(direction, pn)
-							nextScrollTime[pn] = now + scrollInterval
-						end
-					end
-				else
-					-- Reset scroll time when button released (handled by InputEventType_Release, but safe to do here too)
-				end
-			end
-		end)
+		-- Removed AddInputCallback logic - handled by InputHandler.lua
+		-- Removed Update loop for scrolling - handled by InputHandler.lua (sending MW_Scroll commands)
 
 		-- Ensure initial selection is broadcast to UI (Banner, NoteField, etc.)
 		-- Add a small delay to ensure everything is ready before playing audio
 		self:sleep(0.05):queuecommand("BroadcastInitialSelection")
+	end,
+
+	-- Exposed Commands for InputHandler
+	MW_ScrollLeftCommand = function(self, params) PerformScroll(-1, params.PlayerNumber) end,
+	MW_ScrollRightCommand = function(self, params) PerformScroll(1, params.PlayerNumber) end,
+	
+	MW_ToggleGroupCommand = function(self)
+		if SL.MusicWheel.ToggleGroup(true) then
+			wheel:set_info_set(SL.MusicWheel.State.items, SL.MusicWheel.State.focus_index)
+		end
+	end,
+
+	MW_StartCommand = function(self, params)
+		local pn = params.PlayerNumber
+		-- Check if we're on a group header or song
+		local focused_item = SL.MusicWheel.State.items[SL.MusicWheel.State.focus_index]
+
+		-- If on group header, try to toggle it
+		if focused_item and focused_item.type == "group_header" then
+			if SL.MusicWheel.ToggleGroup(false) then
+				-- Group was toggled, update wheel display
+				wheel:set_info_set(SL.MusicWheel.State.items, SL.MusicWheel.State.focus_index)
+			end
+			return
+		end
+
+		-- If on a song, handle song selection with options prompt
+		if focused_item and focused_item.type == "song" then
+			local now = GetTimeSinceStart()
+
+			-- Check if this is a second Start press within timeout
+			if startPressTime and (now - startPressTime) < optionsPromptTimeout and startPressPlayer == pn then
+				if SL and SL.MusicWheel and SL.MusicWheel.RememberSelectionContext then
+					SL.MusicWheel.RememberSelectionContext()
+				end
+				-- Second press - go to options
+				startPressTime = nil
+				startPressPlayer = nil
+
+				-- Verify we have a valid song selected in GAMESTATE
+				if GAMESTATE:GetCurrentSong() then
+					-- Show "Entering Options..." and navigate to options
+					local screen = SCREENMAN:GetTopScreen()
+					if screen then
+						-- Set PlayMode to Regular (prevents crash)
+						GAMESTATE:SetCurrentPlayMode("PlayMode_Regular")
+
+						MESSAGEMAN:Broadcast("ShowEnteringOptions")
+						-- Queue transition on overlay (wait for "Entering Options" message)
+						local overlay = screen:GetChild("Overlay")
+						if overlay then
+							overlay:sleep(0.5):queuecommand("GoToOptions")
+						end
+					end
+				end
+			else
+				-- First press - show prompt and start timer
+				startPressTime = now
+				startPressPlayer = pn
+
+				-- Show "Press Start for Options" overlay
+				MESSAGEMAN:Broadcast("ShowPressStartForOptions")
+
+				-- Schedule timeout to go directly to gameplay
+				local overlay = SCREENMAN:GetTopScreen():GetChild("Overlay")
+				if overlay then
+					overlay:queuecommand("StartTimeout")
+				end
+			end
+		end
+	end,
+
+	MW_ToggleFavoriteCommand = function(self, params)
+		local pn = params.PlayerNumber
+		local song = GAMESTATE:GetCurrentSong()
+		if song then
+			local profile = PROFILEMAN:GetProfile(pn)
+			if profile then
+				if profile:SongIsFavorite(song) then
+					profile:RemoveSongFromFavorites(song)
+				else
+					profile:AddSongToFavorites(song)
+				end
+				-- Broadcast to update heart icons
+				MESSAGEMAN:Broadcast("FavoritesChanged")
+			end
+		end
+	end,
+
+	MW_DifficultyChangeCommand = function(self, params)
+		local pn = params.PlayerNumber
+		local dir = params.Direction -- -1 for easier, 1 for harder
+		
+		local focused_song = SL.MusicWheel.GetFocusedSong()
+		if focused_song then
+			local stepsType = GAMESTATE:GetCurrentStyle():GetStepsType()
+			local allSteps = focused_song:GetStepsByStepsType(stepsType)
+			local currentSteps = GAMESTATE:GetCurrentSteps(pn)
+
+			if #allSteps > 0 and currentSteps then
+				-- Find current difficulty index
+				local currentIndex = 1
+				for i, steps in ipairs(allSteps) do
+					if steps == currentSteps then
+						currentIndex = i
+						break
+					end
+				end
+
+				-- Change difficulty
+				local newIndex = currentIndex
+				if dir == -1 then
+					-- Easier (lower index)
+					newIndex = math.max(1, currentIndex - 1)
+				else
+					-- Harder (higher index)
+					newIndex = math.min(#allSteps, currentIndex + 1)
+				end
+
+				if newIndex ~= currentIndex then
+					local newSteps = allSteps[newIndex]
+					GAMESTATE:SetCurrentSteps(pn, newSteps)
+					-- Save this as the player's preferred difficulty
+					preferredDifficulty[pn] = newSteps:GetDifficulty()
+					MESSAGEMAN:Broadcast("CurrentStepsP" .. (pn == PLAYER_1 and "1" or "2") .. "Changed")
+				end
+			end
+		end
 	end,
 
 	BroadcastInitialSelectionCommand = function(self)
@@ -702,21 +494,7 @@ local t = Def.ActorFrame{
 	-- Add the wheel actors (this returns an ActorFrame from sick_wheel)
 	wheel:create_actors("WheelContainer", num_items, WheelItem, wheel_x, wheel_y),
 	
-	-- Input Buffer Actor
-	Def.Actor{
-		Name="InputBuffer",
-		InitCommand=function(self) wheel.input_buffer = self end,
-		TriggerScrollLeftCommand=function(self) 
-			PerformScroll(-1, self.pn)
-			-- Reset next scroll time to allow continuous scroll to pick up
-			nextScrollTime[self.pn] = GetTimeSinceStart() + initialScrollDelay
-		end,
-		TriggerScrollRightCommand=function(self) 
-			PerformScroll(1, self.pn)
-			-- Reset next scroll time to allow continuous scroll to pick up
-			nextScrollTime[self.pn] = GetTimeSinceStart() + initialScrollDelay
-		end
-	}
+	-- Input Buffer Actor Removed (Handled by InputHandler)
 }
 
 return t
