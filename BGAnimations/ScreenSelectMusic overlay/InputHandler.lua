@@ -27,26 +27,6 @@ local heldButtons = {
 	[PLAYER_2] = {}
 }
 
--- Check if a chord (simultaneous buttons) is being pressed
-local function IsChordPressed(code, pn)
-	-- Format: "Button1-Button2" means both pressed simultaneously
-	if code:find("-") and not code:find("@") then
-		local buttons = {}
-		for button in code:gmatch("([^-]+)") do
-			table.insert(buttons, button)
-		end
-		
-		-- Check if all buttons in the chord are currently held
-		for _, buttonName in ipairs(buttons) do
-			if not heldButtons[pn][buttonName] then
-				return false
-			end
-		end
-		return true
-	end
-	return false
-end
-
 
 -- Track scroll timing for variable speed
 local nextScrollTime = {
@@ -93,6 +73,86 @@ local function GetMusicWheel()
 	return nil
 end
 
+-- Helper to parse metric string into a structured object
+-- Format examples:
+-- "MenuLeft-MenuRight" -> Chord
+-- "@MenuUp-MenuDown" -> Chord (ignore @)
+-- "MenuUp,MenuDown,MenuUp,MenuDown" -> Sequence
+local function ParseMetricCode(codeString)
+	if not codeString or codeString == "" then return nil end
+	
+	-- Remove @ prefix if present (often used in metrics to denote chords vs taps)
+	local cleanCode = codeString:gsub("^@", "")
+	
+	-- Check for Sequence (commas)
+	if cleanCode:find(",") then
+		local seq = {}
+		for btn in cleanCode:gmatch("([^,]+)") do
+			-- Trim whitespace
+			table.insert(seq, (btn:gsub("%s+", "")))
+		end
+		return { type = "sequence", buttons = seq }
+	end
+	
+	-- Check for Chord (dashes)
+	if cleanCode:find("-") then
+		local chord = {}
+		for btn in cleanCode:gmatch("([^-]+)") do
+			table.insert(chord, (btn:gsub("%s+", "")))
+		end
+		return { type = "chord", buttons = chord }
+	end
+	
+	-- Single Button
+	return { type = "chord", buttons = { cleanCode } }
+end
+
+-- Checks if a specific chord definition is currently held
+local function IsChordSatisfied(buttons, pn)
+	for _, button in ipairs(buttons) do
+		-- If any button in the chord isn't held, fail
+		if not heldButtons[pn][button] then
+			return false
+		end
+	end
+	return true
+end
+
+-- Checks if a sequence definition matches the detailed history
+local function IsSequenceSatisfied(targetSequence, history)
+	if #history < #targetSequence then return false end
+	
+	-- Check backwards from the end
+	for i = 1, #targetSequence do
+		local targetBtn = targetSequence[#targetSequence - i + 1]
+		local historyItem = history[#history - i + 1]
+		
+		if historyItem.button ~= targetBtn then
+			return false
+		end
+	end
+	return true
+end
+
+-- Pre-load and parse codes from metrics to avoid parsing every frame
+local InputCodes = {
+	SortList = ParseMetricCode(GetCode("SortList")),
+	SortList2 = ParseMetricCode(GetCode("SortList2")),
+	ToggleGroup = ParseMetricCode(GetCode("CloseFolder")),
+	ToggleFavorite = ParseMetricCode(GetCode("ToggleFavorite")),
+	-- Add more as needed
+}
+
+-- Buffer for scroll inputs to allow chord detection prevention
+-- When Left is pressed, we wait a tiny bit to see if Right is also pressed.
+-- If Right is pressed within the window, it's a chord -> Cancel Scroll.
+-- If window expires, it's a tap -> Execute Scroll.
+local scrollQueue = {
+	[PLAYER_1] = nil,
+	[PLAYER_2] = nil
+}
+local chordDetectionWindow = 0.05 -- 50ms window
+
 local input = function(event)
 	if not event.PlayerNumber or not event.GameButton then return false end
 	
@@ -131,21 +191,34 @@ local input = function(event)
 
 	if event.type == "InputEventType_FirstPress" then
 		
-		-- Check for Sort Menu codes FIRST (before handling individual buttons)
-		for i = 1, 2 do
-			local codeName = i == 1 and "SortList" or ("SortList" .. i)
-			local code = GetCode(codeName)
-			
-			if code and code ~= "" and code ~= "false" then
-				-- Check if this is a chord and if it's currently pressed
-				if IsChordPressed(code, pn) then
-					-- Only open if no other overlay is active
+		-- 1. Check Chords (Sort Menu, Toggle Group)
+		-- We check chords on FirstPress. Since chords require multiple buttons, 
+		-- this will trigger when the LAST button of the chord is pressed.
+		
+		-- Sort Menu
+		for _, key in ipairs({"SortList", "SortList2"}) do
+			local codeDef = InputCodes[key]
+			if codeDef and codeDef.type == "chord" then
+				if IsChordSatisfied(codeDef.buttons, pn) then
 					if not _G.SSM_OverlayActive then
+						-- Cancel any pending scroll since we found a chord
+						scrollQueue[pn] = nil
+						
 						_G.SSM_OverlayActive = true
 						overlay:queuecommand("DirectInputToSortMenu")
 					end
 					return true
 				end
+			end
+		end
+
+		-- Toggle Group
+		if InputCodes.ToggleGroup and InputCodes.ToggleGroup.type == "chord" then
+			if IsChordSatisfied(InputCodes.ToggleGroup.buttons, pn) then
+				-- Cancel any pending scroll
+				scrollQueue[pn] = nil
+				if wheel then wheel:playcommand("MW_ToggleGroup") end
+				return true
 			end
 		end
 		
@@ -254,62 +327,51 @@ local input = function(event)
 		end
 
 
-		-- Handle Difficulty Changes and Favorites (Up/Down sequences)
-		if button == "MenuUp" or button == "MenuDown" then
-			
-			-- First check for ToggleGroup Chord (Up+Down)
-			if heldButtons[pn]["MenuUp"] and heldButtons[pn]["MenuDown"] then
-				if wheel then wheel:playcommand("MW_ToggleGroup") end
+		-- Handle Sequences (Difficulty, Favorites)
+		-- Update History
+		local currentTime = GetTimeSinceStart()
+		local seq = buttonSequence[pn]
+
+		-- Clear old sequence if timeout expired
+		if #seq > 0 and (currentTime - seq[#seq].time) > sequenceTimeout then
+			buttonSequence[pn] = {}
+			seq = buttonSequence[pn]
+		end
+
+		-- Add button to sequence
+		table.insert(seq, {button = button, time = currentTime})
+
+		-- 1. Toggle Favorite (Dynamic Sequence)
+		if InputCodes.ToggleFavorite and InputCodes.ToggleFavorite.type == "sequence" then
+			if IsSequenceSatisfied(InputCodes.ToggleFavorite.buttons, seq) then
+				if wheel then wheel:playcommand("MW_ToggleFavorite", {PlayerNumber=pn}) end
+				buttonSequence[pn] = {} -- Clear after success
 				return true
 			end
+		end
 
-			-- Check Sequences
-			local currentTime = GetTimeSinceStart()
-			local seq = buttonSequence[pn]
-
-			-- Clear old sequence if timeout expired
-			if #seq > 0 and (currentTime - seq[#seq].time) > sequenceTimeout then
-				buttonSequence[pn] = {}
-				seq = buttonSequence[pn]
-			end
-
-			-- Add button to sequence
-			table.insert(seq, {button = button, time = currentTime})
-
-			-- Check for favorites toggle sequence (Up,Down,Up,Down)
-			if #seq >= 4 then
-				if seq[#seq-3].button == "MenuUp" and 
-				   seq[#seq-2].button == "MenuDown" and 
-				   seq[#seq-1].button == "MenuUp" and 
-				   seq[#seq].button == "MenuDown" then
-					
-					if wheel then wheel:playcommand("MW_ToggleFavorite", {PlayerNumber=pn}) end
-					
-					-- Clear sequence after processing
-					buttonSequence[pn] = {}
-					return true
-				end
-			end
-
-			-- Check for difficulty change sequences (need 2 of the same button)
+		-- 2. Difficulty Change (Hardcoded "Double Tap" logic for now, or could make dynamic if metrics exist)
+		-- Metrics usually define dedicated buttons for NextDifficulty/PrevDifficulty, but double-tap is a custom mechanic.
+		-- Keeping hardcoded for now unless user asks.
+		-- TODO: Make dynamic, even creating a new Metric if it does not exists
+		if (button == "MenuUp" or button == "MenuDown") then
 			if #seq >= 2 and seq[#seq].button == seq[#seq-1].button then
 				local dir = (button == "MenuUp") and -1 or 1 -- Up = Easier (- index), Down = Harder (+ index)
 				if wheel then wheel:playcommand("MW_DifficultyChange", {PlayerNumber=pn, Direction=dir}) end
-
-				-- Clear sequence after processing
 				buttonSequence[pn] = {}
 				return true
 			end
 		end
 
-		-- Initial Scroll Press
+		-- Initial Scroll Press (Buffered)
 		if button == "MenuLeft" or button == "MenuRight" then
 			local dir = (button == "MenuLeft") and -1 or 1
-			if wheel then
-				if dir == -1 then wheel:playcommand("MW_ScrollLeft", {PlayerNumber=pn})
-				else wheel:playcommand("MW_ScrollRight", {PlayerNumber=pn}) end
-			end
-			nextScrollTime[pn] = GetTimeSinceStart() + initialScrollDelay
+			-- Buffer the input instead of executing immediately
+			scrollQueue[pn] = {
+				dir = dir,
+				time = GetTimeSinceStart()
+			}
+			-- Do NOT update nextScrollTime yet, only on execution
 		end
 	end
 	
@@ -326,8 +388,23 @@ local function Update(self)
 	if waitingForOptions then return end
 
 	for pn in ivalues(GAMESTATE:GetHumanPlayers()) do
-		-- Only scroll if input is NOT redirected
-		if not SCREENMAN:get_input_redirected(pn) then
+		
+		-- Check Buffered Scroll (First Press)
+		if scrollQueue[pn] then
+			if now >= scrollQueue[pn].time + chordDetectionWindow then
+				-- Window expired, no chord intercepted -> Execute
+				local dir = scrollQueue[pn].dir
+				if wheel then
+					if dir == -1 then wheel:playcommand("MW_ScrollLeft", {PlayerNumber=pn})
+					else wheel:playcommand("MW_ScrollRight", {PlayerNumber=pn}) end
+				end
+				nextScrollTime[pn] = now + initialScrollDelay
+				scrollQueue[pn] = nil -- Consumed
+			end
+		end
+
+		-- Only scroll if input is NOT redirected AND no pending single-tap buffer
+		if not SCREENMAN:get_input_redirected(pn) and not scrollQueue[pn] then
 			local leftHeld = heldButtons[pn]["MenuLeft"]
 			local rightHeld = heldButtons[pn]["MenuRight"]
 			

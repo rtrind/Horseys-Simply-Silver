@@ -62,13 +62,15 @@
 - [x] Remove all remaining `GetMusicWheel()` calls from theme
 - [ ] Change "Reloading screen" message to a proper "loading", just like the transition from profile/style selection to SSM screen
 - [ ] Change "Title screen" from Simply Love to Simply DDR
+- [ ] Implement pattern info toggle
 - [x] Test with both P1 and P2 profiles
 - [ ] Performance testing (large libraries, fast scrolling)
 
 ### Bug Fixes
 - [x] Dynamic second player join (pressing enter on an unjoined player) broken (should open the profile selection with the extra player for selection). Right now, it silently adds the player, on the second enter it tries to start gameplay and crashes.
 - [x] GetLamp should be called once per song in the wheel
-- [ ] I can still activate the sort menu while the starting gameplay screen is awaiting for a possible start to go to the options
+- [x] I can still activate the sort menu while the starting gameplay screen is awaiting for a possible start to go to the options
+- [ ] Make the difficulty change as a metric on metrics.ini and adjust input handler accordingly
 - [ ] Do we need to keep SSM codenames on metrics.ini? We either use them on the input handler, or we let them hardcoded there and remove them from the metrics.
 - [ ] When scrolling fast thru the songs on the wheel, sometimes it stops changing the audio to the current song and continues to play one of the other songs from before. When it finishes, you change to another song and the audio fixes itself.
 
