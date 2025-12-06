@@ -120,17 +120,8 @@ local input = function(event)
 			-- Allow Start (to confirm options) or Back (to cancel)
 			if button == "Start" then
 				-- Handle 2nd press (Go to options) logic below
-			elseif button == "Back" then
-				-- Cancel wait
-				waitingForOptions = false
-				startPressTime = nil
-				startPressPlayer = nil
-				MESSAGEMAN:Broadcast("HidePressStartForOptions")
-				-- Cancel timeout on overlay
-				if overlay then overlay:stoptweening() end
-				return true -- Consume back
 			else
-				-- Block everything else (SortMenu, Scroll, etc.)
+				-- Block everything else (SortMenu, Scroll, Back, etc.)
 				return true 
 			end
 		else
