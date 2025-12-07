@@ -65,7 +65,8 @@
 - [x] Change "Title screen" from Simply Love to Simply DDR
 - [x] Implement pattern info toggle
 - [x] Test with both P1 and P2 profiles
-- [ ] Performance testing (large libraries, fast scrolling)
+- [x] Performance testing (large libraries, fast scrolling)
+- [x] Play sound (same as original wheel) on wheel movement
 
 ### Bug Fixes
 - [x] Dynamic second player join (pressing enter on an unjoined player) broken (should open the profile selection with the extra player for selection). Right now, it silently adds the player, on the second enter it tries to start gameplay and crashes.
@@ -73,7 +74,7 @@
 - [x] I can still activate the sort menu while the starting gameplay screen is awaiting for a possible start to go to the options
 - [x] Make the difficulty change as a metric on metrics.ini and adjust input handler accordingly
 - [x] Do we need to keep SSM codenames on metrics.ini? We either use them on the input handler, or we let them hardcoded there and remove them from the metrics.
-- [ ] When scrolling fast thru the songs on the wheel, sometimes it stops changing the audio to the current song and continues to play one of the other songs from before. When it finishes, you change to another song and the audio fixes itself.
+- [x] When scrolling fast thru the songs on the wheel, sometimes it stops changing the audio to the current song and continues to play one of the other songs from before. When it finishes, you change to another song and the audio fixes itself.
 
 ## Phase 6: More efficient debugging and testing (Not Started)
 - [ ] Is there a way for automated tests to happen, considering the game is closed source? This way I could provide a specific testing config and run the tests in a consistent fashion, trying to detect regressions much faster than testing manually, pointing the error to the LLM and finding a fix, creating an easier development loop.
@@ -96,3 +97,4 @@
 
 ## Won't fix
 - [ ] Timer is broken on SSM, but I won't ever use it.
+- [ ] NotefieldPreview shows some frames of something (I don't know what it is) before showing proper steps (this bug already exists on upstream fork)

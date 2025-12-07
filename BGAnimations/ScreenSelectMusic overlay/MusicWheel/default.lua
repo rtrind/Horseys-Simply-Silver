@@ -198,9 +198,17 @@ local function ApplyFocusedSongToGamestate()
 	gamestate_update_pending = false
 end
 
+-- Sound actor reference (set in InitCommand)
+local wheel_change_sound = nil
+
 local function PerformScroll(direction, pn)
 	-- Final check: don't scroll if input is redirected (Sort Menu open)
 	if SCREENMAN:get_input_redirected(pn) then return end
+
+	-- Play wheel change sound
+	if wheel_change_sound then
+		wheel_change_sound:play()
+	end
 
 	-- Update wheel data and display (visual only)
 	SL.MusicWheel.Scroll(direction)
@@ -507,7 +515,14 @@ local t = Def.ActorFrame{
 	-- Add the wheel actors (this returns an ActorFrame from sick_wheel)
 	wheel:create_actors("WheelContainer", num_items, WheelItem, wheel_x, wheel_y),
 	
-	-- Input Buffer Actor Removed (Handled by InputHandler)
+	-- Wheel change sound
+	Def.Sound{
+		Name = "WheelChangeSound",
+		File = THEME:GetPathS("MusicWheel", "change"),
+		InitCommand = function(self)
+			wheel_change_sound = self
+		end,
+	},
 }
 
 return t
