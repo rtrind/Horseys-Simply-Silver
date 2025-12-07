@@ -25,6 +25,9 @@ if not SL.MusicWheel then
 			-- Caching
 			highscore_cache = {},          -- Cached highscores with context
 			favorites_cache = {},          -- Deduplicated favorites
+			songs_cache = {},              -- Cached songs per style {[steps_type] = songs}
+			groups_cache = {},             -- Cached groups per style {[steps_type] = {[group] = songs}}
+			cache_steps_type = nil,        -- Steps type the cache was built for
 			
 			-- Performance
 			last_rebuild_time = 0,         -- Timestamp of last rebuild
@@ -351,9 +354,64 @@ local function FilterSongsForCurrentStyle(all_songs)
 	return songs
 end
 
--- Get all songs filtered for current style (common pattern)
+-- Get all songs filtered for current style (with caching)
 local function GetAllSongsForCurrentStyle()
-	return FilterSongsForCurrentStyle(GetAllSongs())
+	local state = SL.MusicWheel.State
+	local current_steps_type = GAMESTATE:GetCurrentStyle():GetStepsType()
+	
+	-- Invalidate cache if style changed
+	if state.cache_steps_type ~= current_steps_type then
+		state.songs_cache = {}
+		state.groups_cache = {}
+		state.cache_steps_type = current_steps_type
+	end
+	
+	-- Return cached if available
+	if state.songs_cache.all then
+		return state.songs_cache.all
+	end
+	
+	-- Build and cache
+	local songs = FilterSongsForCurrentStyle(GetAllSongs())
+	state.songs_cache.all = songs
+	return songs
+end
+
+-- Get songs in a group filtered for current style (with caching)
+local function GetSongsInGroupForCurrentStyle(group_name)
+	local state = SL.MusicWheel.State
+	local current_steps_type = GAMESTATE:GetCurrentStyle():GetStepsType()
+	
+	-- Invalidate cache if style changed
+	if state.cache_steps_type ~= current_steps_type then
+		state.songs_cache = {}
+		state.groups_cache = {}
+		state.cache_steps_type = current_steps_type
+	end
+	
+	-- Return cached if available
+	if state.groups_cache[group_name] then
+		return state.groups_cache[group_name]
+	end
+	
+	-- Build and cache
+	local all_songs = GetSongsInGroup(group_name)
+	local songs = {}
+	for _, song in ipairs(all_songs) do
+		if HasChartsForCurrentStyle(song) then
+			table.insert(songs, song)
+		end
+	end
+	state.groups_cache[group_name] = songs
+	return songs
+end
+
+-- Clear song cache (call when songs are added/removed)
+function SL.MusicWheel.ClearSongCache()
+	local state = SL.MusicWheel.State
+	state.songs_cache = {}
+	state.groups_cache = {}
+	state.cache_steps_type = nil
 end
 
 -- ============================================================================
@@ -432,15 +490,8 @@ function SL.MusicWheel.BuildWheelData_Group()
 	
 	-- Add each group as a header, and songs if open
 	for _, group_name in ipairs(groups) do
-		local all_songs = GetSongsInGroup(group_name)
-		
-		-- Filter songs to only include those with charts for current style
-		local songs = {}
-		for _, song in ipairs(all_songs) do
-			if HasChartsForCurrentStyle(song) then
-				table.insert(songs, song)
-			end
-		end
+		-- Use cached filtered songs
+		local songs = GetSongsInGroupForCurrentStyle(group_name)
 		
 		-- Only add groups that have compatible songs
 		if #songs > 0 then
