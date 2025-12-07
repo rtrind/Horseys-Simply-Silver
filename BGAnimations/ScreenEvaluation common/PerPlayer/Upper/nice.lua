@@ -43,24 +43,14 @@ local IsNice = function()
 
 	-- check difficulty
 	local meter
-	if GAMESTATE:IsCourseMode() then -- course mode
-		local trail = GAMESTATE:GetCurrentTrail(player)
-		if trail then
-			meter = trail:GetMeter()
-			if string.match(tostring(meter), "69") ~= nil then return true end
-		end
-	else
-		local steps = GAMESTATE:GetCurrentSteps(player) -- regular mode
-		if steps then
-			meter = steps:GetMeter()
-			if string.match(tostring(meter), "69") ~= nil then return true end
-		end
+	local steps = GAMESTATE:GetCurrentSteps(player)
+	if steps then
+		meter = steps:GetMeter()
+		if string.match(tostring(meter), "69") ~= nil then return true end
 	end
 
 	-- song title
-	local songtitle = (GAMESTATE:IsCourseMode()
-						and GAMESTATE:GetCurrentCourse():GetDisplayFullTitle())
-						or GAMESTATE:GetCurrentSong():GetDisplayFullTitle()
+	local songtitle = GAMESTATE:GetCurrentSong():GetDisplayFullTitle()
 
 	if songtitle then
 		if string.match(tostring(songtitle), "69") ~= nil then return true end
@@ -75,10 +65,10 @@ local IsCranked = function()
 	if not (tonumber(percent) <= 77.41) then return false end
 	if tonumber(percent) <= 0 then return false end
 
-	local SongOrCourse = GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentCourse() or GAMESTATE:GetCurrentSong()
+	local SongOrCourse = GAMESTATE:GetCurrentSong()
 	local title = SongOrCourse:GetDisplayFullTitle():lower()
-	local genre = not GAMESTATE:IsCourseMode() and SongOrCourse:GetGenre():lower() or ""
-	local group = not GAMESTATE:IsCourseMode() and SongOrCourse:GetGroupName():lower() or ""
+	local genre = SongOrCourse:GetGenre():lower() or ""
+	local group = SongOrCourse:GetGroupName():lower() or ""
 
 	if title:match("wrench") or genre:match("dark psytrance") or group:match("cranked pastry") or group:match("scrapyard kent") then return true end
 

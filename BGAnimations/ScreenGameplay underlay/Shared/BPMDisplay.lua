@@ -112,51 +112,19 @@ end
 
 
 if #Players == 2 then
+	-- check if both players are playing the same steps
+	local StepsP1 = GAMESTATE:GetCurrentSteps(PLAYER_1)
+	local StepsP2 = GAMESTATE:GetCurrentSteps(PLAYER_2)
 
-	if not GAMESTATE:IsCourseMode() then
-		-- check if both players are playing the same steps
-		local StepsP1 = GAMESTATE:GetCurrentSteps(PLAYER_1)
-		local StepsP2 = GAMESTATE:GetCurrentSteps(PLAYER_2)
+	-- get timing data...
+	local TimingDataP1 = StepsP1:GetTimingData()
+	local TimingDataP2 = StepsP2:GetTimingData()
 
-		-- get timing data...
-		local TimingDataP1 = StepsP1:GetTimingData()
-		local TimingDataP2 = StepsP2:GetTimingData()
-
-		local dispP1, dispP2
-
-		if TimingDataP1 == TimingDataP2 then
-			-- both players have the same TimingData; only need one BPM Display.
-			t[#t+1] = SingleBPMDisplay()
-		else
-			t[#t+1] = DualBPMDisplay()
-		end
-
-	-- if we ARE in CourseMode
+	if TimingDataP1 == TimingDataP2 then
+		-- both players have the same TimingData; only need one BPM Display.
+		t[#t+1] = SingleBPMDisplay()
 	else
-		local TrailP1 = GAMESTATE:GetCurrentTrail(PLAYER_1)
-		local TrailP2 = GAMESTATE:GetCurrentTrail(PLAYER_2)
-
-		if TrailP1 == TrailP2 then
-			-- both players have the same trail; only need one BPM Display.
-			t[#t+1] = SingleBPMDisplay()
-		else
-			-- Two different Trails may effectively share the the same TimingData for each of their TrailEntries,
-			-- but this is not guaranteed.  A single song within the course may feature split BPMs, for example.
-			-- So, loop through the TrailEntries of both and compare the TimingData of each.
-			-- If there is even one discrepancy, break from the loop and use a DualBPMDisplay.
-			local TrailEntriesP1 = TrailP1:GetTrailEntries()
-			local TrailEntriesP2 = TrailP2:GetTrailEntries()
-			local DivergentTimingData = false
-
-			for i=1, #TrailEntriesP1 do
-				if TrailEntriesP1[i]:GetSteps():GetTimingData() ~= TrailEntriesP2[i]:GetSteps():GetTimingData() then
-					DivergentTimingData = true
-					break
-				end
-			end
-
-			t[#t+1] = DivergentTimingData and DualBPMDisplay() or SingleBPMDisplay()
-		end
+		t[#t+1] = DualBPMDisplay()
 	end
 end
 

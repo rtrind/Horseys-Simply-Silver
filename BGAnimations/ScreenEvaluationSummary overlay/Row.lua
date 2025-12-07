@@ -47,9 +47,7 @@ t[#t+1] = Def.Banner{
 	InitCommand=function(self) self:y(-6) end,
 	DrawStageCommand=function(self)
 		if SongOrCourse then
-			if GAMESTATE:IsCourseMode() then
-				self:LoadFromCourse(SongOrCourse)
-			elseif not SongOrCourse:HasBanner() and HasGroupBanner() then
+			if not SongOrCourse:HasBanner() and HasGroupBanner() then
 				self:LoadFromSongGroup(SongOrCourse:GetGroupName())
 			else
 				self:LoadFromSong(SongOrCourse)

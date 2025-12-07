@@ -12,14 +12,7 @@ return function(SongNumberInCourse)
 		local mods = SL[pn].ActiveModifiers
 		if mods.MeasureCounter and mods.MeasureCounter ~= "None" then
 
-			local steps = nil
-
-			if GAMESTATE:IsCourseMode() then
-				local trail = GAMESTATE:GetCurrentTrail(player):GetTrailEntries()[SongNumberInCourse+1]
-				steps = trail:GetSteps()
-			else
-				steps = GAMESTATE:GetCurrentSteps(player)
-			end
+			local steps = GAMESTATE:GetCurrentSteps(player)
 
 			-- This will parse out and set all the required info for the chart in the SL.Streams cache,
 			-- The function will only do work iff we're parsing a chart different than what's in the cache.

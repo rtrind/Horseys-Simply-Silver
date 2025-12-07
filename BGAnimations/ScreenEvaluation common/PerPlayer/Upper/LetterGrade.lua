@@ -30,12 +30,10 @@ if award == 1 and playerStats:GetScore() == 0 then
 	award = 0
 end
 
-if not GAMESTATE:IsCourseMode() then
-	streamMeasures, breakMeasures = GetTotalStreamAndBreakMeasures(ToEnumShortString(player))
-	totalMeasures = streamMeasures + breakMeasures
-	
-	if streamMeasures/totalMeasures >= 0.2 then hasStream = true end
-end
+streamMeasures, breakMeasures = GetTotalStreamAndBreakMeasures(ToEnumShortString(player))
+totalMeasures = streamMeasures + breakMeasures
+
+if streamMeasures/totalMeasures >= 0.2 then hasStream = true end
 
 local t = Def.ActorFrame{}
 

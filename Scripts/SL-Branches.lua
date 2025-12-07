@@ -44,11 +44,7 @@ Branch.AfterScreenRankingDouble = function()
 end
 
 SelectMusicOrCourse = function()
-	if GAMESTATE:IsCourseMode() then
-		return "ScreenSelectCourse"
-	else
-		return "ScreenSelectMusic"
-	end
+	return "ScreenSelectMusic"
 end
 
 Branch.AllowScreenSelectProfile = function()
@@ -178,10 +174,6 @@ Branch.AfterProfileSave = function()
 
 	if PREFSMAN:GetPreference("EventMode") then
 		return SelectMusicOrCourse()
-
-	elseif GAMESTATE:IsCourseMode() then
-		return Branch.AllowScreenNameEntry()
-
 	else
 
 		-- deduct the number of stages that stock StepMania says the song is

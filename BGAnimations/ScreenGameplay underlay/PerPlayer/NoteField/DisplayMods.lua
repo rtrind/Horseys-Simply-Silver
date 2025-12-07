@@ -32,8 +32,8 @@ af[#af+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 }
 
 -- For tournament packs that have No CMOD rules 
-if not GAMESTATE:IsCourseMode() then
-	local song = GAMESTATE:GetCurrentSong()
+local song = GAMESTATE:GetCurrentSong()
+if song then
 	local song_dir = song:GetSongDir()
 	local group = string.lower(song:GetGroupName())
 	local tourneyPack = false

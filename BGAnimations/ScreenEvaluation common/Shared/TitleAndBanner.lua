@@ -1,5 +1,5 @@
 local path = "/"..THEME:GetCurrentThemeDirectory().."Graphics/_FallbackBanners/"..ThemePrefs.Get("VisualStyle")
-local SongOrCourse = GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentCourse() or GAMESTATE:GetCurrentSong()
+local SongOrCourse = GAMESTATE:GetCurrentSong()
 
 local banner = {
 	directory = (FILEMAN:DoesFileExist(path) and path or THEME:GetPathG("","_FallbackBanners/Arrows")),
@@ -13,23 +13,14 @@ local y_offset = 46
 local af = Def.ActorFrame{ InitCommand=function(self) self:xy(_screen.cx, y_offset) end }
 
 if SongOrCourse and SongOrCourse:HasBanner() then
-	--song or course banner, if there is one
+	--song banner, if there is one
 	af[#af+1] = Def.Banner{
 		Name="Banner",
 		InitCommand=function(self)
-			if GAMESTATE:IsCourseMode() then
-				self:LoadFromCourse( GAMESTATE:GetCurrentCourse() ):animate(false)
-			else
-				self:LoadFromSong( GAMESTATE:GetCurrentSong() )
-			end
+			self:LoadFromSong( GAMESTATE:GetCurrentSong() )
 			self:setsize(banner.width, 164)
-			if GAMESTATE:IsCourseMode() then
-				self:zoom(0.7)
-				self:y(66)
-			else
-				self:zoom(0.6)
-				self:y(41)
-			end
+			self:zoom(0.6)
+			self:y(41)
 		end,
 	}
 else
@@ -42,13 +33,8 @@ else
  			end,
  			OnCommand=function(self)
  				self:setsize(banner.width, 164)
- 				if GAMESTATE:IsCourseMode() then
- 					self:zoom(0.7)
- 					self:y(66)
- 				else
- 					self:zoom(0.6)
- 					self:y(41)
- 				end
+ 				self:zoom(0.6)
+ 				self:y(41)
  			end,
  		};
  	else
@@ -56,13 +42,8 @@ else
  		af[#af+1] = LoadActor(banner.directory .. "/banner" .. SL.Global.ActiveColorIndex .. " (doubleres).png")..{
  			InitCommand=function(self)
  				self:setsize(banner.width, 164)
- 				if GAMESTATE:IsCourseMode() then
- 					self:zoom(0.7)
- 					self:y(66)
- 				else
- 					self:zoom(0.6)
- 					self:y(41)
- 				end
+ 				self:zoom(0.6)
+ 				self:y(41)
  			end
  		}
 	end
@@ -75,44 +56,27 @@ af[#af+1] = Def.Quad{
 		if ThemePrefs.Get("VisualStyle") == "Technique" then
 			self:diffusealpha(0.5)
 		end
-		if GAMESTATE:IsCourseMode() then
-			self:zoom(0.7)
-			self:setsize(banner.width,32)
-			self:y(-3)
-		else
-			self:y(y_offset+68)
-			self:zoom(0.6)
-			self:setsize(banner.width,80)
-		end
+		self:y(y_offset+68)
+		self:zoom(0.6)
+		self:setsize(banner.width,80)
 	end,
 }
 
 -- song/course title text
 af[#af+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 	InitCommand=function(self)
-		local songtitle = (GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentCourse():GetDisplayFullTitle()) or GAMESTATE:GetCurrentSong():GetDisplayFullTitle()
+		local songtitle = GAMESTATE:GetCurrentSong():GetDisplayFullTitle()
 		if songtitle then
 			self:settext(songtitle)
-			if GAMESTATE:IsCourseMode() then
-				self:maxwidth(banner.width*0.7)
-				self:y(-5)
-				self:zoom(0.9)
-			else
-				self:maxwidth(banner.width*0.6)
-				self:y(y_offset+52)
-				self:zoom(0.8)
-			end
+			self:maxwidth(banner.width*0.6)
+			self:y(y_offset+52)
+			self:zoom(0.8)
 		end
 	end
 	--when using af[#af+1] = ... you must use a semicolon for this code to continue to the following actorframe, using a comma here will just cause the rest of the code not to work
  	};
 
 	af[#af+1] = Def.ActorFrame{
-		InitCommand=function(self)
-			if GAMESTATE:IsCourseMode() then
-				self:visible(false)
-			end
-		end,
 		-- song group - "Hey, what pack is that from?"
 		--We're using song group here, rather than folder, because I don't think it's necessary to know the folder that a song is in like it is on the music select screen (especially since the song folder will generally have the name of the song in it, and it'd just be redundant information). If I were to add the option for song folder, I'd make it yet another simply love preference. More freedom, more better.
 
@@ -208,24 +172,13 @@ af[#af+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 				end,
 			OnCommand=function(self)
 				local duration
-
- 				if GAMESTATE:IsCourseMode() then
-					local Players = GAMESTATE:GetHumanPlayers()
-					local player = Players[1]
-					local trail = GAMESTATE:GetCurrentTrail(player)
-
- 					if trail then
-						duration = TrailUtil.GetTotalSeconds(trail)
-					end
+				local song = GAMESTATE:GetCurrentSong()
+				if song then
+					duration = song:MusicLengthSeconds()
 				else
-					local song = GAMESTATE:GetCurrentSong()
-					if song then
-						duration = song:MusicLengthSeconds()
-					else
-						local group_name = SL.MusicWheel.GetFocusedGroup()
-						if group_name then
-							duration = group_durations[group_name]
-						end
+					local group_name = SL.MusicWheel.GetFocusedGroup()
+					if group_name then
+						duration = group_durations[group_name]
 					end
 				end
 

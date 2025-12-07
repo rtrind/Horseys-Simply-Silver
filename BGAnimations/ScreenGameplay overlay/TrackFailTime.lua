@@ -7,64 +7,19 @@
 local player = ...
 local pn = ToEnumShortString(player)
 
--- Return an array of cumulativeSeconds for each song in a course, which is used by Step Statistics Time.lua
-local CourseLengthPerSong = function(player)
-    local cumulativeSeconds = {}
-    if GAMESTATE:IsCourseMode() then
-        local rate = SL.Global.ActiveModifiers.MusicRate
-        local seconds = 0
-        local trail = GAMESTATE:GetCurrentTrail(player)
-
-        if trail then
-            local entries = trail:GetTrailEntries()
-            for i, entry in ipairs(entries) do
-                seconds = seconds + (entry:GetSong():GetLastSecond() / rate)
-                table.insert(cumulativeSeconds, seconds)
-            end
-        end
-        return cumulativeSeconds
-    end
-end
-
--- Return the current time of the course or song, in seconds
+-- Return the current time of the song, in seconds
 local CurrentTimeSongOrCourse = function(player)
-    local playerState = GAMESTATE:GetPlayerState(player)	
-    local seconds = 0
+    local playerState = GAMESTATE:GetPlayerState(player)
     local rate = SL.Global.ActiveModifiers.MusicRate
-
-    if GAMESTATE:IsCourseMode() then
-        local cumulativeSeconds = CourseLengthPerSong(player)
-        
-        -- Find out what song in the course and add up all the previous songs
-        local courseIndex = GAMESTATE:GetCourseSongIndex()
-		if courseIndex > 0 then
-			seconds = cumulativeSeconds[courseIndex]
-		end
-
-        -- Thenn add on the current song's timer
-        local currentSongTimer = playerState:GetSongPosition():GetMusicSecondsVisible()
-        currentSongTimer = currentSongTimer / rate
-        seconds = seconds + currentSongTimer
-    else
-        seconds = playerState:GetSongPosition():GetMusicSecondsVisible() / rate
-    end
-
-    return seconds
+    return playerState:GetSongPosition():GetMusicSecondsVisible() / rate
 end
 
--- Return the total length of the current song or course, in seconds
+-- Return the total length of the current song, in seconds
 local TotalLengthSongOrCourse = function(player)
     local totalSeconds = 0
-    if GAMESTATE:IsCourseMode() then
-        local trail = GAMESTATE:GetCurrentTrail(player)
-        if trail then
-            totalSeconds = trail:GetLengthSeconds()
-        end
-    else
-        local song = GAMESTATE:GetCurrentSong()
-        if song then
-            totalSeconds = song:GetLastSecond()
-        end
+    local song = GAMESTATE:GetCurrentSong()
+    if song then
+        totalSeconds = song:GetLastSecond()
     end
 
     -- totalSeconds is initilialzed in the engine as -1
@@ -95,17 +50,8 @@ local af = Def.Actor{
 			local graphPercentage = 0
             local graphLabel = 0
 
-			if GAMESTATE:IsCourseMode() then 
-				local cumulativeSeconds = CourseLengthPerSong(player)
-				local courseIndex = GAMESTATE:GetCourseSongIndex()
-				local totalSecondsToEndOfSong = cumulativeSeconds[courseIndex+1]
-
-				graphPercentage = deathSecond / totalSecondsToEndOfSong
-				graphLabel = deathSecond / totalSeconds
-			else 
-				graphPercentage = deathSecond / totalSeconds
-				graphLabel = totalSeconds - deathSecond
-			end
+			graphPercentage = deathSecond / totalSeconds
+			graphLabel = totalSeconds - deathSecond
 
 			local currentMeasure = math.floor(playerState:GetSongPosition():GetSongBeatVisible()/4)
 

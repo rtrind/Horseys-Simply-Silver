@@ -3,19 +3,7 @@ local pn = ToEnumShortString(player)
 local info
 local w, h
 
--- in CourseMode, GetStepsCredit() will return a table of info that
--- has as many entries as there are stepcharts in the course
--- (i.e. potentially a lot) so just show course Scripter or Description
-if GAMESTATE:IsCourseMode() then
-	local course = GAMESTATE:GetCurrentCourse()
-	local scripter = course:GetScripter()
-	local descript = course:GetDescription()
-	-- prefer scripter, use description if scripter is empty
-	info = (scripter ~= "" and scripter) or (descript ~= "" and descript) or ""
-
-else
-	info = GetStepsCredit(player)
-end
+info = GetStepsCredit(player)
 
 local marquee_index = 0
 
@@ -24,13 +12,8 @@ return Def.ActorFrame{
 	-- coloured box behind Stepartist text
   	Def.Quad{
 		InitCommand=function(self)
-			if GAMESTATE:IsCourseMode() then
-				self:zoomto(118,40)
-				self:x(50.5)
-			else
-				self:zoomto(140.5,40)
-				self:x(40.5)
-			end
+			self:zoomto(140.5,40)
+			self:x(40.5)
 			self:y( _screen.cy-76)
 			if player == PLAYER_1 then
 				self:x( self:GetX() * -1 )
@@ -58,13 +41,8 @@ return Def.ActorFrame{
 			self:y(_screen.cy-77)
 		   self:horizalign(center)
 		   if ThemePrefs.Get("RainbowMode") then self:diffuse(Color.Black) end
-			if GAMESTATE:IsCourseMode() then
-				self:x(55.5)
-				self:maxwidth(165)
-			else
-				self:x(40)
-				self:maxwidth(180)
-			end
+			self:x(40)
+			self:maxwidth(180)
 		end,
 	   OnCommand=function(self)
 		   if player == PLAYER_1 then

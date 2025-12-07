@@ -5,33 +5,6 @@ local NumPlayers = #GAMESTATE:GetHumanPlayers()
 local GraphWidth  = THEME:GetMetric("GraphDisplay", "BodyWidth")
 local GraphHeight = THEME:GetMetric("GraphDisplay", "BodyHeight")
 
-local function TotalCourseLength()
-    -- utility for graph stuff because i ended up doing this a lot
-    -- i use this method instead of TrailUtil.GetTotalSeconds because that leaves unused time at the end in graphs
-    local trail = GAMESTATE:GetCurrentTrail(player)
-    local t = 0
-    for te in ivalues(trail:GetTrailEntries()) do
-        t = t + te:GetSong():GetLastSecond()
-    end
-
-    return t / SL.Global.ActiveModifiers.MusicRate
-end
-
-local function TotalCourseLengthPlayed()
-	local trail = GAMESTATE:GetCurrentTrail(player)
-	local storage = SL[pn].Stages.Stats[SL.Global.Stages.PlayedThisGame + 1]
-	if storage.DeathSecond ~= nil then
-		local deathSecond = storage.DeathSecond
-		local t = 0
-		for te in ivalues(trail:GetTrailEntries()) do
-			t = t + ( te:GetSong():GetLastSecond() / SL.Global.ActiveModifiers.MusicRate )
-			if t > deathSecond then break end
-		end
-		return t
-	else
-		return -1
-	end
-end
 
 local af = Def.ActorFrame{
 	Name="JudgeGraph",
@@ -55,37 +28,21 @@ local af = Def.ActorFrame{
 	},
 }
 
--- Only add the background histogram in normal gameplay.
--- Course mode needs to get all subsong density graphs and put them togetehr which we
--- don't currently support.
-if not GAMESTATE:IsCourseMode() then
-	af[#af+1] = NPS_Histogram(player, GraphWidth, GraphHeight, 0.5)..{
-		Name="DensityGraph",
-		OnCommand=function(self)
-			self:addx(-GraphWidth/2):addy(GraphHeight)
-			-- Lower the opacity otherwise some of the scatter plot points might become hard to see.
-			self:diffusealpha(0.5)
-			self:queuecommand("Redraw")
-		end,
-	}
-else
-	af[#af+1] = NPS_Histogram_Static_Course(player, GraphWidth, GraphHeight, 0.5)..{
-		Name="DensityGraph",
-		OnCommand=function(self)
-			self:addx(-GraphWidth/2):addy(GraphHeight)
-			-- Lower the opacity otherwise some of the scatter plot points might become hard to see.
-			self:diffusealpha(0.5)
-		end,
-	}
-end
+-- Add the background histogram
+af[#af+1] = NPS_Histogram(player, GraphWidth, GraphHeight, 0.5)..{
+	Name="DensityGraph",
+	OnCommand=function(self)
+		self:addx(-GraphWidth/2):addy(GraphHeight)
+		-- Lower the opacity otherwise some of the scatter plot points might become hard to see.
+		self:diffusealpha(0.5)
+		self:queuecommand("Redraw")
+	end,
+}
 
 af[#af+1] = LoadActor("./ScatterPlot.lua", {player=player, GraphWidth=GraphWidth, GraphHeight=GraphHeight} )
 
 -- The GraphDisplay provided by the engine provides us a solid color histogram detailing
 -- the player's lifemeter during gameplay capped by a white line.
--- in normal gameplay (non-CourseMode), we hide the solid color but leave the white line.
--- in CourseMode, we hide the white line (for aesthetic reasons) and leave the solid color
--- as ScatterPlot.lua does not yet support CourseMode.
 af[#af+1] = Def.GraphDisplay{
 	Name="GraphDisplay",
 	InitCommand=function(self)
@@ -93,30 +50,21 @@ af[#af+1] = Def.GraphDisplay{
 		local ColorIndex = ((SL.Global.ActiveColorIndex + (player==PLAYER_1 and -1 or 1)) % #SL.Colors) + 1
 		self:Load("GraphDisplay" .. ColorIndex )
 
-		if not GAMESTATE:IsCourseMode() then
-			local steps = GAMESTATE:GetCurrentSteps(player)
-			local timingData = steps:GetTimingData()
-			local firstSecond = math.min(timingData:GetElapsedTimeFromBeat(0), 0)
-			local chartStartSecond = GAMESTATE:GetCurrentSong():GetFirstSecond()
-			local lastSecond = GAMESTATE:GetCurrentSong():GetLastSecond()
-			local duration = lastSecond - firstSecond
+		local steps = GAMESTATE:GetCurrentSteps(player)
+		local timingData = steps:GetTimingData()
+		local firstSecond = math.min(timingData:GetElapsedTimeFromBeat(0), 0)
+		local chartStartSecond = GAMESTATE:GetCurrentSong():GetFirstSecond()
+		local lastSecond = GAMESTATE:GetCurrentSong():GetLastSecond()
+		local duration = lastSecond - firstSecond
 
-			-- GraphDisplay starts at chartStartSecond, but the NPS graph
-			-- and the scatter plot start at firstSecond, so we have to
-			-- move the lifebar to the correct offset to align it with the
-			-- NPS graph.
-			local offsetFactor = (chartStartSecond - firstSecond) / duration
-			local offset = GraphWidth * offsetFactor
-			self:addx(offset/2)
-			self:SetWidth(GraphWidth - offset)
-		else
-			local duration = TotalCourseLength()
-			local liveDuration = TotalCourseLengthPlayed()
-
-			if liveDuration ~= -1 then
-				self:SetWidth(liveDuration / duration * GraphWidth):x(-GraphWidth/2):horizalign(left)
-			end
-		end
+		-- GraphDisplay starts at chartStartSecond, but the NPS graph
+		-- and the scatter plot start at firstSecond, so we have to
+		-- move the lifebar to the correct offset to align it with the
+		-- NPS graph.
+		local offsetFactor = (chartStartSecond - firstSecond) / duration
+		local offset = GraphWidth * offsetFactor
+		self:addx(offset/2)
+		self:SetWidth(GraphWidth - offset)
 
 		local playerStageStats = STATSMAN:GetCurStageStats():GetPlayerStageStats(player)
 		local stageStats = STATSMAN:GetCurStageStats()
@@ -149,12 +97,6 @@ if storage.DeathSecond ~= nil then
 	local graphLabel = storage.GraphLabel
 	local secondsLeft = seconds - deathSecond
 	
-	if GAMESTATE:IsCourseMode() then
-		local duration = TotalCourseLength()
-		local liveDuration = TotalCourseLengthPlayed()
-		graphPercentage = graphPercentage * liveDuration / duration
-	end
-
 	-- If the player failed, check how much time was remaining
 	af[#af+1] = Def.ActorFrame {
 		InitCommand=function(self)

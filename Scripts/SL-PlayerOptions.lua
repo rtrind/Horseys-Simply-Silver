@@ -375,43 +375,28 @@ local Overrides = {
 		ExportOnChange = true,
 		Choices = function()
 			local choices = {}
-
-			if not GAMESTATE:IsCourseMode() then
-				local song = GAMESTATE:GetCurrentSong()
-				if song then
-					for steps in ivalues( SongUtil.GetPlayableSteps(song) ) do
-						if steps:IsAnEdit() then
-							choices[#choices+1] = ("%s %i"):format(steps:GetDescription(), steps:GetMeter())
-						else
-							choices[#choices+1] = ("%s %i"):format(THEME:GetString("Difficulty", ToEnumShortString(steps:GetDifficulty())), steps:GetMeter())
-						end
-					end
-				end
-			else
-				local course = GAMESTATE:GetCurrentCourse()
-				if course then
-					for _,trail in ipairs(GetPlayableTrails(course)) do
-						choices[#choices+1] = ("%s %i"):format(THEME:GetString("Difficulty", ToEnumShortString(trail:GetDifficulty())), trail:GetMeter())
+			local song = GAMESTATE:GetCurrentSong()
+			if song then
+				for steps in ivalues( SongUtil.GetPlayableSteps(song) ) do
+					if steps:IsAnEdit() then
+						choices[#choices+1] = ("%s %i"):format(steps:GetDescription(), steps:GetMeter())
+					else
+						choices[#choices+1] = ("%s %i"):format(THEME:GetString("Difficulty", ToEnumShortString(steps:GetDifficulty())), steps:GetMeter())
 					end
 				end
 			end
-
 			return choices
 		end,
 		Values = function()
-			local SongOrCourse = GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentCourse() or GAMESTATE:GetCurrentSong()
-			if SongOrCourse then
-				if GAMESTATE:IsCourseMode() then
-					return GetPlayableTrails(SongOrCourse)
-				else
-					return SongUtil.GetPlayableSteps(SongOrCourse)
-				end
+			local song = GAMESTATE:GetCurrentSong()
+			if song then
+				return SongUtil.GetPlayableSteps(song)
 			end
 			return {}
 		end,
 		LoadSelections = function(self, list, pn)
-			local StepsOrTrail = GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentTrail(pn) or GAMESTATE:GetCurrentSteps(pn)
-			local i = FindInTable(StepsOrTrail, self.Values) or 1
+			local steps = GAMESTATE:GetCurrentSteps(pn)
+			local i = FindInTable(steps, self.Values) or 1
 			list[i] = true
 			return list
 		end,
@@ -423,14 +408,8 @@ local Overrides = {
 					-- Set the PreferredDifficulty now so that the player's newly chosen difficulty
 					-- doesn't reset when they return to SelectMusic/SelectCourse.
 					GAMESTATE:SetPreferredDifficulty(pn, v:GetDifficulty())
-
-					if GAMESTATE:IsCourseMode() then
-						GAMESTATE:SetCurrentTrail(pn, v)
-						MESSAGEMAN:Broadcast("CurrentTrail"..ToEnumShortString(pn).."Changed")
-					else
-						GAMESTATE:SetCurrentSteps(pn, v)
-						MESSAGEMAN:Broadcast("CurrentSteps"..ToEnumShortString(pn).."Changed")
-					end
+					GAMESTATE:SetCurrentSteps(pn, v)
+					MESSAGEMAN:Broadcast("CurrentSteps"..ToEnumShortString(pn).."Changed")
 					break
 				end
 			end

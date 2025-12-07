@@ -4,7 +4,7 @@ local pn = ToEnumShortString(player)
 local IsUltraWide = (GetScreenAspectRatio() > 21/9)
 local NoteFieldIsCentered = (GetNotefieldX(player) == _screen.cx)
 
-local StepsOrTrail = (GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentTrail(player)) or GAMESTATE:GetCurrentSteps(player)
+local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
 local total_tapnotes = StepsOrTrail:GetRadarValues(player):GetValue( "RadarCategory_Notes" )
 
 -- Only add this in ITG mode.

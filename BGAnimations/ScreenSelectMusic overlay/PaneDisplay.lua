@@ -8,8 +8,8 @@ local text_zoom = 0.7
 
 -- -----------------------------------------------------------------------
 local GetSongAndSteps = function(player)
-	local SongOrCourse = (GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentCourse()) or GAMESTATE:GetCurrentSong()
-	local StepsOrTrail = (GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentTrail(player)) or GAMESTATE:GetCurrentSteps(player)
+	local SongOrCourse = GAMESTATE:GetCurrentSong()
+	local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
 	return SongOrCourse, StepsOrTrail
 end
 

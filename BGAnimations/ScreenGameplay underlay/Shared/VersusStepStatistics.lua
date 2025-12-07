@@ -54,7 +54,7 @@ for player in ivalues(Players) do
         -- No need to reimplement the wheel here. Just use the existing actor and modify it for our use case.
         local judgments = LoadActor("../PerPlayer/StepStatistics/TapNoteJudgments.lua", {player, false})
         judgments.InitCommand = function(self)    
-            local StepsOrTrail = (GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentTrail(player)) or GAMESTATE:GetCurrentSteps(player)
+            local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
             local total_tapnotes = StepsOrTrail:GetRadarValues(player):GetValue( "RadarCategory_Notes" )
     
             -- determine how many digits are needed to express the number of notes in base-10
@@ -129,11 +129,8 @@ af[#af+1] = Def.Banner{
 }
 af[#af+1] = Def.Banner{
     CurrentSongChangedMessageCommand=function(self)
-		if GAMESTATE:IsCourseMode() then
-			self:LoadFromCourse( GAMESTATE:GetCurrentCourse() )
-		else
-			self:LoadFromSongGroup( GAMESTATE:GetCurrentSong():GetGroupName() )
-		end
+        self:LoadFromSongGroup( GAMESTATE:GetCurrentSong():GetGroupName() )
+
 		self:setsize(418,164):zoom(0.25):addy(125)
     end
 }

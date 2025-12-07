@@ -28,7 +28,7 @@ local CalculateScrollSpeed = function(player)
 	player   = player or GAMESTATE:GetMasterPlayerNumber()
 	local pn = ToEnumShortString(player)
 
-	local StepsOrTrail = (GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentTrail(player)) or GAMESTATE:GetCurrentSteps(player)
+	local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
 	local MusicRate    = SL.Global.ActiveModifiers.MusicRate or 1
 
 	local SpeedModType = SL[pn].ActiveModifiers.SpeedModType
@@ -109,7 +109,7 @@ local CalculatePerspectiveSpeed = function(player)
 	local pn = ToEnumShortString(player)
 	local ScreenOptions = SCREENMAN:GetTopScreen()
 
-	local StepsOrTrail = (GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentTrail(player)) or GAMESTATE:GetCurrentSteps(player)
+	local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
 	local MusicRate    = SL.Global.ActiveModifiers.MusicRate or 1
 
 	local SpeedModType = SL[pn].ActiveModifiers.SpeedModType

@@ -18,7 +18,7 @@ spr.CodeMessageCommand=function(self, params)
 		local month = ("%02d-%s"):format(MonthOfYear()+1, THEME:GetString("Months", "Month"..MonthOfYear()+1))
 
 		-- get the FullTitle of the song or course that was just played
-		local title = GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentCourse():GetDisplayFullTitle() or GAMESTATE:GetCurrentSong():GetDisplayFullTitle()
+		local title = GAMESTATE:GetCurrentSong():GetDisplayFullTitle()
 
 		-- song titles can be very long, and the engine's SaveScreenshot() function
 		-- is already hardcoded to make the filename long via DateTime::GetNowDateTime()

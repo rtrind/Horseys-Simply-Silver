@@ -4,12 +4,7 @@ local function gen_vertices(player, width, height, Steps, desaturation)
 	local pn = ToEnumShortString(player)
 
 	if not Steps then 
-		if GAMESTATE:IsCourseMode() then
-			local TrailEntry = GAMESTATE:GetCurrentTrail(player):GetTrailEntry(GAMESTATE:GetCourseSongIndex())
-			Steps = TrailEntry:GetSteps()
-		else
-			Steps = GAMESTATE:GetCurrentSteps(player)
-		end
+		Steps = GAMESTATE:GetCurrentSteps(player)
 	end
 	Song = SONGMAN:GetSongFromSteps(Steps)
 	

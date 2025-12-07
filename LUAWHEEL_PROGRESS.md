@@ -161,10 +161,10 @@
 
 ### Planned Tasks
 - [x] Continue ITL/SRPG/GrooveStats removal (remaining files)
-- [ ] Remove tournament mode
-- [ ] Remove files from the original engine wheel
-- [ ] Remove Outfox online features
-- [ ] Simplify remaining GAMESTATE:IsCourseMode() calls
+- [x] Remove tournament mode
+- [x] Remove files from the original engine wheel
+- [x] Remove Outfox online features
+- [x] Simplify remaining GAMESTATE:IsCourseMode() calls (reduced from 126 to 0)
 - [ ] Optimize lazy loading to prevent stuttering
 - [ ] Optimize memory usage (unload off-screen items)
 - [ ] Test edge cases (large libraries, fast scrolling)

@@ -49,19 +49,8 @@ end
 -- song.  We'll need to track how long each song is, and add (cumulatively-increasing)
 -- seconds to SongPosition:GetMusicSeconds() for each song past the first.
 --
--- Here, set up a table with cumulative seconds-per-Song for the overall Course.
+-- seconds_offset is scoped to this entire file
 local cumulative_seconds = {}
-if GAMESTATE:IsCourseMode() then
-	cumulative_seconds = courseLengthBySong(player)
-end
-
--- use seconds_offset in CourseMode to initialize timer text
--- for songs after the first
--- (i.e. by the start of the 4th song, 6 minutes have already elapsed)
---
--- seconds_offset is scoped to this entire file and updated in
--- CurrentSongChangedMessageCommand so it can be referenced
--- from within Update()
 local seconds_offset = 0
 
 -- -----------------------------------------------------------------------
@@ -205,8 +194,7 @@ af[#af+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 			self:halign( PlayerNumber:Reverse()[OtherPlayer[player]] )
 		end
 
-		local s = GAMESTATE:IsCourseMode() and THEME:GetString("ScreenGameplay", "Course") or THEME:GetString("ScreenGameplay", "Song")
-		self:settext( ("%s "):format(s) )
+		self:settext( ("%s "):format(THEME:GetString("ScreenGameplay", "Song")) )
 	end,
 	OnCommand=function(self)
 		if player==PLAYER_1 then

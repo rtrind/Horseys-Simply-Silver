@@ -7,7 +7,7 @@ local NoteFieldIsCentered = (GetNotefieldX(player) == _screen.cx)
 local gray = color("#5A6166")
 local row_height = 28
 
-local StepsOrTrail = (GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentTrail(player)) or GAMESTATE:GetCurrentSteps(player)
+local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
 
 -- -----------------------------------------------------------------------
 -- helper function

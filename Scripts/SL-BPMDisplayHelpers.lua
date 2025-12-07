@@ -48,21 +48,12 @@ end
 
 GetDisplayBPMs = function(player, StepsOrTrail, MusicRate)
 	player       = player       or GAMESTATE:GetMasterPlayerNumber()
-	StepsOrTrail = StepsOrTrail or (GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentTrail(player)) or GAMESTATE:GetCurrentSteps(player)
+	StepsOrTrail = StepsOrTrail or GAMESTATE:GetCurrentSteps(player)
 	MusicRate    = MusicRate    or SL.Global.ActiveModifiers.MusicRate
 
 	if not StepsOrTrail then return end
 
-	local bpms
-
-	-- if in CourseMode
-	if GAMESTATE:IsCourseMode() then
-		bpms = GetTrailBPMs(player, StepsOrTrail)
-
-	-- otherwise, we are not in CourseMode, i.e. in "normal" mode
-	else
-		bpms = StepsOrTrail:GetDisplayBpms()
-	end
+	local bpms = StepsOrTrail:GetDisplayBpms()
 
 	-- ensure there are 2 values before attempting to index them
 	if not (bpms and bpms[1] and bpms[2]) then return end
@@ -96,7 +87,7 @@ end
 
 StringifyDisplayBPMs = function(player, StepsOrTrail, MusicRate)
 	player       = player       or GAMESTATE:GetMasterPlayerNumber()
-	StepsOrTrail = StepsOrTrail or (GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentTrail(player)) or GAMESTATE:GetCurrentSteps(player)
+	StepsOrTrail = StepsOrTrail or GAMESTATE:GetCurrentSteps(player)
 	MusicRate    = MusicRate    or SL.Global.ActiveModifiers.MusicRate
 
 	local bpms = GetDisplayBPMs(player, StepsOrTrail, MusicRate)

@@ -27,16 +27,6 @@ local af = Def.ActorFrame{
 			fail = (GAMESTATE:GetCurMusicSeconds() < GAMESTATE:GetCurrentSong():GetLastSecond())
 		end
 
-		-- In course mode always fail if we're not already on the last
-		-- song. If we are on the last song, then we fall back to the
-		-- condition above.
-		if GAMESTATE:IsCourseMode() then
-			local course = GAMESTATE:GetCurrentCourse()
-			if GAMESTATE:GetCourseSongIndex() + 1 < course:GetNumCourseEntries() then
-				fail = true
-			end
-		end
-
 		-- We have to fail both players as we stopped the song early.
 		for player in ivalues( GAMESTATE:GetEnabledPlayers() ) do
 			if fail or usedAutoplay[player] then

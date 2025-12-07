@@ -33,9 +33,6 @@ af[#af+1] = Def.ActorFrame{
 	-- Song Folder Label
 	LoadFont("Common Normal")..{
 		InitCommand=function(self)
-			if GAMESTATE:IsCourseMode() then
-				self:visible(false)
-			end
 			self:zoom(0.9)
 			self:horizalign(right)
 			self:y(-10)
@@ -84,16 +81,12 @@ af[#af+1] = Def.ActorFrame{
 	-- ----------------------------------------
 	-- Artist Label
 	LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
-		Text=THEME:GetString("SongDescription", GAMESTATE:IsCourseMode() and "NumSongs" or "Artist"):upper(),
+		Text=THEME:GetString("SongDescription", "Artist"):upper(),
 		InitCommand=function(self)
 			self:align(1,0)
 			self:maxwidth(44)
 			self:diffuse(0.5,0.5,0.5,1)
-			if GAMESTATE:IsCourseMode() then
-				self:y(-11)
-			else
-				self:y(0):zoom(0.9)
-			end
+			self:y(0):zoom(0.9)
 		end,
 	},
 
@@ -102,19 +95,11 @@ af[#af+1] = Def.ActorFrame{
 		InitCommand=function(self)
 			self:align(0,0)
 			self:x(5)
-			if GAMESTATE:IsCourseMode() then
-				self:y(-11)
-			else
-				self:y(0):zoom(0.9)
-			end
+			self:y(0):zoom(0.9)
 		end,
 		SetCommand=function(self)
-			if GAMESTATE:IsCourseMode() then
-				local course = GAMESTATE:GetCurrentCourse()
-				self:settext( course and #course:GetCourseEntries() or "" )
-			else
-				local song = GAMESTATE:GetCurrentSong()
-				self:settext( song and song:GetDisplayArtist() or "" )
+			local song = GAMESTATE:GetCurrentSong()
+			self:settext( song and song:GetDisplayArtist() or "" )
 
 				if not GAMESTATE:IsEventMode() and song and (song:IsLong() or song:IsMarathon()) then
 					-- make room for the "COUNTS AS 2/3 ROUNDS" bubble
@@ -150,9 +135,9 @@ af[#af+1] = Def.ActorFrame{
 			-- Use custom Lua wheel API instead of engine wheel
 			local focused_item = SL.MusicWheel.GetFocusedItem()
 
-			-- we only want to try to show BPM values for Songs and Courses
+			-- we only want to try to show BPM values for Songs
 			-- not group headers
-			if not focused_item or (focused_item.type ~= "song" and not GAMESTATE:IsCourseMode()) then
+			if not focused_item or focused_item.type ~= "song" then
 				self:settext("")
 				return
 			end
@@ -182,19 +167,12 @@ af[#af+1] = Def.ActorFrame{
 				self:AddAttribute(0,             {Length=3, Diffuse={0.60,0.60,0.60,1}})
 				self:AddAttribute(3+p1bpm:len(), {Length=3, Diffuse={0.60,0.60,0.60,1}})
 
-				if GAMESTATE:IsCourseMode() then
-					-- P1 and P2's BPM text in CourseMode is white until I have time to figure CourseMode out
-					self:AddAttribute(3,             {Length=p1bpm:len(), Diffuse={1,1,1,1}})
-					self:AddAttribute(7+p1bpm:len(), {Length=p2bpm:len(), Diffuse={1,1,1,1}})
-
-				else
-					-- P1 and P2's BPM text is the color of their difficulty
-					if GAMESTATE:GetCurrentSteps(PLAYER_1) then
-						self:AddAttribute(3,             {Length=p1bpm:len(), Diffuse=DifficultyColor(GAMESTATE:GetCurrentSteps(PLAYER_1):GetDifficulty())})
-					end
-					if GAMESTATE:GetCurrentSteps(PLAYER_2) then
-						self:AddAttribute(7+p1bpm:len(), {Length=p2bpm:len(), Diffuse=DifficultyColor(GAMESTATE:GetCurrentSteps(PLAYER_2):GetDifficulty())})
-					end
+				-- P1 and P2's BPM text is the color of their difficulty
+				if GAMESTATE:GetCurrentSteps(PLAYER_1) then
+					self:AddAttribute(3,             {Length=p1bpm:len(), Diffuse=DifficultyColor(GAMESTATE:GetCurrentSteps(PLAYER_1):GetDifficulty())})
+				end
+				if GAMESTATE:GetCurrentSteps(PLAYER_2) then
+					self:AddAttribute(7+p1bpm:len(), {Length=p2bpm:len(), Diffuse=DifficultyColor(GAMESTATE:GetCurrentSteps(PLAYER_2):GetDifficulty())})
 				end
 			end
 		end
@@ -232,14 +210,6 @@ af[#af+1] = Def.ActorFrame{
 				-- Look up the overall duration of this group from our precalculated table of group durations
 				seconds = group_durations[focused_item.group_name]
 
-			elseif GAMESTATE:IsCourseMode() then
-				-- is it possible for 2 Trails within the same Course to have differing durations?
-				-- I can't think of a scenario where that would happen, but hey, this is StepMania.
-				-- In any case, I'm opting to display the duration of the MPN's current trail.
-				local trail = GAMESTATE:GetCurrentTrail(GAMESTATE:GetMasterPlayerNumber())
-				if trail then
-					seconds = TrailUtil.GetTotalSeconds(trail)
-				end
 			end
 
 			-- r21 lol

@@ -22,8 +22,8 @@ local HighScoreIndex = {
 -- -----------------------------------------------------------------------
 -- custom logic to (try to) assess if a MachineHighScore was achieved when in EventMode
 
-local SongOrCourse = GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentCourse() or GAMESTATE:GetCurrentSong()
-local StepsOrTrail = GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentTrail(player) or GAMESTATE:GetCurrentSteps(player)
+local SongOrCourse = GAMESTATE:GetCurrentSong()
+local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
 local MachineHighScores = PROFILEMAN:GetMachineProfile():GetHighScoreList(SongOrCourse,StepsOrTrail):GetHighScores()
 
 local EarnedMachineHighScoreInEventMode = function()

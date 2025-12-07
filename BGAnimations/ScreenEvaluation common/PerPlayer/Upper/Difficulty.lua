@@ -26,16 +26,8 @@ return Def.ActorFrame{
 			self:y( _screen.cy-82 )
 			self:x(129.5 * (player==PLAYER_1 and -1 or 1))
 
-			local meter
-			if GAMESTATE:IsCourseMode() then
-				local trail = GAMESTATE:GetCurrentTrail(player)
-				if trail then meter = trail:GetMeter() end
-			else
-				local steps = GAMESTATE:GetCurrentSteps(player)
-				if steps then meter = steps:GetMeter() end
-			end
-
-			if meter then self:settext(meter) end
+			local steps = GAMESTATE:GetCurrentSteps(player)
+			if steps then self:settext(steps:GetMeter()) end
 			self:maxwidth(70)
 		end
 	},

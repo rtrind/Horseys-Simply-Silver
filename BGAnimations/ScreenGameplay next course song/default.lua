@@ -28,8 +28,4 @@ local af = Def.ActorFrame{
   }
 }
 
-if GAMESTATE:IsCourseMode() then
-	af[#af+1] = LoadActor("ChangeSpeedModBeforeFirstNote.lua")
-end
-
 return af

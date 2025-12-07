@@ -1,8 +1,3 @@
--- this difficulty grid doesn't support CourseMode
--- CourseContentsList.lua should be used instead
-if GAMESTATE:IsCourseMode() then return end
--- ----------------------------------------------
-
 local GetStepsToDisplay = LoadActor("./StepsToDisplay.lua")
 
 local t = Def.ActorFrame{

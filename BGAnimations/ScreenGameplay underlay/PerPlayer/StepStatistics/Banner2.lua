@@ -10,12 +10,8 @@ if not SL[pn].ActiveModifiers.PackBanner then return end
 
 return Def.Banner{
 	CurrentSongChangedMessageCommand=function(self)
-		if GAMESTATE:IsCourseMode() then
-			self:LoadFromCourse( GAMESTATE:GetCurrentCourse() )
-		else
-			self:LoadFromSongGroup( GAMESTATE:GetCurrentSong():GetGroupName() )
-		end
-		
+		self:LoadFromSongGroup( GAMESTATE:GetCurrentSong():GetGroupName() )
+
 		self:setsize(418,164):zoom(0.4):diffusealpha(1)
 		self:xy(70 * (player==PLAYER_1 and 1 or -1), -200)
 		

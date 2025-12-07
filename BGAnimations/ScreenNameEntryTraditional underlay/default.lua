@@ -154,7 +154,7 @@ for i=1,NumStages do
 		InitCommand=function(self) self:xy(_screen.cx, 54):maxwidth(294):shadowlength(0.333) end,
 		OnCommand=function(self)
 			if SongOrCourse then
-				self:settext( GAMESTATE:IsCourseMode() and SongOrCourse:GetDisplayFullTitle() or SongOrCourse:GetDisplayMainTitle() )
+				self:settext( SongOrCourse:GetDisplayMainTitle() )
 			end
 		end
 	}
@@ -165,9 +165,7 @@ for i=1,NumStages do
 		InitCommand=function(self) self:xy(_screen.cx, 121.5) end,
 		OnCommand=function(self)
 			if SongOrCourse then
-				if GAMESTATE:IsCourseMode() then
-					self:LoadFromCourse(SongOrCourse)
-				elseif not SongOrCourse:HasBanner() and HasGroupBanner() then
+				if not SongOrCourse:HasBanner() and HasGroupBanner() then
 					self:LoadFromSongGroup(SongOrCourse:GetGroupName())
 				else
 					self:LoadFromSong(SongOrCourse)

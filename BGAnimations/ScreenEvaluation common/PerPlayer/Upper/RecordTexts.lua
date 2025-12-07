@@ -11,8 +11,8 @@ local HighScoreIndex = {
 -- ---------------------------------------------
 -- GetMachineHighScoreIndex() will always return -1 in EventMode, so...
 
-local SongOrCourse = GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentCourse() or GAMESTATE:GetCurrentSong()
-local StepsOrTrail = GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentTrail(player) or GAMESTATE:GetCurrentSteps(player)
+local SongOrCourse = GAMESTATE:GetCurrentSong()
+local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
 
 local MaxMachineHighScores = PREFSMAN:GetPreference("MaxHighScoresPerListForMachine")
 local MachineHighScores = PROFILEMAN:GetMachineProfile():GetHighScoreList(SongOrCourse,StepsOrTrail):GetHighScores()

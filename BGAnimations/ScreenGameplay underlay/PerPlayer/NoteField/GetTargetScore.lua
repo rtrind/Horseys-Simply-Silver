@@ -6,15 +6,9 @@ local pn = ToEnumShortString(player)
 local GetTopScore = function(kind)
 	if not player or not kind then return end
 
-	local SongOrCourse, StepsOrTrail, scorelist
-
-	if GAMESTATE:IsCourseMode() then
-		SongOrCourse = GAMESTATE:GetCurrentCourse()
-		StepsOrTrail = GAMESTATE:GetCurrentTrail(player)
-	else
-		SongOrCourse = GAMESTATE:GetCurrentSong()
-		StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
-	end
+	local SongOrCourse = GAMESTATE:GetCurrentSong()
+	local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
+	local scorelist
 
 	if kind == "Machine" then
 		scorelist = PROFILEMAN:GetMachineProfile():GetHighScoreList(SongOrCourse,StepsOrTrail)

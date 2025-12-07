@@ -97,7 +97,7 @@ return Def.ActorFrame{
 			self:queuecommand("Reset")
 		end,
 		ResetCommand=function(self)
-			local StepsOrTrail = GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentTrail(player) or GAMESTATE:GetCurrentSteps(player)
+			local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
 			if StepsOrTrail then
 				local difficulty = StepsOrTrail:GetDifficulty()
 				self:diffuse( DifficultyColor(difficulty) )
@@ -174,8 +174,8 @@ return Def.ActorFrame{
 		end,
 		ResetCommand=function(self)
 
-			local SongOrCourse = GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentCourse() or GAMESTATE:GetCurrentSong()
-			local StepsOrTrail = GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentTrail(player) or GAMESTATE:GetCurrentSteps(player)
+			local SongOrCourse = GAMESTATE:GetCurrentSong()
+			local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
 
 			-- always stop tweening when steps change in case a MarqueeCommand is queued
 			self:stoptweening()
@@ -192,28 +192,21 @@ return Def.ActorFrame{
 				text_table = GetStepsCredit(player)
 				marquee_index = 0
 
-				-- don't queue a Marquee in CourseMode
-				-- each TrailEntry text change will be broadcast from CourseContentsList.lua
-				-- to ensure it stays synced with the scrolling list of songs
-				if not GAMESTATE:IsCourseMode() then
-					-- only queue a Marquee if there are things in the text_table to display
-
-					if #text_table > 0 then
-						local fulldesc = ""
-						for i=1,#text_table do
-							local curText = text_table[i]
-							fulldesc = fulldesc .. curText .. "\n"
-						end
-						self:settext(fulldesc)
-						DiffuseEmojis(self, fulldesc)
-						if GAMESTATE:GetCurrentSteps(player):IsAutogen() then
-							self:settext(THEME:GetString("ScreenSelectMusic", "AUTOGEN"))
-							DiffuseEmojis(self)
-						end
-					else
-						-- no credit information was specified in the simfile for this stepchart, so just set to an empty string
-						self:settext("")
+				if #text_table > 0 then
+					local fulldesc = ""
+					for i=1,#text_table do
+						local curText = text_table[i]
+						fulldesc = fulldesc .. curText .. "\n"
 					end
+					self:settext(fulldesc)
+					DiffuseEmojis(self, fulldesc)
+					if GAMESTATE:GetCurrentSteps(player):IsAutogen() then
+						self:settext(THEME:GetString("ScreenSelectMusic", "AUTOGEN"))
+						DiffuseEmojis(self)
+					end
+				else
+					-- no credit information was specified in the simfile for this stepchart, so just set to an empty string
+					self:settext("")
 				end
 			else
 				-- there wasn't a song/course or a steps object, so the MusicWheel is probably hovering
@@ -223,53 +216,43 @@ return Def.ActorFrame{
 		end,
 		ITLCommand=function(self)
 			if #GAMESTATE:GetHumanPlayers() == 1 then
-				local SongOrCourse = GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentCourse() or GAMESTATE:GetCurrentSong()
-				local StepsOrTrail = GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentTrail(player) or GAMESTATE:GetCurrentSteps(player)
+				local SongOrCourse = GAMESTATE:GetCurrentSong()
+				local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
 
 				-- always stop tweening when steps change in case a MarqueeCommand is queued
 				self:stoptweening()
 
 				if SongOrCourse and StepsOrTrail then
-
 					text_table = GetStepsCredit(player)
 					marquee_index = 0
 
-					-- don't queue a Marquee in CourseMode
-					-- each TrailEntry text change will be broadcast from CourseContentsList.lua
-					-- to ensure it stays synced with the scrolling list of songs
-					if not GAMESTATE:IsCourseMode() then
-						-- only queue a Marquee if there are things in the text_table to display
-						if #text_table > 0 then
-							-- self:queuecommand("Marquee")
-							local fulldesc = ""
-							for i=1,#text_table do
-								local curText = text_table[i]
-								if string.sub(curText, string.len(curText) - 3, string.len(curText)) == " pts" then
-									local max_points = string.sub(curText, 1, string.len(curText) - 4)
-									local exscore = tonumber(SL[pn].itlScore)/100
-									local max_point_multiplier = 0
-									if exscore then
-										local points = GetPointsForSong(max_points, exscore)
-										local pointsPercent = string.format("%.2f%%", points / max_points * 100)
-										curText = points .. "/" .. curText .. " ("..pointsPercent..")"
-									end
+					if #text_table > 0 then
+						-- self:queuecommand("Marquee")
+						local fulldesc = ""
+						for i=1,#text_table do
+							local curText = text_table[i]
+							if string.sub(curText, string.len(curText) - 3, string.len(curText)) == " pts" then
+								local max_points = string.sub(curText, 1, string.len(curText) - 4)
+								local exscore = tonumber(SL[pn].itlScore)/100
+								local max_point_multiplier = 0
+								if exscore then
+									local points = GetPointsForSong(max_points, exscore)
+									local pointsPercent = string.format("%.2f%%", points / max_points * 100)
+									curText = points .. "/" .. curText .. " ("..pointsPercent..")"
 								end
-								fulldesc = fulldesc .. curText .. "\n"
 							end
-							self:settext(fulldesc)
-							DiffuseEmojis(self, fulldesc)
-							if GAMESTATE:GetCurrentSteps(player):IsAutogen() then
-								self:settext(THEME:GetString("ScreenSelectMusic", "AUTOGEN"))
-								DiffuseEmojis(self)
-							end
-						else
-							-- no credit information was specified in the simfile for this stepchart, so just set to an empty string
-							self:settext("")
+							fulldesc = fulldesc .. curText .. "\n"
 						end
+						self:settext(fulldesc)
+						DiffuseEmojis(self, fulldesc)
+						if GAMESTATE:GetCurrentSteps(player):IsAutogen() then
+							self:settext(THEME:GetString("ScreenSelectMusic", "AUTOGEN"))
+							DiffuseEmojis(self)
+						end
+					else
+						self:settext("")
 					end
 				else
-					-- there wasn't a song/course or a steps object, so the MusicWheel is probably hovering
-					-- on a group title, which means we want to set the stepartist text to an empty string for now
 					self:settext("")
 				end
 			end

@@ -84,19 +84,9 @@ return Def.Actor{
 				end
 			end
 			
-			local courseOffset = 0
-			if GAMESTATE:IsCourseMode() then
-				local curCourseSong = GAMESTATE:GetCourseSongIndex()
-				local courseEntries = GAMESTATE:GetCurrentTrail(ToEnumShortString(player)):GetTrailEntries()
-				
-				for i=1,curCourseSong do
-					courseOffset = courseOffset + courseEntries[i]:GetSong():GetLastSecond()
-				end
-			end
-
 			-- Store judgment offsets (including misses) in an indexed table as they occur.
 			-- Also store the CurMusicSeconds for Evaluation's scatter plot.
-			sequential_offsets[#sequential_offsets+1] = { courseOffset + GAMESTATE:GetCurMusicSeconds(), offset, arrow, isStream, foot, hitEarly, earlyOffset, heldMiss }
+			sequential_offsets[#sequential_offsets+1] = { GAMESTATE:GetCurMusicSeconds(), offset, arrow, isStream, foot, hitEarly, earlyOffset, heldMiss }
 			hitEarly = false
 			heldMiss = false
 			earlyOffset = 0

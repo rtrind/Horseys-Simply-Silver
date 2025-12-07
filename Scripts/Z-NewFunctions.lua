@@ -23,19 +23,8 @@ end
 -- Moving out of Step Statistics StepsInfo.lua
 GetSongAndSteps = function(player) 
 	-- Return song ID and step data ID
-	local song
-	local steps
-	
-	if GAMESTATE:IsCourseMode() then
-		local songindex = GAMESTATE:GetCourseSongIndex()
-		local trail = GAMESTATE:GetCurrentTrail(player):GetTrailEntries()[songindex+1]
-		steps = trail:GetSteps()
-		song = trail:GetSong()
-	else
-		song = GAMESTATE:GetCurrentSong()
-		steps = GAMESTATE:GetCurrentSteps(player)			
-	end
-	
+	local song = GAMESTATE:GetCurrentSong()
+	local steps = GAMESTATE:GetCurrentSteps(player)
 	return song, steps
 end
 
@@ -58,38 +47,13 @@ getAuthorTable = function(steps)
 	return author_table
 end
 
--- Return an array of cumulative_seconds for each song in a course, which used by Step Statistics Time.lua
-courseLengthBySong=function(player)
-    local cumulative_seconds = {}
-    if GAMESTATE:IsCourseMode() then
-        local rate = SL.Global.ActiveModifiers.MusicRate
-        local seconds = 0
-        local trail = GAMESTATE:GetCurrentTrail(player)
-    
-        if trail then
-            local entries = trail:GetTrailEntries()
-            for i, entry in ipairs(entries) do
-                seconds = seconds + (entry:GetSong():MusicLengthSeconds() / rate)
-                table.insert(cumulative_seconds, seconds)
-            end
-        end
-        return cumulative_seconds
-    end
-end
 
--- Return the total length of the current song or course, in seconds
+-- Return the total length of the current song, in seconds
 totalLengthSongOrCourse=function(player)
     local totalseconds = 0
-    if GAMESTATE:IsCourseMode() then
-        local trail = GAMESTATE:GetCurrentTrail(player)
-        if trail then
-            totalseconds = trail:GetLengthSeconds()
-        end
-    else
-        local song = GAMESTATE:GetCurrentSong()
-        if song then
-            totalseconds = song:GetLastSecond()
-        end
+    local song = GAMESTATE:GetCurrentSong()
+    if song then
+        totalseconds = song:GetLastSecond()
     end
 
     -- totalseconds is initilialzed in the engine as -1
@@ -104,33 +68,11 @@ totalLengthSongOrCourse=function(player)
     return totalseconds
 end
 
--- Return the current time of the course or song, in seconds
+-- Return the current time of the song, in seconds
 currentTimeSongOrCourse=function(player)
-    local playerState = GAMESTATE:GetPlayerState(player)	
-    local seconds = 0
+    local playerState = GAMESTATE:GetPlayerState(player)
     local rate = SL.Global.ActiveModifiers.MusicRate
-
-    -- This doesn't work for course mode yet, it isn't called
-    if GAMESTATE:IsCourseMode() then
-        -- Find out what song in the course
-        local course_index = GAMESTATE:GetCourseSongIndex()
-
-        -- cumulative song length array
-        local cumulative_seconds = courseLengthBySong(player)
-
-        -- Add up all the previous songs
-        for i=1,course_index do
-            seconds = seconds + cumulative_seconds[course_index]
-        end
-
-        -- Now add on the current song's timer
-        local currentSongTimer = playerState:GetSongPosition():GetMusicSecondsVisible()
-        currentSongTimer = currentSongTimer / rate
-        seconds = seconds + currentSongTimer
-    else
-        seconds = playerState:GetSongPosition():GetMusicSecondsVisible()  / rate
-    end
-
+    local seconds = playerState:GetSongPosition():GetMusicSecondsVisible() / rate
     return seconds
 end
 

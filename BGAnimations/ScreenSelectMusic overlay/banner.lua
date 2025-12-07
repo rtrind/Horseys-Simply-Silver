@@ -1,7 +1,7 @@
 local path = "/"..THEME:GetCurrentThemeDirectory().."Graphics/_FallbackBanners/"..ThemePrefs.Get("VisualStyle")
 local banner_directory = FILEMAN:DoesFileExist(path) and path or THEME:GetPathG("","_FallbackBanners/Arrows")
 
-local SongOrCourse = GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentCourse() or GAMESTATE:GetCurrentSong()
+local SongOrCourse = GAMESTATE:GetCurrentSong()
 
 local bannerWidth = 418
 local bannerHeight = 164
@@ -80,7 +80,7 @@ t[#t+1] = Def.Sprite{
 	end,
 	SetCommand=function(self)
 		-- Show group banner as fallback if song has no banner
-		SongOrCourse = GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentCourse() or GAMESTATE:GetCurrentSong()
+		SongOrCourse = GAMESTATE:GetCurrentSong()
 		if SongOrCourse and not SongOrCourse:HasBanner() then
 			local group_banner_path = SONGMAN:GetSongGroupBannerPath(SongOrCourse:GetGroupName())
 			if group_banner_path and group_banner_path ~= "" then
@@ -109,7 +109,7 @@ if PREFSMAN:GetPreference("ShowBanners") then
 			self:playcommand("Set")
 		end,
 		SetCommand=function(self)
-			SongOrCourse = GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentCourse() or GAMESTATE:GetCurrentSong()
+			SongOrCourse = GAMESTATE:GetCurrentSong()
 			if SongOrCourse and SongOrCourse:HasBanner() then
 				self:LoadFromSong(SongOrCourse)
 				self:setsize(bannerWidth, bannerHeight)
@@ -142,7 +142,7 @@ t[#t+1] = Def.ActorFrame{
 }
 
 
-if not GAMESTATE:IsCourseMode() and ThemePrefs.Get("ShowCDTitles") then
+if ThemePrefs.Get("ShowCDTitles") then
 	t[#t+1] = Def.Sprite {
 		OnCommand=function(self)
 			self:draworder(101)
@@ -154,7 +154,7 @@ if not GAMESTATE:IsCourseMode() and ThemePrefs.Get("ShowCDTitles") then
 		CurrentSongChangedMessageCommand=function(self) self:playcommand("SetCD") end,
 		SwitchFocusToGroupsMessageCommand=function(self) self:GetChild("CdTitle"):visible(false) end,
 		SetCDCommand=function(self)
-			SongOrCourse = GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentCourse() or GAMESTATE:GetCurrentSong()
+			SongOrCourse = GAMESTATE:GetCurrentSong()
 			if SongOrCourse and SongOrCourse:HasCDTitle() then
 				self:visible(true)
 				self:Load( GAMESTATE:GetCurrentSong():GetCDTitlePath() )

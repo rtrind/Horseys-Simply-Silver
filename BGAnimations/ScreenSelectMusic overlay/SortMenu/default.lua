@@ -265,7 +265,7 @@ local wheel_options = {
 
 	-- Conditions:
 	-- These determine whether or not the option will be displayed.
-	-- For instance: { {"SortBy", "Group"}, GAMESTATE:IsCourseMode() } will only display the Group option in CourseMode.
+	-- For instance: { {"SortBy", "Group"}, true } will always display the Group option.
 	-- You can use any Lua expression that equates to a boolean value here.
 	-- Alternatively, you may provide a function that returns a boolean value for more complex and timely conditions.
 		-- Horsey Note:
@@ -279,7 +279,7 @@ local wheel_options = {
 	-- It follows the same structure as the top level table.
 	-- If all submenu items are removed because of a condition, that empty submenu will not appear in the resulting list.
 
-	{ {"WhereforeArtThou", "SongSearch"}, not GAMESTATE:IsCourseMode() and ThemePrefs.Get("KeyboardFeatures") },
+	{ {"WhereforeArtThou", "SongSearch"}, ThemePrefs.Get("KeyboardFeatures") },
 	{ {"SetSummaryText", "SetSummary"}, SL.Global.Stages.PlayedThisGame > 0 },
 	{ 
 		{"", "CategorySorts"}, 
@@ -501,11 +501,9 @@ local t = Def.ActorFrame {
 			end
 		end
 
-		if not GAMESTATE:IsCourseMode() then
-			if ThemePrefs.Get("KeyboardFeatures") then
-				-- Only display this option if keyboard features are enabled
-				table.insert(wheel_options, {"WhereforeArtThou", "SongSearch"})
-			end
+		if ThemePrefs.Get("KeyboardFeatures") then
+			-- Only display this option if keyboard features are enabled
+			table.insert(wheel_options, {"WhereforeArtThou", "SongSearch"})
 		end
 
 		if ThemePrefs.Get("AllowScreenSelectProfile") then

@@ -415,35 +415,13 @@ end
 
 GetStepsCredit = function(player)
 	local t = {}
-
-	if GAMESTATE:IsCourseMode() then
-		local trail = GAMESTATE:GetCurrentTrail(player)
-		local entries = trail:GetTrailEntries()
-		local song
-
-		for i, entry in ipairs(entries) do
-			steps = entry:GetSteps()
-			if steps then
-				-- prefer steps Description; this is where stepartists seem to put chart info
-				if steps:GetDescription() ~= "" then
-					t[i] = steps:GetDescription()
-
-				-- if no description was available, use AuthorCredit instead
-				elseif steps:GetAuthorCredit() ~= "" then
-					t[i] = steps:GetAuthorCredit()
-				end
-			end
-		end
-	else
-		local steps = GAMESTATE:GetCurrentSteps(player)
-		-- credit
-		if steps:GetAuthorCredit() ~= "" then t[#t+1] = steps:GetAuthorCredit() end
-		-- description
-		if steps:GetDescription() ~= "" and steps:GetDescription() ~= steps:GetAuthorCredit() then t[#t+1] = steps:GetDescription() end
-		-- chart name
-		if steps:GetChartName() ~= "" and steps:GetChartName() ~= steps:GetAuthorCredit() and steps:GetChartName() ~= steps:GetDescription() then t[#t+1] = steps:GetChartName() end
-	end
-
+	local steps = GAMESTATE:GetCurrentSteps(player)
+	-- credit
+	if steps:GetAuthorCredit() ~= "" then t[#t+1] = steps:GetAuthorCredit() end
+	-- description
+	if steps:GetDescription() ~= "" and steps:GetDescription() ~= steps:GetAuthorCredit() then t[#t+1] = steps:GetDescription() end
+	-- chart name
+	if steps:GetChartName() ~= "" and steps:GetChartName() ~= steps:GetAuthorCredit() and steps:GetChartName() ~= steps:GetDescription() then t[#t+1] = steps:GetChartName() end
 	return t
 end
 
@@ -689,7 +667,7 @@ end
 GetExJudgmentCounts = function(player)
 	local pn = ToEnumShortString(player)
 	local stats = STATSMAN:GetCurStageStats():GetPlayerStageStats(pn)
-	local StepsOrTrail = (GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentTrail(player)) or GAMESTATE:GetCurrentSteps(player)
+	local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
 
 	local counts = {}
 
@@ -774,7 +752,7 @@ end
 -- The W0 weight may have been modified for Tournament mode purposes.
 -- Use the optional boolean argument use_actual_w0_weight to choose to fallback to the proper W0 weight.
 CalculateExScore = function(player, ex_counts, use_actual_w0_weight)
-	local StepsOrTrail = (GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentTrail(player)) or GAMESTATE:GetCurrentSteps(player)
+	local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
 
 	local totalSteps = StepsOrTrail:GetRadarValues(player):GetValue( "RadarCategory_TapsAndHolds" )
 	local totalHolds = StepsOrTrail:GetRadarValues(player):GetValue( "RadarCategory_Holds" )

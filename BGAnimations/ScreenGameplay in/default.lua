@@ -32,10 +32,7 @@ if not SL.Global.GameplayReloadCheck then
 	SL.Global.Stages.Restarts = 0
 end
 
-if GAMESTATE:IsCourseMode() then
-	SongsInCourse = #GAMESTATE:GetCurrentCourse():GetCourseEntries()
-	text = ("%s 1 / %d"):format(THEME:GetString("Stage", "Stage"), SongsInCourse)
-elseif SL.Global.GameplayReloadCheck then
+if SL.Global.GameplayReloadCheck then
 	SL.Global.Stages.Restarts = SL.Global.Stages.Restarts + 1
 	text = "RESTART " .. tostring(SL.Global.Stages.Restarts)
 elseif string.find(string.upper(GAMESTATE:GetCurrentSong():GetGroupName()), "STAMINA RPG 8") then
@@ -110,11 +107,6 @@ af[#af+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Bold")..{
 		end
 	end,
 	CurrentSongChangedMessageCommand=function(self)
-		if GAMESTATE:IsCourseMode() then
-			InitializeMeasureCounterAndModsLevel(SongNumberInCourse)
-			SongNumberInCourse = SongNumberInCourse + 1
-			self:settext(("%s %d / %d"):format(THEME:GetString("Stage", "Stage"), SongNumberInCourse, SongsInCourse))
-		end
 	end
 }
 

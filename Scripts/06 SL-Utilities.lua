@@ -222,13 +222,9 @@ end
 function GetGroupBanner()
  	local path = '';
  	if ThemePrefs.Get('NoBannerUseGroupBanner') then
- 		local current = GAMESTATE:IsCourseMode() and GAMESTATE:GetCurrentCourse() or GAMESTATE:GetCurrentSong();
+ 		local current = GAMESTATE:GetCurrentSong();
  		if current then
- 			if GAMESTATE:IsCourseMode() then
- 				path = SONGMAN:GetCourseGroupBannerPath(current:GetGroupName());
- 			else
- 				path = SONGMAN:GetSongGroupBannerPath(current:GetGroupName());
- 			end
+ 			path = SONGMAN:GetSongGroupBannerPath(current:GetGroupName());
  		end
  	end
  	return path;

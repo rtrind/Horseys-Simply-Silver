@@ -1,8 +1,3 @@
--- Currently the Density Graph in SSM doesn't work for Courses.
--- Disable the functionality.
-if GAMESTATE:IsCourseMode() then return end
-
-
 local player = ...
 local pn = ToEnumShortString(player)
 

@@ -4,7 +4,6 @@
 -- used by SSMCasual to play preview music of the current song
 -- this is invoked each time the custom MusicWheel changes focus
 play_sample_music = function()
-	if GAMESTATE:IsCourseMode() then return end
 	local song = GAMESTATE:GetCurrentSong()
 
 	if song then

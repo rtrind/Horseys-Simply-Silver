@@ -1,5 +1,5 @@
 -- don't bother showing this UI in non-CourseMode because we display this information in a card below the banner in non-CourseMode
-if not GAMESTATE:IsCourseMode() then return end
+
 
 return Def.ActorFrame{
 	InitCommand=function(self) self:xy(_screen.cx, 175) end,
@@ -36,15 +36,7 @@ return Def.ActorFrame{
 	LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 		InitCommand=function(self) self:zoom(0.6):maxwidth(418/0.875):x(145):horizalign("right") end,
 		OnCommand=function(self)
-			local seconds = nil
-			if GAMESTATE:IsCourseMode() then
-				local trail = GAMESTATE:GetCurrentTrail(GAMESTATE:GetMasterPlayerNumber())
-				if trail then
-					seconds = TrailUtil.GetTotalSeconds(trail)
-				end
-			else
-				seconds = GAMESTATE:GetCurrentSong():GetLastSecond()
-			end
+			local seconds = GAMESTATE:GetCurrentSong():GetLastSecond()
 
 			if seconds then
 				seconds = seconds / SL.Global.ActiveModifiers.MusicRate
@@ -71,7 +63,7 @@ return Def.ActorFrame{
 			end
 		end,
 		OnCommand = function(self)
-			local artist = (not GAMESTATE:IsCourseMode()) and GAMESTATE:GetCurrentSong():GetDisplayArtist()
+			local artist = GAMESTATE:GetCurrentSong():GetDisplayArtist()
 			if artist then self:settext(artist) end
 		end
 	}
