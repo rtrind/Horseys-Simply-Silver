@@ -182,7 +182,9 @@ end
 
 for player in ivalues(Players) do
 	local pn = ToEnumShortString(player)
-	local x_offset = (player == PLAYER_1 and -120) or 200
+	-- x_offset must match cursor position in PlayerNameAndDecorations.lua
+	-- P1 cursor: _screen.cx - 160, P2 cursor: _screen.cx + 160
+	local x_offset = (player == PLAYER_1 and -160) or 160
 
 	t[#t+1] = LoadActor("PlayerNameAndDecorations.lua", player)
 	t[#t+1] = LoadActor("./HighScores.lua", player)

@@ -35,7 +35,9 @@ local alphabet_character_mt = {
 
 			self.container:finishtweening()
 
-			if item_index <= 0 or  item_index >= num_items-1 then
+			-- Hide only the first and last items (buffer items for smooth scrolling)
+			-- With 7 items and focus at 4, this shows items 2-6 (2 on each side of focus)
+			if item_index <= 1 or item_index >= num_items then
 				self.container:diffusealpha(0)
 			else
 				self.container:diffusealpha(1)
