@@ -99,6 +99,14 @@
   - Favorites already handled by `if #favorites > 0` check
   - Added placeholder item for empty wheel to prevent crashes
   - Added focus_index bounds checking in GetFocusedItem
+- [x] Extract common code patterns to functions
+  - Added `CreateSongItem(song, group, opts)` - creates song wheel items
+  - Added `CreateGroupHeader(group_name, song_count, index)` - creates group headers
+  - Added `AddSongsToItems(items, songs, group, opts)` - batch add songs
+  - Added `FilterSongsForCurrentStyle(all_songs)` - filter by current style
+  - Added `GetAllSongsForCurrentStyle()` - get all songs filtered
+  - Refactored 8 build functions to use these helpers
+  - Reduced ~100 lines of duplicated code
 
 ### Planned Tasks
 - [ ] Identify more elements not used in the dedicab (ITL, SRPG, GrooveStats have 118/227+ refs - significant refactor)
@@ -107,7 +115,6 @@
 - [ ] Optimize memory usage (unload off-screen items)
 - [ ] Test edge cases (large libraries, fast scrolling)
 - [ ] Performance profiling and optimization
-- [ ] Extract common code patterns to functions
 
 ### Bug Fixes
 - [ ] TBD

@@ -340,6 +340,68 @@ local function HasChartsForCurrentStyle(song)
 	return steps and #steps > 0
 end
 
+-- Filter a list of songs to only include those with charts for current style
+local function FilterSongsForCurrentStyle(all_songs)
+	local songs = {}
+	for _, song in ipairs(all_songs) do
+		if HasChartsForCurrentStyle(song) then
+			table.insert(songs, song)
+		end
+	end
+	return songs
+end
+
+-- Get all songs filtered for current style (common pattern)
+local function GetAllSongsForCurrentStyle()
+	return FilterSongsForCurrentStyle(GetAllSongs())
+end
+
+-- ============================================================================
+-- Item Creation Helpers (reduce code duplication)
+-- ============================================================================
+
+-- Create a song item for the wheel
+-- @param song: Song object
+-- @param group: Group name string
+-- @param opts: Optional table with {is_favorite, favorited_by, steps}
+local function CreateSongItem(song, group, opts)
+	opts = opts or {}
+	return {
+		type = "song",
+		song = song,
+		group = group,
+		is_favorite = opts.is_favorite or false,
+		favorited_by = opts.favorited_by or {},
+		steps = opts.steps or nil,  -- Used by Difficulty sort
+	}
+end
+
+-- Create a group header item for the wheel
+-- @param group_name: Display name for the group
+-- @param song_count: Number of songs in the group
+-- @param index: Optional group index (default nil)
+local function CreateGroupHeader(group_name, song_count, index)
+	local is_open = SL.MusicWheel.State.open_groups[group_name] or false
+	return {
+		type = "group_header",
+		group_name = group_name,
+		song_count = song_count,
+		is_open = is_open,
+		index = index or nil,
+	}
+end
+
+-- Add songs from a list to items array
+-- @param items: Target items array
+-- @param songs: Array of song objects
+-- @param group: Group name for all songs
+-- @param opts: Optional table passed to CreateSongItem
+local function AddSongsToItems(items, songs, group, opts)
+	for _, song in ipairs(songs) do
+		table.insert(items, CreateSongItem(song, group, opts))
+	end
+end
+
 -- Build flat list of wheel items for Group sort
 -- Phase 2: Supports open/close groups
 function SL.MusicWheel.BuildWheelData_Group()
@@ -348,19 +410,10 @@ function SL.MusicWheel.BuildWheelData_Group()
 	-- 1. Add Favorites Group at the top
 	local favorites = SL.MusicWheel.BuildFavoritesSection()
 	if #favorites > 0 then
-		local is_open = SL.MusicWheel.State.open_groups["<Favorites>"] or false
-		
-		-- Add group header
-		table.insert(items, {
-			type = "group_header",
-			group_name = "<Favorites>",
-			song_count = #favorites,
-			is_open = is_open,
-			index = 0 -- Special index for favorites
-		})
+		table.insert(items, CreateGroupHeader("<Favorites>", #favorites, 0))
 		
 		-- Add favorite songs if group is open
-		if is_open then
+		if SL.MusicWheel.State.open_groups["<Favorites>"] then
 			for _, item in ipairs(favorites) do
 				table.insert(items, item)
 			end
@@ -392,33 +445,15 @@ function SL.MusicWheel.BuildWheelData_Group()
 		-- Only add groups that have compatible songs
 		if #songs > 0 then
 			group_index_counter = group_index_counter + 1
-			local is_open = SL.MusicWheel.State.open_groups[group_name] or false
-			
-			-- Add group header
-			table.insert(items, {
-				type = "group_header",
-				group_name = group_name,
-				song_count = #songs,
-				is_open = is_open,
-				index = group_index_counter
-			})
+			table.insert(items, CreateGroupHeader(group_name, #songs, group_index_counter))
 			
 			-- If group is open, add all songs in the group
-			if is_open then
+			if SL.MusicWheel.State.open_groups[group_name] then
 				-- Sort songs alphabetically by title
 				table.sort(songs, function(a, b)
 					return a:GetDisplayMainTitle():lower() < b:GetDisplayMainTitle():lower()
 				end)
-				
-				for _, song in ipairs(songs) do
-					table.insert(items, {
-						type = "song",
-						song = song,
-						group = group_name,
-						is_favorite = false,
-						favorited_by = {}
-					})
-				end
+				AddSongsToItems(items, songs, group_name)
 			end
 		end
 	end
@@ -452,15 +487,7 @@ end
 -- Build list of wheel items for Title sort (alphabetical with letter headers)
 function SL.MusicWheel.BuildWheelData_Title()
 	local items = {}
-	local all_songs = GetAllSongs()
-	
-	-- Filter songs to only include those with charts for current style
-	local songs = {}
-	for _, song in ipairs(all_songs) do
-		if HasChartsForCurrentStyle(song) then
-			table.insert(songs, song)
-		end
-	end
+	local songs = GetAllSongsForCurrentStyle()
 	
 	-- Sort songs alphabetically by title, but force all non-letters to the top
 	SortSongsAlphabetically(songs, function(song) return song:GetDisplayMainTitle() end)
@@ -531,15 +558,7 @@ end
 -- Build list of wheel items for Artist sort (alphabetical with letter headers)
 function SL.MusicWheel.BuildWheelData_Artist()
 	local items = {}
-	local all_songs = GetAllSongs()
-	
-	-- Filter songs to only include those with charts for current style
-	local songs = {}
-	for _, song in ipairs(all_songs) do
-		if HasChartsForCurrentStyle(song) then
-			table.insert(songs, song)
-		end
-	end
+	local songs = GetAllSongsForCurrentStyle()
 	
 	-- Sort songs alphabetically by artist, but force all non-letters to the top
 	SortSongsAlphabetically(songs, function(song) return song:GetDisplayArtist() end)
@@ -680,15 +699,7 @@ end
 -- Build list of wheel items for BPM sort (grouped by BPM ranges)
 function SL.MusicWheel.BuildWheelData_BPM()
 	local items = {}
-	local all_songs = GetAllSongs()
-	
-	-- Filter songs to only include those with charts for current style
-	local songs = {}
-	for _, song in ipairs(all_songs) do
-		if HasChartsForCurrentStyle(song) then
-			table.insert(songs, song)
-		end
-	end
+	local songs = GetAllSongsForCurrentStyle()
 	
 	-- Define BPM ranges
 	local bpm_ranges = {}
@@ -766,15 +777,7 @@ end
 -- Build list of wheel items for Length sort (grouped by song duration ranges)
 function SL.MusicWheel.BuildWheelData_Length()
 	local items = {}
-	local all_songs = GetAllSongs()
-	
-	-- Filter songs to only include those with charts for current style
-	local songs = {}
-	for _, song in ipairs(all_songs) do
-		if HasChartsForCurrentStyle(song) then
-			table.insert(songs, song)
-		end
-	end
+	local songs = GetAllSongsForCurrentStyle()
 	
 	-- Define length ranges (in seconds)
 	local length_ranges = {}
@@ -873,15 +876,7 @@ end
 -- Combines play counts from all enabled players
 function SL.MusicWheel.BuildWheelData_MostPlayed()
 	local items = {}
-	local all_songs = GetAllSongs()
-	
-	-- Filter songs to only include those with charts for current style
-	local songs = {}
-	for _, song in ipairs(all_songs) do
-		if HasChartsForCurrentStyle(song) then
-			table.insert(songs, song)
-		end
-	end
+	local songs = GetAllSongsForCurrentStyle()
 	
 	-- Calculate total play count for each song (sum across all enabled players)
 	local song_play_counts = {}
@@ -910,15 +905,7 @@ function SL.MusicWheel.BuildWheelData_MostPlayed()
 	end)
 	
 	-- Add all songs as flat list
-	for _, song in ipairs(songs) do
-		table.insert(items, {
-			type = "song",
-			song = song,
-			group = nil,
-			is_favorite = false,
-			favorited_by = {}
-		})
-	end
+	AddSongsToItems(items, songs, nil)
 	
 	return items
 end
@@ -927,15 +914,7 @@ end
 -- Uses machine profile play counts only
 function SL.MusicWheel.BuildWheelData_MachineMostPlayed()
 	local items = {}
-	local all_songs = GetAllSongs()
-	
-	-- Filter songs to only include those with charts for current style
-	local songs = {}
-	for _, song in ipairs(all_songs) do
-		if HasChartsForCurrentStyle(song) then
-			table.insert(songs, song)
-		end
-	end
+	local songs = GetAllSongsForCurrentStyle()
 	
 	-- Calculate machine play count for each song
 	local song_play_counts = {}
@@ -962,15 +941,7 @@ function SL.MusicWheel.BuildWheelData_MachineMostPlayed()
 	end)
 	
 	-- Add all songs as flat list
-	for _, song in ipairs(songs) do
-		table.insert(items, {
-			type = "song",
-			song = song,
-			group = nil,
-			is_favorite = false,
-			favorited_by = {}
-		})
-	end
+	AddSongsToItems(items, songs, nil)
 	
 	return items
 end
@@ -1095,16 +1066,8 @@ end
 -- Uses the highest grade achieved across ALL difficulties for each song
 function SL.MusicWheel.BuildWheelData_TopScores()
 	local items = {}
-	local all_songs = GetAllSongs()
+	local songs = GetAllSongsForCurrentStyle()
 	local steps_type = GAMESTATE:GetCurrentStyle():GetStepsType()
-	
-	-- Filter songs to only include those with charts for current style
-	local songs = {}
-	for _, song in ipairs(all_songs) do
-		if HasChartsForCurrentStyle(song) then
-			table.insert(songs, song)
-		end
-	end
 	
 	-- Map grades to Simply Love display names and sort order
 	-- Groups S+/S/S- into S, etc.
