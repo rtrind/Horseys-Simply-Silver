@@ -280,7 +280,6 @@ local wheel_options = {
 	-- If all submenu items are removed because of a condition, that empty submenu will not appear in the resulting list.
 
 	{ {"WhereforeArtThou", "SongSearch"}, ThemePrefs.Get("KeyboardFeatures") },
-	{ {"SetSummaryText", "SetSummary"}, SL.Global.Stages.PlayedThisGame > 0 },
 	{ 
 		{"", "CategorySorts"}, 
 		{

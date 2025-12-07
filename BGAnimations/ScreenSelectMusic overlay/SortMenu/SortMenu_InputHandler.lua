@@ -121,9 +121,6 @@ local input = function(event)
 				elseif focus.new_overlay == "PracticeMode" then
 					SCREENMAN:GetTopScreen():SetNextScreenName("ScreenPractice")
 					SCREENMAN:GetTopScreen():StartTransitioningScreen("SM_GoToNextScreen")
-				elseif focus.new_overlay == "SetSummary" then
-					SCREENMAN:GetTopScreen():SetNextScreenName("ScreenEvaluationSummarySet")
-					SCREENMAN:GetTopScreen():StartTransitioningScreen("SM_GoToNextScreen")
 				end
 			end
 
