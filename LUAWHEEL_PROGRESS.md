@@ -107,14 +107,20 @@
   - Added `GetAllSongsForCurrentStyle()` - get all songs filtered
   - Refactored 8 build functions to use these helpers
   - Reduced ~100 lines of duplicated code
+- [x] Minimize unused items in metrics.ini
+  - Removed `[ScreenSelectCourse]`, `[CourseWheel]`, `[ScreenSelectCourseNonstop]` sections
+  - Removed `[CourseCodeDetector]` section
+  - Removed `CourseOnCommand` from `[MusicWheelItem]`
+  - Removed `NumCourseGroupColors` and `CourseGroupColor1` from `[SongManager]`
+  - Added comments documenting removed sections
 
 ### Planned Tasks
 - [ ] Identify more elements not used in the dedicab (ITL, SRPG, GrooveStats have 118/227+ refs - significant refactor)
-- [ ] Minimize unused items in metrics.ini
 - [ ] Optimize lazy loading to prevent stuttering
 - [ ] Optimize memory usage (unload off-screen items)
 - [ ] Test edge cases (large libraries, fast scrolling)
 - [ ] Performance profiling and optimization
+- [ ] Simplify remaining WideScale() calls to 16:9 values only
 
 ### Bug Fixes
 - [ ] TBD
