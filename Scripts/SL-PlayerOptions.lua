@@ -951,7 +951,7 @@ local Overrides = {
 			if list[1] then SL.Global.ScreenAfter.PlayerOptions = Branch.GameplayScreen() end
 
 			if SL.Global.MenuTimer.ScreenSelectMusic > 1 then
-				if list[2] then SL.Global.ScreenAfter.PlayerOptions = SelectMusicOrCourse() end
+				if list[2] then SL.Global.ScreenAfter.PlayerOptions = "ScreenSelectMusic" end
 				if list[3] then SL.Global.ScreenAfter.PlayerOptions = "ScreenPlayerOptions2" end
 				if list[4] then SL.Global.ScreenAfter.PlayerOptions = "ScreenPlayerOptions3" end
 				if list[5] then SL.Global.ScreenAfter.PlayerOptions = "ScreenPlayerOptions4" end
@@ -974,7 +974,7 @@ local Overrides = {
 			if list[1] then SL.Global.ScreenAfter.PlayerOptions2 = Branch.GameplayScreen() end
 
 			if SL.Global.MenuTimer.ScreenSelectMusic > 1 then
-				if list[2] then SL.Global.ScreenAfter.PlayerOptions2 = SelectMusicOrCourse() end
+				if list[2] then SL.Global.ScreenAfter.PlayerOptions2 = "ScreenSelectMusic" end
 				if list[3] then SL.Global.ScreenAfter.PlayerOptions2 = "ScreenPlayerOptions" end
 				if list[4] then SL.Global.ScreenAfter.PlayerOptions2 = "ScreenPlayerOptions3" end
 				if list[5] then SL.Global.ScreenAfter.PlayerOptions2 = "ScreenPlayerOptions4" end
@@ -998,7 +998,7 @@ local Overrides = {
 			if list[1] then SL.Global.ScreenAfter.PlayerOptions3 = Branch.GameplayScreen() end
 
 			if SL.Global.MenuTimer.ScreenSelectMusic > 1 then
-				if list[2] then SL.Global.ScreenAfter.PlayerOptions3 = SelectMusicOrCourse() end
+				if list[2] then SL.Global.ScreenAfter.PlayerOptions3 = "ScreenSelectMusic" end
 				if list[3] then SL.Global.ScreenAfter.PlayerOptions3 = "ScreenPlayerOptions" end
 				if list[4] then SL.Global.ScreenAfter.PlayerOptions3 = "ScreenPlayerOptions2" end
 				if list[5] then SL.Global.ScreenAfter.PlayerOptions3 = "ScreenPlayerOptions4" end
@@ -1021,7 +1021,7 @@ local Overrides = {
 			if list[1] then SL.Global.ScreenAfter.PlayerOptions4 = Branch.GameplayScreen() end
 
 			if SL.Global.MenuTimer.ScreenSelectMusic > 1 then
-				if list[2] then SL.Global.ScreenAfter.PlayerOptions4 = SelectMusicOrCourse() end
+				if list[2] then SL.Global.ScreenAfter.PlayerOptions4 = "ScreenSelectMusic" end
 				if list[3] then SL.Global.ScreenAfter.PlayerOptions4 = "ScreenPlayerOptions" end
 				if list[4] then SL.Global.ScreenAfter.PlayerOptions4 = "ScreenPlayerOptions2" end
 				if list[5] then SL.Global.ScreenAfter.PlayerOptions4 = "ScreenPlayerOptions3" end

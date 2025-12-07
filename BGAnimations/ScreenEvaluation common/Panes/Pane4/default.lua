@@ -22,9 +22,9 @@ local HighScoreIndex = {
 -- -----------------------------------------------------------------------
 -- custom logic to (try to) assess if a MachineHighScore was achieved when in EventMode
 
-local SongOrCourse = GAMESTATE:GetCurrentSong()
-local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
-local MachineHighScores = PROFILEMAN:GetMachineProfile():GetHighScoreList(SongOrCourse,StepsOrTrail):GetHighScores()
+local song = GAMESTATE:GetCurrentSong()
+local steps = GAMESTATE:GetCurrentSteps(player)
+local MachineHighScores = PROFILEMAN:GetMachineProfile():GetHighScoreList(song,steps):GetHighScores()
 
 local EarnedMachineHighScoreInEventMode = function()
 	-- if no DancePoints were earned, it's not a HighScore

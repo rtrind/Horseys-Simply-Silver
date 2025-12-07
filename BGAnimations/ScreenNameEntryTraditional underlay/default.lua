@@ -126,7 +126,7 @@ t[#t+1] = Def.ActorFrame {
 -- Banner(s) and Title(s)
 for i=1,NumStages do
 
-	local SongOrCourse = SL.Global.Stages.Stats[i].song
+	local song = SL.Global.Stages.Stats[i].song
 
 	-- Create an ActorFrame for each (Name + Banner) pair
 	-- so that we can display/hide all children simultaneously.
@@ -153,8 +153,8 @@ for i=1,NumStages do
 		Name="SongName"..i,
 		InitCommand=function(self) self:xy(_screen.cx, 54):maxwidth(294):shadowlength(0.333) end,
 		OnCommand=function(self)
-			if SongOrCourse then
-				self:settext( SongOrCourse:GetDisplayMainTitle() )
+			if song then
+				self:settext( song:GetDisplayMainTitle() )
 			end
 		end
 	}
@@ -164,11 +164,11 @@ for i=1,NumStages do
 		Name="SongBanner"..i,
 		InitCommand=function(self) self:xy(_screen.cx, 121.5) end,
 		OnCommand=function(self)
-			if SongOrCourse then
-				if not SongOrCourse:HasBanner() and HasGroupBanner() then
-					self:LoadFromSongGroup(SongOrCourse:GetGroupName())
+			if song then
+				if not song:HasBanner() and HasGroupBanner() then
+					self:LoadFromSongGroup(song:GetGroupName())
 				else
-					self:LoadFromSong(SongOrCourse)
+					self:LoadFromSong(song)
 				end
 				self:setsize(418,164):zoom(0.7)
 			end

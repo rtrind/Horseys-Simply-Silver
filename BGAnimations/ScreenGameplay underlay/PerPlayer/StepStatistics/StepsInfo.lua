@@ -67,7 +67,6 @@ if not c and ar > 1.5 then -- only display labels if using widescreen and not us
 	end
 end
 
--- Course mode now works maybe
 af[#af+1] = Def.ActorFrame {
 	InitCommand=function(self)
 		self:x(xvalues)

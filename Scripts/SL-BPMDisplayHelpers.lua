@@ -38,22 +38,22 @@ end
 -- GetDisplayBPMs() will attempt to return a table of numeric {lower, upper} DISPLAYBPM values
 -- it handles CourseMode and normal gameplay and factors in the current MusicRate
 --
--- if StepsOrTrail is provided, that will be used (useful for EvalSummary)
--- if a player is provided without a StepsOrTrail, it will use the CurrentSteps() of that player (useful for SelectMusic, Eval, etc.)
+-- if steps is provided, that will be used (useful for EvalSummary)
+-- if a player is provided without a steps, it will use the CurrentSteps() of that player (useful for SelectMusic, Eval, etc.)
 -- if a player is not provided, it will use the CurrentSteps() of the MasterPlayer
 --
 -- the SM engine does not allow bpm values <= 0, but it does allow stepartists to
 -- manually specify DISPLAYBPM values <= 0; if such a DISPLAYBPM value is found,
 -- this function will use actual bpm values instead to preserve sanity
 
-GetDisplayBPMs = function(player, StepsOrTrail, MusicRate)
+GetDisplayBPMs = function(player, steps, MusicRate)
 	player       = player       or GAMESTATE:GetMasterPlayerNumber()
-	StepsOrTrail = StepsOrTrail or GAMESTATE:GetCurrentSteps(player)
+	steps = steps or GAMESTATE:GetCurrentSteps(player)
 	MusicRate    = MusicRate    or SL.Global.ActiveModifiers.MusicRate
 
-	if not StepsOrTrail then return end
+	if not steps then return end
 
-	local bpms = StepsOrTrail:GetDisplayBpms()
+	local bpms = steps:GetDisplayBpms()
 
 	-- ensure there are 2 values before attempting to index them
 	if not (bpms and bpms[1] and bpms[2]) then return end
@@ -63,7 +63,7 @@ GetDisplayBPMs = function(player, StepsOrTrail, MusicRate)
 	-- 2. trying to accommodate it themeside is complicated and error-prone
 	-- so get the honest BPM data from the step's TimingData
 	if bpms[1] <= 0 or bpms[2] <= 0 then
-		bpms = StepsOrTrail:GetTimingData():GetActualBPM()
+		bpms = steps:GetTimingData():GetActualBPM()
 		-- again, ensure there are 2 values
 		if not bpms[1] or not bpms[2] then return end
 	end
@@ -85,12 +85,12 @@ end
 -- If arguments are not provided, the current song/stepchart will be used
 -- (like on SelectMusic and PlayerOptions).
 
-StringifyDisplayBPMs = function(player, StepsOrTrail, MusicRate)
+StringifyDisplayBPMs = function(player, steps, MusicRate)
 	player       = player       or GAMESTATE:GetMasterPlayerNumber()
-	StepsOrTrail = StepsOrTrail or GAMESTATE:GetCurrentSteps(player)
+	steps = steps or GAMESTATE:GetCurrentSteps(player)
 	MusicRate    = MusicRate    or SL.Global.ActiveModifiers.MusicRate
 
-	local bpms = GetDisplayBPMs(player, StepsOrTrail, MusicRate)
+	local bpms = GetDisplayBPMs(player, steps, MusicRate)
 
 	if not (bpms and bpms[1] and bpms[2]) then return "" end
 

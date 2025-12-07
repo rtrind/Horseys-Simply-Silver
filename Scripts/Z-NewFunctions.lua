@@ -49,7 +49,7 @@ end
 
 
 -- Return the total length of the current song, in seconds
-totalLengthSongOrCourse=function(player)
+totalLengthsong=function(player)
     local totalseconds = 0
     local song = GAMESTATE:GetCurrentSong()
     if song then
@@ -69,7 +69,7 @@ totalLengthSongOrCourse=function(player)
 end
 
 -- Return the current time of the song, in seconds
-currentTimeSongOrCourse=function(player)
+currentTimesong=function(player)
     local playerState = GAMESTATE:GetPlayerState(player)
     local rate = SL.Global.ActiveModifiers.MusicRate
     local seconds = playerState:GetSongPosition():GetMusicSecondsVisible() / rate

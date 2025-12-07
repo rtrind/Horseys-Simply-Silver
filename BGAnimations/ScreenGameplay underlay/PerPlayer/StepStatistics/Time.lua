@@ -20,9 +20,9 @@ local alive = true
 -- to something presentable (like 3:28)
 local fmt = nil
 
--- how long this song or course is, in seconds
+-- how long this song is, in seconds
 -- we'll use this to choose a formatting function
-local totalseconds = totalLengthSongOrCourse(player)
+local totalseconds = totalLengthsong(player)
 
 -- choose the appropriate time-to-string formatting function
 

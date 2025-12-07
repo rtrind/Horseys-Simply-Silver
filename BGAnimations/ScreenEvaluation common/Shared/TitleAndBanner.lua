@@ -1,5 +1,5 @@
 local path = "/"..THEME:GetCurrentThemeDirectory().."Graphics/_FallbackBanners/"..ThemePrefs.Get("VisualStyle")
-local SongOrCourse = GAMESTATE:GetCurrentSong()
+local song = GAMESTATE:GetCurrentSong()
 
 local banner = {
 	directory = (FILEMAN:DoesFileExist(path) and path or THEME:GetPathG("","_FallbackBanners/Arrows")),
@@ -12,7 +12,7 @@ local y_offset = 46
 
 local af = Def.ActorFrame{ InitCommand=function(self) self:xy(_screen.cx, y_offset) end }
 
-if SongOrCourse and SongOrCourse:HasBanner() then
+if song and song:HasBanner() then
 	--song banner, if there is one
 	af[#af+1] = Def.Banner{
 		Name="Banner",
@@ -49,7 +49,7 @@ else
 	end
 end
 
--- quad behind the song/course title text
+-- quad behind the song title text
 af[#af+1] = Def.Quad{
 	InitCommand=function(self)
 		self:diffuse(color("#1E282F"))
@@ -62,7 +62,7 @@ af[#af+1] = Def.Quad{
 	end,
 }
 
--- song/course title text
+-- song title text
 af[#af+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 	InitCommand=function(self)
 		local songtitle = GAMESTATE:GetCurrentSong():GetDisplayFullTitle()

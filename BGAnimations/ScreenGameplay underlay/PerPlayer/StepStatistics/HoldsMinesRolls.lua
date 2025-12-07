@@ -7,7 +7,7 @@ local NoteFieldIsCentered = (GetNotefieldX(player) == _screen.cx)
 local gray = color("#5A6166")
 local row_height = 28
 
-local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
+local steps = GAMESTATE:GetCurrentSteps(player)
 
 -- -----------------------------------------------------------------------
 -- helper function
@@ -34,7 +34,7 @@ local RCPossible  = { Holds={}, Mines={}, Rolls={} }
 
 -- get number values for RCPossible
 for i, category in ipairs(RadarCategories) do
-	RCPossible[category].count = StepsOrTrail:GetRadarValues( player ):GetValue( category )
+	RCPossible[category].count = steps:GetRadarValues( player ):GetValue( category )
 end
 
 -- how many digits do we need the UI to accommodate?

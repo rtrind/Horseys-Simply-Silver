@@ -54,8 +54,8 @@ for player in ivalues(Players) do
         -- No need to reimplement the wheel here. Just use the existing actor and modify it for our use case.
         local judgments = LoadActor("../PerPlayer/StepStatistics/TapNoteJudgments.lua", {player, false})
         judgments.InitCommand = function(self)    
-            local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
-            local total_tapnotes = StepsOrTrail:GetRadarValues(player):GetValue( "RadarCategory_Notes" )
+            local steps = GAMESTATE:GetCurrentSteps(player)
+            local total_tapnotes = steps:GetRadarValues(player):GetValue( "RadarCategory_Notes" )
     
             -- determine how many digits are needed to express the number of notes in base-10
             local digits = (math.floor(math.log10(total_tapnotes)) + 1)

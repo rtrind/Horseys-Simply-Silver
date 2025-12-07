@@ -8,14 +8,14 @@ local player = ...
 local pn = ToEnumShortString(player)
 
 -- Return the current time of the song, in seconds
-local CurrentTimeSongOrCourse = function(player)
+local GetCurrentSongTime = function(player)
     local playerState = GAMESTATE:GetPlayerState(player)
     local rate = SL.Global.ActiveModifiers.MusicRate
     return playerState:GetSongPosition():GetMusicSecondsVisible() / rate
 end
 
 -- Return the total length of the current song, in seconds
-local TotalLengthSongOrCourse = function(player)
+local GetTotalSongLength = function(player)
     local totalSeconds = 0
     local song = GAMESTATE:GetCurrentSong()
     if song then
@@ -41,12 +41,8 @@ local af = Def.Actor{
 			local playerState = GAMESTATE:GetPlayerState(player)			
 
 			-- These functions already account for rate mod
-			local currentSecond = CurrentTimeSongOrCourse(player)
-			-- The course mode graph only shows lifebar history for the entire course up until the end
-            -- of the current song. So for positioning in course mode, we need to find the total time
-            -- of all the songs up until the end of the current song. This is *maybe* correct.
-			local totalSeconds = TotalLengthSongOrCourse(player)
-			local deathSecond = CurrentTimeSongOrCourse(player)
+			local totalSeconds = GetTotalSongLength(player)
+			local deathSecond = GetCurrentSongTime(player)
 			local graphPercentage = 0
             local graphLabel = 0
 

@@ -28,13 +28,13 @@ local CalculateScrollSpeed = function(player)
 	player   = player or GAMESTATE:GetMasterPlayerNumber()
 	local pn = ToEnumShortString(player)
 
-	local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
+	local steps = GAMESTATE:GetCurrentSteps(player)
 	local MusicRate    = SL.Global.ActiveModifiers.MusicRate or 1
 
 	local SpeedModType = SL[pn].ActiveModifiers.SpeedModType
 	local SpeedMod     = SL[pn].ActiveModifiers.SpeedMod
 
-	local bpms = GetDisplayBPMs(player, StepsOrTrail, MusicRate)
+	local bpms = GetDisplayBPMs(player, steps, MusicRate)
 	if not (bpms and bpms[1] and bpms[2]) then return "" end
 
 	if SpeedModType=="X" then
@@ -109,7 +109,7 @@ local CalculatePerspectiveSpeed = function(player)
 	local pn = ToEnumShortString(player)
 	local ScreenOptions = SCREENMAN:GetTopScreen()
 
-	local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
+	local steps = GAMESTATE:GetCurrentSteps(player)
 	local MusicRate    = SL.Global.ActiveModifiers.MusicRate or 1
 
 	local SpeedModType = SL[pn].ActiveModifiers.SpeedModType
@@ -137,7 +137,7 @@ local CalculatePerspectiveSpeed = function(player)
 		Mini = ScreenOptions:GetOptionRow(MiniModRowIndex):GetChild(""):GetChild("Item")[ PlayerNumber:Reverse()[player]+1 ]:GetText():gsub("%%","")
 	end
 
-	local bpms = GetDisplayBPMs(player, StepsOrTrail, MusicRate)
+	local bpms = GetDisplayBPMs(player, steps, MusicRate)
 	if not (bpms and bpms[1] and bpms[2]) then return "" end
 
 	if SpeedModType=="X" then

@@ -1,7 +1,7 @@
 local path = "/"..THEME:GetCurrentThemeDirectory().."Graphics/_FallbackBanners/"..ThemePrefs.Get("VisualStyle")
 local banner_directory = FILEMAN:DoesFileExist(path) and path or THEME:GetPathG("","_FallbackBanners/Arrows")
 
-local SongOrCourse = GAMESTATE:GetCurrentSong()
+local song = GAMESTATE:GetCurrentSong()
 
 local bannerWidth = 418
 local bannerHeight = 164
@@ -40,7 +40,7 @@ t[#t+1] = Def.Sprite{
 		-- don't bother assessing whether to draw or not draw
 		if PREFSMAN:GetPreference("ShowBanners") == false then return end
 
-		if SongOrCourse and SongOrCourse:HasBanner() then
+		if song and song:HasBanner() then
 			self:visible(false)
 		else
 			self:visible(true)
@@ -80,9 +80,9 @@ t[#t+1] = Def.Sprite{
 	end,
 	SetCommand=function(self)
 		-- Show group banner as fallback if song has no banner
-		SongOrCourse = GAMESTATE:GetCurrentSong()
-		if SongOrCourse and not SongOrCourse:HasBanner() then
-			local group_banner_path = SONGMAN:GetSongGroupBannerPath(SongOrCourse:GetGroupName())
+		song = GAMESTATE:GetCurrentSong()
+		if song and not song:HasBanner() then
+			local group_banner_path = SONGMAN:GetSongGroupBannerPath(song:GetGroupName())
 			if group_banner_path and group_banner_path ~= "" then
 				self:Load(group_banner_path)
 				self:setsize(bannerWidth, bannerHeight)
@@ -109,9 +109,9 @@ if PREFSMAN:GetPreference("ShowBanners") then
 			self:playcommand("Set")
 		end,
 		SetCommand=function(self)
-			SongOrCourse = GAMESTATE:GetCurrentSong()
-			if SongOrCourse and SongOrCourse:HasBanner() then
-				self:LoadFromSong(SongOrCourse)
+			song = GAMESTATE:GetCurrentSong()
+			if song and song:HasBanner() then
+				self:LoadFromSong(song)
 				self:setsize(bannerWidth, bannerHeight)
 				self:visible(true)
 			else
@@ -154,8 +154,8 @@ if ThemePrefs.Get("ShowCDTitles") then
 		CurrentSongChangedMessageCommand=function(self) self:playcommand("SetCD") end,
 		SwitchFocusToGroupsMessageCommand=function(self) self:GetChild("CdTitle"):visible(false) end,
 		SetCDCommand=function(self)
-			SongOrCourse = GAMESTATE:GetCurrentSong()
-			if SongOrCourse and SongOrCourse:HasCDTitle() then
+			song = GAMESTATE:GetCurrentSong()
+			if song and song:HasCDTitle() then
 				self:visible(true)
 				self:Load( GAMESTATE:GetCurrentSong():GetCDTitlePath() )
 				local dim1, dim2 = math.max(self:GetWidth(), self:GetHeight()), math.min(self:GetWidth(), self:GetHeight())

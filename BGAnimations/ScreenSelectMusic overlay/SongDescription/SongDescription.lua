@@ -101,12 +101,11 @@ af[#af+1] = Def.ActorFrame{
 			local song = GAMESTATE:GetCurrentSong()
 			self:settext( song and song:GetDisplayArtist() or "" )
 
-				if not GAMESTATE:IsEventMode() and song and (song:IsLong() or song:IsMarathon()) then
-					-- make room for the "COUNTS AS 2/3 ROUNDS" bubble
-					self:maxwidth(152)
-				else
-					self:maxwidth(287)
-				end
+			if not GAMESTATE:IsEventMode() and song and (song:IsLong() or song:IsMarathon()) then
+				-- make room for the "COUNTS AS 2/3 ROUNDS" bubble
+				self:maxwidth(152)
+			else
+				self:maxwidth(287)
 			end
 		end
 	},

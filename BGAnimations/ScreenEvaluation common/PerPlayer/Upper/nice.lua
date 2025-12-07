@@ -65,10 +65,10 @@ local IsCranked = function()
 	if not (tonumber(percent) <= 77.41) then return false end
 	if tonumber(percent) <= 0 then return false end
 
-	local SongOrCourse = GAMESTATE:GetCurrentSong()
-	local title = SongOrCourse:GetDisplayFullTitle():lower()
-	local genre = SongOrCourse:GetGenre():lower() or ""
-	local group = SongOrCourse:GetGroupName():lower() or ""
+	local song = GAMESTATE:GetCurrentSong()
+	local title = song:GetDisplayFullTitle():lower()
+	local genre = song:GetGenre():lower() or ""
+	local group = song:GetGroupName():lower() or ""
 
 	if title:match("wrench") or genre:match("dark psytrance") or group:match("cranked pastry") or group:match("scrapyard kent") then return true end
 

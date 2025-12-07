@@ -11,11 +11,11 @@ local HighScoreIndex = {
 -- ---------------------------------------------
 -- GetMachineHighScoreIndex() will always return -1 in EventMode, so...
 
-local SongOrCourse = GAMESTATE:GetCurrentSong()
-local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
+local song = GAMESTATE:GetCurrentSong()
+local steps = GAMESTATE:GetCurrentSteps(player)
 
 local MaxMachineHighScores = PREFSMAN:GetPreference("MaxHighScoresPerListForMachine")
-local MachineHighScores = PROFILEMAN:GetMachineProfile():GetHighScoreList(SongOrCourse,StepsOrTrail):GetHighScores()
+local MachineHighScores = PROFILEMAN:GetMachineProfile():GetHighScoreList(song,steps):GetHighScores()
 
 local EarnedMachineHighScoreInEventMode = function()
 	-- if no DancePoints were earned, it's not a HighScore

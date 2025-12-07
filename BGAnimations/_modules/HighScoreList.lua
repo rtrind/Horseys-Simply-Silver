@@ -18,9 +18,9 @@ local profile = args.Profile or PROFILEMAN:GetMachineProfile()
 
 -- optionally provide Song and Steps objects; if none are provided
 -- default to using whatever GAMESTATE currently thinks they are
-local SongOrCourse = args.SongOrCourse or GAMESTATE:GetCurrentSong()
-local StepsOrTrail = args.StepsOrTrail or ((args.RoundsAgo==nil or args.RoundsAgo==1) and GAMESTATE:GetCurrentSteps(player))
-if not (SongOrCourse and StepsOrTrail) then return af end
+local song = args.song or GAMESTATE:GetCurrentSong()
+local steps = args.steps or ((args.RoundsAgo==nil or args.RoundsAgo==1) and GAMESTATE:GetCurrentSteps(player))
+if not (song and steps) then return af end
 
 local Font = args.Font or ThemePrefs.Get("ThemeFont") .. " Normal"
 local row_height = args.RowHeight or 22
@@ -28,7 +28,7 @@ local row_height = args.RowHeight or 22
 -- ---------------------------------------------
 -- setup that can occur now that the arguments have been handled
 
-local HighScoreList = profile:GetHighScoreList(SongOrCourse,StepsOrTrail)
+local HighScoreList = profile:GetHighScoreList(song,steps)
 local HighScores = HighScoreList:GetHighScores()
 if not HighScores then return af end
 

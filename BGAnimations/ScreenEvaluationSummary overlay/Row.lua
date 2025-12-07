@@ -1,6 +1,6 @@
 local position_on_screen = ...
 
-local SongOrCourse, StageNum
+local song, StageNum
 
 local path = "/"..THEME:GetCurrentThemeDirectory().."Graphics/_FallbackBanners/"..ThemePrefs.Get("VisualStyle")
 local banner_directory = FILEMAN:DoesFileExist(path) and path or THEME:GetPathG("","_FallbackBanners/Arrows")
@@ -15,12 +15,12 @@ local t = Def.ActorFrame{
 
 		StageNum = ((params.Page-1)*4) + position_on_screen
 		local stage = SL.Global.Stages.Stats[StageNum]
-		SongOrCourse = stage ~= nil and stage.song or nil
+		song = stage ~= nil and stage.song or nil
 
 		self:playcommand("DrawStage", {StageNum=StageNum})
 	end,
 	DrawStageCommand=function(self)
-		if SongOrCourse == nil then
+		if song == nil then
 			self:visible(false)
 		else
 			self:finishtweening():queuecommand("Show"):visible(true)
@@ -38,7 +38,7 @@ t[#t+1] = Def.Quad{
 t[#t+1] = LoadActor(banner_directory.."/banner"..SL.Global.ActiveColorIndex.." (doubleres).png")..{
 	Name="FallbackBanner",
 	InitCommand=function(self) self:y(-6):zoom(0.333) end,
-	DrawStageCommand=function(self) self:visible(SongOrCourse ~= nil and not SongOrCourse:HasBanner()) end
+	DrawStageCommand=function(self) self:visible(song ~= nil and not song:HasBanner()) end
 }
 
 -- the banner, if there is one
@@ -46,11 +46,11 @@ t[#t+1] = Def.Banner{
 	Name="Banner",
 	InitCommand=function(self) self:y(-6) end,
 	DrawStageCommand=function(self)
-		if SongOrCourse then
-			if not SongOrCourse:HasBanner() and HasGroupBanner() then
-				self:LoadFromSongGroup(SongOrCourse:GetGroupName())
+		if song then
+			if not song:HasBanner() and HasGroupBanner() then
+				self:LoadFromSongGroup(song:GetGroupName())
 			else
-				self:LoadFromSong(SongOrCourse)
+				self:LoadFromSong(song)
 			end
 			self:setsize(418,164):zoom(0.333)
 		end
@@ -62,7 +62,7 @@ t[#t+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 	Name="SongTitle",
 	InitCommand=function(self) self:zoom(0.8):y(-43):maxwidth(350) end,
 	DrawStageCommand=function(self)
-		if SongOrCourse then self:settext(SongOrCourse:GetDisplayFullTitle()) end
+		if song then self:settext(song:GetDisplayFullTitle()) end
 	end
 }
 
@@ -73,11 +73,11 @@ t[#t+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 	Name="SongBPM",
 	InitCommand=function(self) self:zoom(0.65):y(32):maxwidth(350) end,
 	DrawStageCommand=function(self)
-		if SongOrCourse then
+		if song then
 			local MusicRate = SL.Global.Stages.Stats[StageNum].MusicRate
 			local mpn = GAMESTATE:GetMasterPlayerNumber()
-			local StepsOrTrail = SL[ToEnumShortString(mpn)].Stages.Stats[StageNum].steps
-			local bpms = StringifyDisplayBPMs(mpn, StepsOrTrail, MusicRate)
+			local steps = SL[ToEnumShortString(mpn)].Stages.Stats[StageNum].steps
+			local bpms = StringifyDisplayBPMs(mpn, steps, MusicRate)
 			if MusicRate ~= 1 then
 				-- format a string like "150 - 300 bpm (1.5x Music Rate)"
 				self:settext( ("%s bpm (%gx %s)"):format(bpms, MusicRate, THEME:GetString("OptionTitles", "MusicRate")) )

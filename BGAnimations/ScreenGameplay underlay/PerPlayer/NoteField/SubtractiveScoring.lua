@@ -15,8 +15,7 @@ local undesirable_judgment = FAplus and "W3" or "W2"
 -- or whether to just display percent away from 100%
 local received_judgment_lower_than_desired = false
 
--- this starts at 0 for each song/course
--- (but does not reset to 0 between each song in a course)
+-- this starts at 0 for each song
 local undesirable_judgment_count = 0
 
 -- variables for tapnotescore and holdnotescore that need file scope

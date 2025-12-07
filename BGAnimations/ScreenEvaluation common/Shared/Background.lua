@@ -1,9 +1,9 @@
 if not ThemePrefs.Get("ResultsBG") then return end
-local SongOrCourse = GAMESTATE:GetCurrentSong()
+local song = GAMESTATE:GetCurrentSong()
 local af = Def.ActorFrame{ InitCommand=function(self) self:xy(0, 32):horizalign(0):vertalign(0) end }
 
-if SongOrCourse and SongOrCourse:HasBackground() then
-	--song or course banner, if there is one
+if song and song:HasBackground() then
+	--song banner, if there is one
 	af[#af+1] = Def.Sprite{
 		Name="Background",
 		InitCommand=function(self)

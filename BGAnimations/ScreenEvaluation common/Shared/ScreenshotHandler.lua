@@ -17,7 +17,7 @@ spr.CodeMessageCommand=function(self, params)
 		-- format a localized month string like "06-June" or "12-Diciembre"
 		local month = ("%02d-%s"):format(MonthOfYear()+1, THEME:GetString("Months", "Month"..MonthOfYear()+1))
 
-		-- get the FullTitle of the song or course that was just played
+		-- get the FullTitle of the song that was just played
 		local title = GAMESTATE:GetCurrentSong():GetDisplayFullTitle()
 
 		-- song titles can be very long, and the engine's SaveScreenshot() function

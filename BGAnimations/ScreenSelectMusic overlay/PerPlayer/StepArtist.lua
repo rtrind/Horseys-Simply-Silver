@@ -97,9 +97,9 @@ return Def.ActorFrame{
 			self:queuecommand("Reset")
 		end,
 		ResetCommand=function(self)
-			local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
-			if StepsOrTrail then
-				local difficulty = StepsOrTrail:GetDifficulty()
+			local steps = GAMESTATE:GetCurrentSteps(player)
+			if steps then
+				local difficulty = steps:GetDifficulty()
 				self:diffuse( DifficultyColor(difficulty) )
 			else
 				self:diffuse( PlayerColor(player) )
@@ -174,8 +174,8 @@ return Def.ActorFrame{
 		end,
 		ResetCommand=function(self)
 
-			local SongOrCourse = GAMESTATE:GetCurrentSong()
-			local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
+			local song = GAMESTATE:GetCurrentSong()
+			local steps = GAMESTATE:GetCurrentSteps(player)
 
 			-- always stop tweening when steps change in case a MarqueeCommand is queued
 			self:stoptweening()
@@ -187,7 +187,7 @@ return Def.ActorFrame{
 				self:horizalign(right):x(266)
 			end
 
-			if SongOrCourse and StepsOrTrail then
+			if song and steps then
 
 				text_table = GetStepsCredit(player)
 				marquee_index = 0
@@ -216,13 +216,13 @@ return Def.ActorFrame{
 		end,
 		ITLCommand=function(self)
 			if #GAMESTATE:GetHumanPlayers() == 1 then
-				local SongOrCourse = GAMESTATE:GetCurrentSong()
-				local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
+				local song = GAMESTATE:GetCurrentSong()
+				local steps = GAMESTATE:GetCurrentSteps(player)
 
 				-- always stop tweening when steps change in case a MarqueeCommand is queued
 				self:stoptweening()
 
-				if SongOrCourse and StepsOrTrail then
+				if song and steps then
 					text_table = GetStepsCredit(player)
 					marquee_index = 0
 

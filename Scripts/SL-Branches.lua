@@ -43,10 +43,6 @@ Branch.AfterScreenRankingDouble = function()
 	return PREFSMAN:GetPreference("MemoryCards") and "ScreenMemoryCard" or "ScreenRainbow"
 end
 
-SelectMusicOrCourse = function()
-	return "ScreenSelectMusic"
-end
-
 Branch.AllowScreenSelectProfile = function()
 	return "ScreenSelectProfile"
 end
@@ -101,7 +97,7 @@ Branch.AfterEvaluationStage = function()
 end
 
 Branch.AfterSelectPlayMode = function()
-	return SelectMusicOrCourse()
+	return "ScreenSelectMusic"
 end
 
 Branch.AfterGameplay = function()
@@ -173,7 +169,7 @@ end
 Branch.AfterProfileSave = function()
 
 	if PREFSMAN:GetPreference("EventMode") then
-		return SelectMusicOrCourse()
+		return "ScreenSelectMusic"
 	else
 
 		-- deduct the number of stages that stock StepMania says the song is
@@ -235,12 +231,12 @@ Branch.AfterProfileSave = function()
 
 			return Branch.AllowScreenEvalSummary()
 		else
-			return SelectMusicOrCourse()
+			return "ScreenSelectMusic"
 		end
 	end
 
 	-- just in case?
-	return SelectMusicOrCourse()
+	return "ScreenSelectMusic"
 end
 
 Branch.AfterProfileSaveSummary = function()

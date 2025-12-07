@@ -8,21 +8,21 @@ local text_zoom = 0.7
 
 -- -----------------------------------------------------------------------
 local GetSongAndSteps = function(player)
-	local SongOrCourse = GAMESTATE:GetCurrentSong()
-	local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
-	return SongOrCourse, StepsOrTrail
+	local song = GAMESTATE:GetCurrentSong()
+	local steps = GAMESTATE:GetCurrentSteps(player)
+	return song, steps
 end
 
-local GetScoreFromProfile = function(profile, SongOrCourse, StepsOrTrail)
-	if not (profile and SongOrCourse and StepsOrTrail) then return nil end
-	return profile:GetHighScoreList(SongOrCourse, StepsOrTrail):GetHighScores()[1]
+local GetScoreFromProfile = function(profile, song, steps)
+	if not (profile and song and steps) then return nil end
+	return profile:GetHighScoreList(song, steps):GetHighScores()[1]
 end
 
 local GetScoreForPlayer = function(player)
 	local highScore
 	if PROFILEMAN:IsPersistentProfile(player) then
-		local SongOrCourse, StepsOrTrail = GetSongAndSteps(player)
-		highScore = GetScoreFromProfile(PROFILEMAN:GetProfile(player), SongOrCourse, StepsOrTrail)
+		local song, steps = GetSongAndSteps(player)
+		highScore = GetScoreFromProfile(PROFILEMAN:GetProfile(player), song, steps)
 	end
 	return highScore
 end
@@ -83,10 +83,10 @@ for player in ivalues(PlayerNumber) do
 			self:zoomtowidth(267):zoomtoheight(pane_height*2):addy(-pane_height):vertalign(top)
 		end,
 		SetCommand=function(self)
-			local SongOrCourse, StepsOrTrail = GetSongAndSteps(player)
+			local song, steps = GetSongAndSteps(player)
 			if GAMESTATE:IsHumanPlayer(player) then
-				if StepsOrTrail then
-					self:diffuse(DifficultyColor(StepsOrTrail:GetDifficulty()))
+				if steps then
+					self:diffuse(DifficultyColor(steps:GetDifficulty()))
 				else
 					self:diffuse(PlayerColor(player))
 				end
@@ -110,11 +110,11 @@ for player in ivalues(PlayerNumber) do
 					self:diffuse(ThemePrefs.Get("VisualStyle") == "Technique" and Color.White or Color.Black)
 				end,
 				SetCommand=function(self)
-					local SongOrCourse, StepsOrTrail = GetSongAndSteps(player)
-					if not SongOrCourse then self:settext("?"); return end
-					if not StepsOrTrail then self:settext(""); return end
+					local song, steps = GetSongAndSteps(player)
+					if not song then self:settext("?"); return end
+					if not steps then self:settext(""); return end
 					if item.rc then
-						local val = StepsOrTrail:GetRadarValues(player):GetValue(item.rc)
+						local val = steps:GetRadarValues(player):GetValue(item.rc)
 						self:settext(val >= 0 and val or "?")
 					end
 				end
@@ -140,8 +140,8 @@ for player in ivalues(PlayerNumber) do
 			self:diffuse(ThemePrefs.Get("VisualStyle") == "Technique" and Color.White or Color.Black)
 		end,
 		SetCommand=function(self)
-			local SongOrCourse, StepsOrTrail = GetSongAndSteps(player)
-			local machineScore = GetScoreFromProfile(machine_profile, SongOrCourse, StepsOrTrail)
+			local song, steps = GetSongAndSteps(player)
+			local machineScore = GetScoreFromProfile(machine_profile, song, steps)
 			self:settext(machineScore and machineScore:GetName() or "----")
 			DiffuseEmojis(self:ClearAttributes())
 		end
@@ -156,8 +156,8 @@ for player in ivalues(PlayerNumber) do
 			self:diffuse(ThemePrefs.Get("VisualStyle") == "Technique" and Color.White or Color.Black)
 		end,
 		SetCommand=function(self)
-			local SongOrCourse, StepsOrTrail = GetSongAndSteps(player)
-			local machineScore = GetScoreFromProfile(machine_profile, SongOrCourse, StepsOrTrail)
+			local song, steps = GetSongAndSteps(player)
+			local machineScore = GetScoreFromProfile(machine_profile, song, steps)
 			if machineScore then
 				self:settext(FormatPercentScore(machineScore:GetPercentDP()))
 			else
@@ -207,9 +207,9 @@ for player in ivalues(PlayerNumber) do
 			self:diffuse(ThemePrefs.Get("VisualStyle") == "Technique" and Color.White or Color.Black)
 		end,
 		SetCommand=function(self)
-			local SongOrCourse, StepsOrTrail = GetSongAndSteps(player)
-			if not SongOrCourse then self:settext(""); return end
-			local meter = StepsOrTrail and StepsOrTrail:GetMeter() or "?"
+			local song, steps = GetSongAndSteps(player)
+			if not song then self:settext(""); return end
+			local meter = steps and steps:GetMeter() or "?"
 			self:settext(meter)
 		end
 	}

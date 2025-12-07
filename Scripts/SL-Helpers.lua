@@ -667,7 +667,7 @@ end
 GetExJudgmentCounts = function(player)
 	local pn = ToEnumShortString(player)
 	local stats = STATSMAN:GetCurStageStats():GetPlayerStageStats(pn)
-	local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
+	local steps = GAMESTATE:GetCurrentSteps(player)
 
 	local counts = {}
 
@@ -699,7 +699,7 @@ GetExJudgmentCounts = function(player)
 			end
 		end
 	end
-	counts["totalSteps"] = StepsOrTrail:GetRadarValues(player):GetValue( "RadarCategory_TapsAndHolds" )
+	counts["totalSteps"] = steps:GetRadarValues(player):GetValue( "RadarCategory_TapsAndHolds" )
 
 	local RadarCategory = { "Holds", "Mines", "Rolls" }
 
@@ -707,7 +707,7 @@ GetExJudgmentCounts = function(player)
 
 	for RCType in ivalues(RadarCategory) do
 		local number = stats:GetRadarActual():GetValue( "RadarCategory_"..RCType )
-		local possible = StepsOrTrail:GetRadarValues(player):GetValue( "RadarCategory_"..RCType )
+		local possible = steps:GetRadarValues(player):GetValue( "RadarCategory_"..RCType )
 
 		if RCType == "Mines" then
 			-- NoMines still report the total number of mines that exist in a chart, even if they weren't played in the chart.
@@ -752,11 +752,11 @@ end
 -- The W0 weight may have been modified for Tournament mode purposes.
 -- Use the optional boolean argument use_actual_w0_weight to choose to fallback to the proper W0 weight.
 CalculateExScore = function(player, ex_counts, use_actual_w0_weight)
-	local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
+	local steps = GAMESTATE:GetCurrentSteps(player)
 
-	local totalSteps = StepsOrTrail:GetRadarValues(player):GetValue( "RadarCategory_TapsAndHolds" )
-	local totalHolds = StepsOrTrail:GetRadarValues(player):GetValue( "RadarCategory_Holds" )
-	local totalRolls = StepsOrTrail:GetRadarValues(player):GetValue( "RadarCategory_Rolls" )
+	local totalSteps = steps:GetRadarValues(player):GetValue( "RadarCategory_TapsAndHolds" )
+	local totalHolds = steps:GetRadarValues(player):GetValue( "RadarCategory_Holds" )
+	local totalRolls = steps:GetRadarValues(player):GetValue( "RadarCategory_Rolls" )
 
 	local W0Weight = use_actual_w0_weight and 3.5 or SL.ExWeights["W0"]
 	local total_possible = totalSteps * W0Weight + (totalHolds + totalRolls) * SL.ExWeights["Held"]
@@ -769,7 +769,7 @@ CalculateExScore = function(player, ex_counts, use_actual_w0_weight)
 	-- Stamina community does often play with no-mines on, but because EX scoring is more timing centric where mines
 	-- generally have a negative weight, it's a better experience to make sure the EX score reflects that.
 	if po:NoMines() then
-		local totalMines = StepsOrTrail:GetRadarValues(player):GetValue( "RadarCategory_Mines" )
+		local totalMines = steps:GetRadarValues(player):GetValue( "RadarCategory_Mines" )
 		total_points = total_points + totalMines * SL.ExWeights["HitMine"];
 	end
 

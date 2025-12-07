@@ -32,8 +32,8 @@ local pos = {
 
 local pss = STATSMAN:GetCurStageStats():GetPlayerStageStats(player)
 
-local StepsOrTrail = GAMESTATE:GetCurrentSteps(player)
-local total_tapnotes = StepsOrTrail:GetRadarValues(player):GetValue( "RadarCategory_Notes" )
+local steps = GAMESTATE:GetCurrentSteps(player)
+local total_tapnotes = steps:GetRadarValues(player):GetValue( "RadarCategory_Notes" )
 
 -- determine how many digits are needed to express the number of notes in base-10
 local digits = (math.floor(math.log10(total_tapnotes)) + 1)

@@ -8,15 +8,15 @@ local durationPerSong = 4
 local af = Def.ActorFrame{}
 
 for i=1,NumStages do
-	local StepsOrTrail
-	local SongOrCourse = SL.Global.Stages.Stats[i].song
+	local steps
+	local song = SL.Global.Stages.Stats[i].song
 	local stats = SL[pn].Stages.Stats[i]
 
 	-- stats might exist for one player but not the other due to latejoin
 	if stats then
-		StepsOrTrail = stats.steps
+		steps = stats.steps
 
-		local args = { Player=player, RoundsAgo=(NumStages-(i-1)), SongOrCourse=SongOrCourse, StepsOrTrail=StepsOrTrail }
+		local args = { Player=player, RoundsAgo=(NumStages-(i-1)), song=song, steps=steps }
 		local list = LoadActor(THEME:GetPathB("", "_modules/HighScoreList.lua"), args)
 
 		list.Name = "HighScoreList" .. i .. ToEnumShortString(player)
