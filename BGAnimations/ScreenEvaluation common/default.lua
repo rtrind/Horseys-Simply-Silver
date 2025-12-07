@@ -90,13 +90,6 @@ for player in ivalues(Players) do
 
 	-- Save Ghost Data if player has improved their score
 	t[#t+1] = LoadActor("./PerPlayer/SaveGhostData.lua", player)
-
-
-	-- Generate the .rpg file for the player to keep track of best rate mod on the songwheel
-	-- When the event isn't active, this actor is nil.
-	t[#t+1] = LoadActor("./PerPlayer/RpgRatemod.lua", player)
-	
-	
 end
 
 -- -----------------------------------------------------------------------
@@ -107,8 +100,5 @@ t[#t+1] = LoadActor("./Panes/default.lua", NumPanes)
 -- code for handling score vocalization
 t[#t+1] = LoadActor("./ScoreVocalization.lua")
 -- -----------------------------------------------------------------------
-
--- Score submission actor (currently unused)
-t[#t+1] = LoadActor("./Shared/AutoSubmitScore.lua")
 
 return t
