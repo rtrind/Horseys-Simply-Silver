@@ -1,27 +1,24 @@
 local player = ...
 local pn = ToEnumShortString(player)
 
-
-local showPatternInfo = true
+-- ZarzobPanes contains FolderStats and ScoreBox (pattern info)
+-- Visible when showPatternInfo is true, hidden when false
+local showPatternInfo = false
 
 local t = Def.ActorFrame{
     Name="GroupPanes"..pn,
     InitCommand=function(self)
-        self:visible(not showPatternInfo)
-    end,
-
-    CodeMessageCommand=function(self, params)
-        -- on ScreenSelectMusic, this screen code is reused to instead toggle player profile views
-        if params.Name == "TogglePatternInfo" and params.PlayerNumber == player then
-            if (ThemePrefs.Get("FolderStats")) or not (ThemePrefs.Get("MusicWheelGS") ~= "Scorebox") then
-                showPatternInfo = not showPatternInfo
-                self:queuecommand("TogglePatternInfo")
-            end
-        end
-    end,
-
-    TogglePatternInfoCommand=function(self)
         self:visible(showPatternInfo)
+        Trace("ZarzobPanes["..pn.."] InitCommand: visible="..tostring(showPatternInfo))
+    end,
+
+    TogglePatternInfoMessageCommand=function(self, params)
+        Trace("ZarzobPanes["..pn.."] received TogglePatternInfoMessage, params.PlayerNumber="..tostring(params.PlayerNumber)..", player="..tostring(player))
+        if params.PlayerNumber == player then
+            showPatternInfo = not showPatternInfo
+            self:visible(showPatternInfo)
+            Trace("ZarzobPanes["..pn.."] toggled: visible="..tostring(showPatternInfo))
+        end
     end,
 }
 

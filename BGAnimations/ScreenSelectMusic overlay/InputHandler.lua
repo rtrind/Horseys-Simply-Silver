@@ -140,9 +140,9 @@ local InputCodes = {
 	SortList2 = ParseMetricCode(GetCode("SortList2")),
 	ToggleGroup = ParseMetricCode(GetCode("CloseFolder")),
 	ToggleFavorite = ParseMetricCode(GetCode("ToggleFavorite")),
+	TogglePatternInfo = ParseMetricCode(GetCode("TogglePatternInfo")),
 	DifficultyEasier = ParseMetricCode(GetCode("DifficultyEasier")),
 	DifficultyHarder = ParseMetricCode(GetCode("DifficultyHarder")),
-	-- Add more as needed
 }
 
 -- Buffer for scroll inputs to allow chord detection prevention
@@ -366,6 +366,16 @@ local input = function(event)
 		if InputCodes.DifficultyHarder and InputCodes.DifficultyHarder.type == "sequence" then
 			if IsSequenceSatisfied(InputCodes.DifficultyHarder.buttons, seq) then
 				if wheel then wheel:playcommand("MW_DifficultyChange", {PlayerNumber=pn, Direction=1}) end
+				buttonSequence[pn] = {}
+				return true
+			end
+		end
+
+		-- 3. Toggle Pattern Info (e.g. Select, Select)
+		if InputCodes.TogglePatternInfo and InputCodes.TogglePatternInfo.type == "sequence" then
+			if IsSequenceSatisfied(InputCodes.TogglePatternInfo.buttons, seq) then
+				-- Broadcast CodeMessage to trigger the toggle in DensityGraph, ZarzobPanes, PlayerProfiles
+				MESSAGEMAN:Broadcast("TogglePatternInfo", {PlayerNumber=pn})
 				buttonSequence[pn] = {}
 				return true
 			end

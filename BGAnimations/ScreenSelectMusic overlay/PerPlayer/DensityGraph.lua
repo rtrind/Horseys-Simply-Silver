@@ -55,6 +55,12 @@ local af = Def.ActorFrame{
 			self:queuecommand("Redraw")
 		end
 	end,
+	TogglePatternInfoMessageCommand=function(self, params)
+		if params.PlayerNumber == player then
+			showPatternInfo = not showPatternInfo
+			self:queuecommand("TogglePatternInfo")
+		end
+	end,
 }
 
 -- Background quad for the density graph

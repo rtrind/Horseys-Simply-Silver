@@ -62,8 +62,8 @@
 - [x] Remove all remaining `GetMusicWheel()` calls from theme
 - [x] Cleanup metrics.ini SSM
 - [x] Change "Reloading screen" message to a proper "loading", just like the transition from profile/style selection to SSM screen
-- [ ] Change "Title screen" from Simply Love to Simply DDR
-- [ ] Implement pattern info toggle
+- [x] Change "Title screen" from Simply Love to Simply DDR
+- [x] Implement pattern info toggle
 - [x] Test with both P1 and P2 profiles
 - [ ] Performance testing (large libraries, fast scrolling)
 
@@ -82,7 +82,7 @@
 ## Phase 7: Optimization (Not Started)
 
 ### Planned Tasks
-- [ ] Identify more elements not used in the dedicab and remove them to make build leaner (remove course mode, ITL, unused graphics, ...)
+- [ ] Identify more elements not used in the dedicab and remove them to make build leaner (remove course mode, ITL, unused graphics, SRPG, GrooveStats, ...)
 - [ ] Minimize unused items in metrics.ini
 - [ ] Optimize lazy loading to prevent stuttering
 - [ ] Optimize memory usage (unload off-screen items)

@@ -20,7 +20,8 @@ local offset = 44.25
 local time_displayed = 5
 local marquee_animation = 0.5
 
-local showPatternInfo = true
+-- PlayerProfiles visible when showPatternInfo is false (default)
+local showPatternInfo = false
 
 --used to calculate the scroll speed with respect to rate mod, speed mod type, BPM ranges all respective to each player
 --this was copied from ScreenPlayerOptions overlay/default.lua
@@ -196,18 +197,11 @@ if GAMESTATE:GetNumPlayersEnabled() == 1 then return Def.ActorFrame{
 		end
 	end,
 
-	CodeMessageCommand=function(self, params)
-		-- on ScreenSelectMusic, this screen code is reused to instead toggle player profile views
-		if params.Name == "TogglePatternInfo" and params.PlayerNumber == player then
-            if (ThemePrefs.Get("FolderStats")) or not (ThemePrefs.Get("MusicWheelGS") ~= "Scorebox") then
-                showPatternInfo = not showPatternInfo
-                self:queuecommand("TogglePatternInfo")
-            end
+	TogglePatternInfoMessageCommand=function(self, params)
+		if params.PlayerNumber == player then
+			showPatternInfo = not showPatternInfo
+			self:visible(not showPatternInfo)
 		end
-	end,
-
-	TogglePatternInfoCommand=function(self)
-		self:visible(not showPatternInfo)
 	end,
 
   	--background quad
@@ -764,18 +758,11 @@ if GAMESTATE:GetNumPlayersEnabled() == 2 then return Def.ActorFrame{
 		end
 	end,
 
-	CodeMessageCommand=function(self, params)
-		-- on ScreenSelectMusic, this screen code is reused to instead toggle player profile views
-		if params.Name == "TogglePatternInfo" and params.PlayerNumber == player then
-            if (ThemePrefs.Get("FolderStats")) or not (ThemePrefs.Get("MusicWheelGS") ~= "Scorebox") then
-                showPatternInfo = not showPatternInfo
-                self:queuecommand("TogglePatternInfo")
-            end
+	TogglePatternInfoMessageCommand=function(self, params)
+		if params.PlayerNumber == player then
+			showPatternInfo = not showPatternInfo
+			self:visible(not showPatternInfo)
 		end
-	end,
-
-	TogglePatternInfoCommand=function(self)
-		self:visible(not showPatternInfo)
 	end,
 
 	--background quad
