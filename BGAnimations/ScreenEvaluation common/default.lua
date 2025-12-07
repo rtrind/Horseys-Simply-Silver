@@ -93,8 +93,6 @@ end
 
 t[#t+1] = LoadActor("./Panes/default.lua", NumPanes)
 
--- code for handling score vocalization
-t[#t+1] = LoadActor("./ScoreVocalization.lua")
 -- -----------------------------------------------------------------------
 
 return t
