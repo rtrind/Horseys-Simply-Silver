@@ -17,14 +17,16 @@ local af = Def.ActorFrame {
 	DisplaySearchResultsMessageCommand=function(self, params)
 		self:visible(true)
 		self:playcommand("AssessCandidates", params)
-		-- We have to wait a little bit before adding the input handler.
-		self:sleep(0.5):queuecommand("AddInputCallback")
-	end,
-	AddInputCallbackCommand=function(self)
-		SCREENMAN:GetTopScreen():AddInputCallback(inputHandler)
+		-- Immediately redirect input to prevent Start from triggering gameplay
+		-- while the search results are being displayed
 		for player in ivalues(PlayerNumber) do
 			SCREENMAN:set_input_redirected(player, true)
 		end
+		-- Add the input handler after a short delay for visual setup
+		self:sleep(0.1):queuecommand("AddInputCallback")
+	end,
+	AddInputCallbackCommand=function(self)
+		SCREENMAN:GetTopScreen():AddInputCallback(inputHandler)
 	end,
 	DirectInputToEngineCommand=function(self)
 		SCREENMAN:GetTopScreen():RemoveInputCallback(inputHandler)

@@ -15,73 +15,71 @@ local function GetLetterFromDeviceButton(deviceButton)
 	return nil
 end
 
--- Jump to a letter group in Title sort
-local function JumpToLetterGroup(letter)
-	if not letter or not SL.MusicWheel then return false end
-	
-	-- Switch to Title sort if not already
-	local state = SL.MusicWheel.State
-	if state.sort_order ~= "SortOrder_Title" then
-		SL.MusicWheel.RebuildWheelData("SortOrder_Title")
+-- Jump to a song starting with the given letter in the current sort mode
+local function JumpToLetter(letter)
+	if not letter or not SL.MusicWheel then 
+		Trace("[KEYBOARD] JumpToLetter: no letter or no SL.MusicWheel")
+		return false 
 	end
 	
-	-- Find the group header that starts with this letter
-	local target_index = nil
-	for i, item in ipairs(state.items) do
-		if item.type == "group_header" then
-			local group_letter = item.group_name:sub(1, 1):upper()
-			if group_letter == letter then
-				target_index = i
-				break
-			elseif group_letter > letter then
-				-- Passed the letter, use previous group or this one
-				if not target_index then target_index = i end
-				break
+	local state = SL.MusicWheel.State
+	if not state.items or #state.items == 0 then 
+		Trace("[KEYBOARD] JumpToLetter: no items")
+		return false 
+	end
+	
+	Trace("[KEYBOARD] JumpToLetter: searching for letter '" .. letter .. "' in sort: " .. tostring(state.sort_order))
+	
+	-- Find the first song whose title starts with this letter
+	-- Search through ALL songs (including in closed groups) to find the target
+	local stepsType = GAMESTATE:GetCurrentStyle():GetStepsType()
+	local allSongs = SONGMAN:GetAllSongs()
+	local targetSong = nil
+	
+	-- Filter and sort songs by title
+	local matchingSongs = {}
+	for _, song in ipairs(allSongs) do
+		if song:HasStepsType(stepsType) then
+			local title = song:GetDisplayMainTitle()
+			if title and title:sub(1, 1):upper() == letter then
+				table.insert(matchingSongs, song)
 			end
-			target_index = i -- Keep track of last group before target
 		end
 	end
 	
-	if target_index then
-		-- Get the target group name
-		local group_item = state.items[target_index]
-		if group_item and group_item.type == "group_header" then
-			local group_name = group_item.group_name
-			
-			-- Close all groups and open only the target group
-			state.open_groups = {}
-			state.open_groups[group_name] = true
-			state.items = SL.MusicWheel.BuildWheelData(state.sort_order)
-			
-			-- Re-find the group header after rebuild
-			for i, item in ipairs(state.items) do
-				if item.type == "group_header" and item.group_name == group_name then
-					target_index = i
-					break
-				end
-			end
-			
-			-- Focus on first song after the group header
-			for i = target_index + 1, #state.items do
-				if state.items[i].type == "song" then
-					state.focus_index = i
-					local song = state.items[i].song
-					GAMESTATE:SetCurrentSong(song)
-					
-					-- Update steps for all players
-					local steps_type = GAMESTATE:GetCurrentStyle():GetStepsType()
-					local compatible_steps = song:GetStepsByStepsType(steps_type)
-					if compatible_steps and #compatible_steps > 0 then
-						for player in ivalues(GAMESTATE:GetHumanPlayers()) do
-							GAMESTATE:SetCurrentSteps(player, compatible_steps[1])
-						end
-					end
-					break
-				elseif state.items[i].type == "group_header" then
-					-- Hit next group, stay on header
-					state.focus_index = target_index
-					break
-				end
+	Trace("[KEYBOARD] Found " .. #matchingSongs .. " songs starting with '" .. letter .. "'")
+	
+	-- Sort by title
+	table.sort(matchingSongs, function(a, b)
+		return a:GetDisplayMainTitle():lower() < b:GetDisplayMainTitle():lower()
+	end)
+	
+	-- Get the first matching song
+	if #matchingSongs > 0 then
+		targetSong = matchingSongs[1]
+	end
+	
+	if not targetSong then
+		-- No song found starting with this letter
+		Trace("[KEYBOARD] No song found starting with '" .. letter .. "'")
+		return false
+	end
+	
+	Trace("[KEYBOARD] Target song: " .. targetSong:GetDisplayMainTitle())
+	
+	-- Use FindSongIndex which handles opening the containing group
+	local song_index = SL.MusicWheel.FindSongIndex(targetSong)
+	Trace("[KEYBOARD] FindSongIndex returned: " .. tostring(song_index))
+	
+	if song_index then
+		state.focus_index = song_index
+		GAMESTATE:SetCurrentSong(targetSong)
+		
+		-- Update steps for all players
+		local compatible_steps = targetSong:GetStepsByStepsType(stepsType)
+		if compatible_steps and #compatible_steps > 0 then
+			for player in ivalues(GAMESTATE:GetHumanPlayers()) do
+				GAMESTATE:SetCurrentSteps(player, compatible_steps[1])
 			end
 		end
 		
@@ -269,7 +267,7 @@ local input = function(event)
 						break
 					end
 				end
-				if not anyRedirected and JumpToLetterGroup(letter) then
+				if not anyRedirected and JumpToLetter(letter) then
 					return true
 				end
 			end
@@ -288,16 +286,18 @@ local input = function(event)
 	-- For other input handling, require GameButton
 	if not button then return false end
 	
-	-- Track button state
+	-- Don't handle input if input is redirected (e.g. SortMenu is open or closing)
+	-- Clear held buttons when redirected to prevent phantom scrolling after overlay closes
+	if SCREENMAN:get_input_redirected(pn) then
+		heldButtons[pn] = {}
+		return false
+	end
+	
+	-- Track button state (only when not redirected)
 	if event.type == "InputEventType_FirstPress" then
 		heldButtons[pn][button] = true
 	elseif event.type == "InputEventType_Release" then
 		heldButtons[pn][button] = nil
-	end
-	
-	-- Don't handle input if input is redirected (e.g. SortMenu is open or closing)
-	if SCREENMAN:get_input_redirected(pn) then
-		return false
 	end
 
 	-- If waiting for options, block most inputs

@@ -2,7 +2,7 @@ local candidatesScroller = ...
 
 local input = function(event)
 	if not (event and event.PlayerNumber and event.button) then
-		return false
+		return true
 	end
 
 	local overlay = SCREENMAN:GetTopScreen():GetChild("Overlay"):GetChild("SongSearch")
@@ -13,8 +13,10 @@ local input = function(event)
 		local num_items = type(info)=="table" and info.totalItems or candidatesScroller.num_items
 		if event.GameButton == "MenuRight" or event.GameButton == "MenuDown" then
 			candidatesScroller:scroll_by_amount(1)
+			return true
 		elseif event.GameButton == "MenuLeft" or event.GameButton == "MenuUp" then
 			candidatesScroller:scroll_by_amount(-1)
+			return true
 		elseif event.GameButton == "Start" then
 			local focus = candidatesScroller:get_actor_item_at_focus_pos()
 			local songOrExit = focus.song_name.songOrExit
@@ -39,11 +41,13 @@ local input = function(event)
 				end
 			end
 			overlay:queuecommand("DirectInputToEngine")
+			return true
 		elseif event.GameButton == "Back" or event.GameButton == "Select" then
 			overlay:queuecommand("DirectInputToEngine")
+			return true
 		end
 	end
-	return false
+	return true
 end
 
 return input

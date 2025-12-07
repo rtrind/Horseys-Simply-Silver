@@ -119,6 +119,72 @@ local function GetSongGroup(song)
 	return ""
 end
 
+-- Build the list of length ranges used for Length sort
+-- Returns a table of {min, max, label} entries
+-- This is the SINGLE SOURCE OF TRUTH for length classification
+local function GetLengthRanges()
+	local ranges = {}
+	
+	-- <3 minutes: groups of 30 seconds (0:00-0:30, 0:31-1:00, etc.)
+	-- Start at 0 to catch very short songs
+	for i = 0, 150, 30 do
+		local min_sec = i
+		local max_sec = i + 29.999  -- Use 29.999 to avoid boundary issues
+		-- Label shows human-readable range
+		local label_min = i == 0 and 1 or i + 1  -- Display as "0:01" not "0:00"
+		local label_max = i + 30
+		local label = string.format("%d:%02d-%d:%02d", 
+			math.floor(label_min / 60), label_min % 60,
+			math.floor(label_max / 60), label_max % 60)
+		table.insert(ranges, {min = min_sec, max = max_sec, label = label})
+	end
+	
+	-- 3-10 minutes: groups of 1 minute (3:01-4:00, 4:01-5:00, etc.)
+	for i = 180, 540, 60 do
+		local min_sec = i
+		local max_sec = i + 59.999
+		local label_min = i + 1
+		local label_max = i + 60
+		local label = string.format("%d:%02d-%d:%02d", 
+			math.floor(label_min / 60), label_min % 60,
+			math.floor(label_max / 60), label_max % 60)
+		table.insert(ranges, {min = min_sec, max = max_sec, label = label})
+	end
+	
+	-- 10-20 minutes: groups of 5 minutes
+	for i = 600, 1140, 300 do
+		local min_sec = i
+		local max_sec = i + 299.999
+		local label_min = i + 1
+		local label_max = i + 300
+		local label = string.format("%d:%02d-%d:%02d", 
+			math.floor(label_min / 60), label_min % 60,
+			math.floor(label_max / 60), label_max % 60)
+		table.insert(ranges, {min = min_sec, max = max_sec, label = label})
+	end
+	
+	-- 20+ minutes
+	table.insert(ranges, {min = 1200, max = math.huge, label = "20:01+"})
+	
+	return ranges
+end
+
+-- Get the length range label for a given song length in seconds
+-- Uses the same ranges as GetLengthRanges() for consistency
+local function GetLengthRangeLabel(length)
+	if not length then return "0:01-0:30" end
+	
+	local ranges = GetLengthRanges()
+	for _, range in ipairs(ranges) do
+		if length >= range.min and length <= range.max then
+			return range.label
+		end
+	end
+	
+	-- Fallback for songs shorter than 1 second
+	return "0:01-0:30"
+end
+
 -- Check if a song has valid steps for current game mode
 local function HasValidSteps(song)
 	if not song then return false end
@@ -830,41 +896,8 @@ function SL.MusicWheel.BuildWheelData_Length()
 	local items = {}
 	local songs = GetAllSongsForCurrentStyle()
 	
-	-- Define length ranges (in seconds)
-	local length_ranges = {}
-	
-	-- <3 minutes: groups of 30 seconds (0:01-0:30, 0:31-1:00, etc.)
-	for i = 1, 151, 30 do
-		local min_sec = i
-		local max_sec = i + 29
-		local label = string.format("%d:%02d-%d:%02d", 
-			math.floor(min_sec / 60), min_sec % 60,
-			math.floor(max_sec / 60), max_sec % 60)
-		table.insert(length_ranges, {min = min_sec, max = max_sec, label = label})
-	end
-	
-	-- 3-10 minutes: groups of 1 minute
-	for i = 181, 541, 60 do
-		local min_sec = i
-		local max_sec = i + 59
-		local label = string.format("%d:%02d-%d:%02d", 
-			math.floor(min_sec / 60), min_sec % 60,
-			math.floor(max_sec / 60), max_sec % 60)
-		table.insert(length_ranges, {min = min_sec, max = max_sec, label = label})
-	end
-	
-	-- 10-20 minutes: groups of 5 minutes
-	for i = 601, 1141, 300 do
-		local min_sec = i
-		local max_sec = i + 299
-		local label = string.format("%d:%02d-%d:%02d", 
-			math.floor(min_sec / 60), min_sec % 60,
-			math.floor(max_sec / 60), max_sec % 60)
-		table.insert(length_ranges, {min = min_sec, max = max_sec, label = label})
-	end
-	
-	-- 20+ minutes
-	table.insert(length_ranges, {min = 1201, max = math.huge, label = "20:01+"})
+	-- Use shared length ranges (single source of truth)
+	local length_ranges = GetLengthRanges()
 	
 	-- Group songs by length range
 	local range_index = 0
@@ -1333,24 +1366,9 @@ local function GetGroupForSong(song, sort_order)
 		return base .. "-" .. (base + 19)
 		
 	elseif sort_order == "SortOrder_Length" then
+		-- Use shared function (single source of truth)
 		local length = song:GetLastSecond()
-		if length > 1200 then return "20:01+" end
-		if length > 600 then
-			local base = math.floor((length - 601) / 300) * 300 + 601
-			local min_sec = base
-			local max_sec = base + 299
-			return string.format("%d:%02d-%d:%02d", math.floor(min_sec / 60), min_sec % 60, math.floor(max_sec / 60), max_sec % 60)
-		end
-		if length > 180 then
-			local base = math.floor((length - 181) / 60) * 60 + 181
-			local min_sec = base
-			local max_sec = base + 59
-			return string.format("%d:%02d-%d:%02d", math.floor(min_sec / 60), min_sec % 60, math.floor(max_sec / 60), max_sec % 60)
-		end
-		local base = math.floor((length - 1) / 30) * 30 + 1
-		local min_sec = base
-		local max_sec = base + 29
-		return string.format("%d:%02d-%d:%02d", math.floor(min_sec / 60), min_sec % 60, math.floor(max_sec / 60), max_sec % 60)
+		return GetLengthRangeLabel(length)
 		
 	elseif sort_order == "SortOrder_ModeMenu" then
 		-- Difficulty sort
@@ -1908,8 +1926,12 @@ function SL.MusicWheel.FindSongIndex(target_song)
 	end
 	
 	-- Song not visible - need to find and open its group
-	-- Get the song's group name
-	local song_group = target_song:GetGroupName()
+	-- Get the song's group name based on current sort order
+	local song_group = GetGroupForSong(target_song, state.sort_order)
+	if not song_group then
+		-- Fallback to pack name if GetGroupForSong fails
+		song_group = target_song:GetGroupName()
+	end
 	
 	-- Close all groups and open the target group
 	-- But preserve Favorites if it was open
