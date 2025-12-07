@@ -240,11 +240,6 @@ SL_CustomPrefs.Get = function()
 			Choices = { THEME:GetString("ThemePrefs","Wendy"), THEME:GetString("ThemePrefs", "Mega"), THEME:GetString("ThemePrefs", "Unprofessional") },
 			Values = { "Common", "Mega", "Unprofessional" }
 		},
-		MusicWheelGS =
-		{
-			Default = "Scorebox",
-			Choices = { "Scorebox", "Pane", "Off" }
-		},
 		FolderStats =
 		{
 			Default = true,
