@@ -84,7 +84,6 @@ local PlayerDefaults = {
 
 				NoteFieldOffsetX = 0,
 				NoteFieldOffsetY = 0,
-				Vocalization = "Random",
 			}
 			-- TODO(teejusb): Rename "Streams" as the data contains more information than that.
 			self.Streams = {
