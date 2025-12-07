@@ -76,21 +76,38 @@
 - [x] Do we need to keep SSM codenames on metrics.ini? We either use them on the input handler, or we let them hardcoded there and remove them from the metrics.
 - [x] When scrolling fast thru the songs on the wheel, sometimes it stops changing the audio to the current song and continues to play one of the other songs from before. When it finishes, you change to another song and the audio fixes itself.
 
-## Phase 6: More efficient debugging and testing (Not Started)
-- [ ] Is there a way for automated tests to happen, considering the game is closed source? This way I could provide a specific testing config and run the tests in a consistent fashion, trying to detect regressions much faster than testing manually, pointing the error to the LLM and finding a fix, creating an easier development loop.
+## Phase 6: Optimization (In Progress)
 
-## Phase 7: Optimization (Not Started)
+### Completed Tasks
+- [x] Add debug instrumentation for crash diagnosis (90-min crash)
+  - Added `SL_Debug` module in `Scripts/06 SL-Utilities.lua` with:
+    - Session uptime tracking (HH:MM:SS format)
+    - Memory usage monitoring (Lua heap size)
+    - Screen transition logging
+    - Periodic status logging (every 60 seconds)
+    - Performance timing helpers (`StartTimer`/`EndTimer`)
+    - Safe function wrapper (`SafeCall`)
+    - Error logging with context
+  - Added screen change hook in `ScreenSystemLayer overlay.lua`
+  - Added performance timing to `RebuildWheelData` and `BuildFavoritesSection`
+- [x] Add error handling for missing songs/steps
+  - Added safe song accessor functions (`GetSongTitle`, `GetSongDir`, `GetSongGroup`) with pcall wrapping
+  - Added error handling to `GetAllSongs`, `GetSongsInGroup`, `GetAllGroups` SONGMAN API calls
+  - Added safety checks to `Scroll` and `GetFocusedItem` for empty wheel states
+  - Added nil checks throughout FilterSongs and HasValidSteps
+- [x] Handle edge cases (empty favorites, single song, empty wheel)
+  - Favorites already handled by `if #favorites > 0` check
+  - Added placeholder item for empty wheel to prevent crashes
+  - Added focus_index bounds checking in GetFocusedItem
 
 ### Planned Tasks
-- [ ] Identify more elements not used in the dedicab and remove them to make build leaner (remove course mode, ITL, unused graphics, SRPG, GrooveStats, ...)
+- [ ] Identify more elements not used in the dedicab (ITL, SRPG, GrooveStats have 118/227+ refs - significant refactor)
 - [ ] Minimize unused items in metrics.ini
 - [ ] Optimize lazy loading to prevent stuttering
 - [ ] Optimize memory usage (unload off-screen items)
-- [ ] Test edge cases (empty favorites, single song, etc.)
-- [ ] Add error handling for missing songs/steps
+- [ ] Test edge cases (large libraries, fast scrolling)
 - [ ] Performance profiling and optimization
-- [ ] Optimize all touched files in the project and extract common code to functions
-- [ ] Add debug instrumentation to have more information if the build crashes (on previous build, after 90 minutes there was a usual crash)
+- [ ] Extract common code patterns to functions
 
 ### Bug Fixes
 - [ ] TBD
@@ -98,3 +115,6 @@
 ## Won't fix
 - [ ] Timer is broken on SSM, but I won't ever use it.
 - [ ] NotefieldPreview shows some frames of something (I don't know what it is) before showing proper steps (this bug already exists on upstream fork)
+
+## Ideas
+- [ ] A way to automate testing and make it easier to detect regressions

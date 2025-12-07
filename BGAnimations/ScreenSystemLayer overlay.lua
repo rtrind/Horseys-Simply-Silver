@@ -8,7 +8,31 @@ local t = Def.ActorFrame{
 			ThemePrefs.Set("RainbowMode", false)
 			ThemePrefs.Save()
 		end
-	end
+	end,
+	
+	-- Debug: Log screen changes
+	ScreenChangedMessageCommand=function(self)
+		if SL_Debug then
+			local screen = SCREENMAN:GetTopScreen()
+			if screen then
+				SL_Debug.LogScreenChange(screen:GetName())
+			end
+		end
+	end,
+}
+
+-- Debug: Periodic status logging actor
+t[#t+1] = Def.Actor{
+	InitCommand=function(self)
+		-- Update every second to check if we need to log periodic status
+		self:sleep(1):queuecommand("PeriodicCheck")
+	end,
+	PeriodicCheckCommand=function(self)
+		if SL_Debug then
+			SL_Debug.LogPeriodicStatus()
+		end
+		self:sleep(1):queuecommand("PeriodicCheck")
+	end,
 }
 
 -- -----------------------------------------------------------------------

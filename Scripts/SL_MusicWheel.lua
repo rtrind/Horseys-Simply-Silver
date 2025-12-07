@@ -92,17 +92,44 @@ end
 -- Helper Functions
 -- ============================================================================
 
+-- Safe song title accessor - returns empty string if song is nil
+local function GetSongTitle(song)
+	if not song then return "" end
+	local success, result = pcall(function() return song:GetDisplayMainTitle() end)
+	if success and result then return result end
+	return ""
+end
+
+-- Safe song directory accessor
+local function GetSongDir(song)
+	if not song then return "" end
+	local success, result = pcall(function() return song:GetSongDir() end)
+	if success and result then return result end
+	return ""
+end
+
+-- Safe song group accessor
+local function GetSongGroup(song)
+	if not song then return "" end
+	local success, result = pcall(function() return song:GetGroupName() end)
+	if success and result then return result end
+	return ""
+end
+
 -- Check if a song has valid steps for current game mode
 local function HasValidSteps(song)
 	if not song then return false end
 	
-	local steps = song:GetAllSteps()
-	if not steps or #steps == 0 then return false end
+	local success, steps = pcall(function() return song:GetAllSteps() end)
+	if not success or not steps or #steps == 0 then return false end
 	
 	-- Check if at least one step is valid for current players
 	for _, step in ipairs(steps) do
-		if step and step:GetMeter() > 0 then
-			return true
+		if step then
+			local meter_ok, meter = pcall(function() return step:GetMeter() end)
+			if meter_ok and meter and meter > 0 then
+				return true
+			end
 		end
 	end
 	
@@ -111,10 +138,12 @@ end
 
 -- Filter songs to only include those with valid steps
 local function FilterSongs(songs)
+	if not songs then return {} end
+	
 	local filtered = {}
 	
 	for _, song in ipairs(songs) do
-		if HasValidSteps(song) then
+		if song and HasValidSteps(song) then
 			table.insert(filtered, song)
 		end
 	end
@@ -122,21 +151,36 @@ local function FilterSongs(songs)
 	return filtered
 end
 
--- Get all songs from SONGMAN
+-- Get all songs from SONGMAN (with error handling)
 local function GetAllSongs()
-	local all_songs = SONGMAN:GetAllSongs()
+	local success, all_songs = pcall(function() return SONGMAN:GetAllSongs() end)
+	if not success or not all_songs then
+		if SL_Debug then SL_Debug.LogError("GetAllSongs", "Failed to get songs from SONGMAN") end
+		return {}
+	end
 	return FilterSongs(all_songs)
 end
 
--- Get songs in a specific group
+-- Get songs in a specific group (with error handling)
 local function GetSongsInGroup(group_name)
-	local songs = SONGMAN:GetSongsInGroup(group_name)
+	if not group_name or group_name == "" then return {} end
+	
+	local success, songs = pcall(function() return SONGMAN:GetSongsInGroup(group_name) end)
+	if not success or not songs then
+		if SL_Debug then SL_Debug.LogError("GetSongsInGroup", "Failed to get songs for group: " .. tostring(group_name)) end
+		return {}
+	end
 	return FilterSongs(songs)
 end
 
--- Get all group names
+-- Get all group names (with error handling)
 local function GetAllGroups()
-	return SONGMAN:GetSongGroupNames()
+	local success, groups = pcall(function() return SONGMAN:GetSongGroupNames() end)
+	if not success or not groups then
+		if SL_Debug then SL_Debug.LogError("GetAllGroups", "Failed to get group names") end
+		return {}
+	end
+	return groups
 end
 
 -- ============================================================================
@@ -146,6 +190,8 @@ end
 -- Build deduplicated favorites section
 -- Returns: array of song items with favorites metadata
 function SL.MusicWheel.BuildFavoritesSection()
+	local timer_start = SL_Debug and SL_Debug.StartTimer() or nil
+	
 	local favorites_set = {}  -- Use as set for deduplication (stores song dirs)
 	local favorites_list = {}
 	
@@ -225,6 +271,11 @@ function SL.MusicWheel.BuildFavoritesSection()
 	table.sort(favorites_list, function(a, b)
 		return a.song:GetDisplayMainTitle():lower() < b.song:GetDisplayMainTitle():lower()
 	end)
+
+	-- Log performance
+	if SL_Debug and timer_start then
+		SL_Debug.EndTimer(timer_start, "BuildFavoritesSection (" .. #favorites_list .. " songs)", 20)
+	end
 
 	return favorites_list
 end
@@ -1356,7 +1407,14 @@ end
 
 -- Rebuild wheel data and update state
 function SL.MusicWheel.RebuildWheelData(sort_order)
+	-- Performance tracking
+	local timer_start = SL_Debug and SL_Debug.StartTimer() or nil
+	
 	sort_order = sort_order or SL.MusicWheel.State.sort_order
+	
+	if SL_Debug then
+		SL_Debug.LogOperation("RebuildWheelData", "sort: " .. tostring(sort_order))
+	end
 	
 	-- Capture current selection before rebuilding
 	local target_song = SL.MusicWheel.GetFocusedSong()
@@ -1385,6 +1443,19 @@ function SL.MusicWheel.RebuildWheelData(sort_order)
 	
 	SL.MusicWheel.State.items = SL.MusicWheel.BuildWheelData(sort_order)
 	SL.MusicWheel.State.last_rebuild_time = GetTimeSinceStart()
+	
+	-- Handle edge case: empty wheel (no songs available)
+	if #SL.MusicWheel.State.items == 0 then
+		if SL_Debug then
+			SL_Debug.LogError("RebuildWheelData", "Wheel is empty - no songs available for current style/sort")
+		end
+		-- Add a placeholder item so the wheel doesn't crash
+		table.insert(SL.MusicWheel.State.items, {
+			type = "placeholder",
+			display_text = "No songs available",
+			group = "",
+		})
+	end
 	
 	-- Try to restore focus to the target song
 	local found_index = nil
@@ -1415,6 +1486,12 @@ function SL.MusicWheel.RebuildWheelData(sort_order)
 	
 	-- Broadcast rebuild message
 	MESSAGEMAN:Broadcast("MusicWheelRebuilt", {sort_order = sort_order})
+	
+	-- Log performance
+	if SL_Debug and timer_start then
+		local item_count = #SL.MusicWheel.State.items
+		SL_Debug.EndTimer(timer_start, "RebuildWheelData (" .. item_count .. " items)", 50)
+	end
 end
 
 -- ============================================================================
@@ -1491,6 +1568,13 @@ end
 -- Scroll wheel by offset amount
 function SL.MusicWheel.Scroll(offset)
 	local state = SL.MusicWheel.State
+	
+	-- Safety check: ensure we have items to scroll
+	if not state or not state.items or #state.items == 0 then
+		if SL_Debug then SL_Debug.LogError("Scroll", "Cannot scroll: wheel has no items") end
+		return
+	end
+	
 	local new_index = state.focus_index + offset
 	
 	-- Wrap around (cyclical scrolling)
@@ -1509,9 +1593,18 @@ function SL.MusicWheel.Scroll(offset)
 	})
 end
 
--- Get currently focused item
+-- Get currently focused item (with safety checks)
 function SL.MusicWheel.GetFocusedItem()
 	local state = SL.MusicWheel.State
+	if not state or not state.items or #state.items == 0 then
+		return nil
+	end
+	
+	-- Ensure focus_index is within bounds
+	if state.focus_index < 1 or state.focus_index > #state.items then
+		state.focus_index = 1
+	end
+	
 	return state.items[state.focus_index]
 end
 

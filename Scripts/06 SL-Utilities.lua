@@ -309,3 +309,159 @@ function SetPreferredSong()
 		end
 	end
 end
+
+------------------------------------------------------------
+-- DEBUG INSTRUMENTATION
+-- For diagnosing crashes and performance issues
+------------------------------------------------------------
+
+-- Debug configuration
+SL_Debug = {
+	enabled = true,           -- Master switch for debug logging
+	log_memory = true,        -- Log memory usage
+	log_screen_changes = true, -- Log screen transitions
+	log_interval_seconds = 60, -- How often to log periodic stats (in seconds)
+	session_start = nil,       -- Set when theme initializes
+	screen_count = 0,          -- Number of screen transitions
+	last_screen = nil,         -- Last screen name
+	last_periodic_log = 0,     -- Timestamp of last periodic log
+}
+
+-- Get current timestamp in seconds since theme loaded
+-- Uses GetTimeSinceStart() which is provided by Outfox engine
+function SL_Debug.GetUptime()
+	if not SL_Debug.session_start then
+		SL_Debug.session_start = GetTimeSinceStart and GetTimeSinceStart() or 0
+	end
+	local now = GetTimeSinceStart and GetTimeSinceStart() or 0
+	return now - SL_Debug.session_start
+end
+
+-- Format uptime as HH:MM:SS
+function SL_Debug.FormatUptime()
+	local seconds = SL_Debug.GetUptime()
+	local hours = math.floor(seconds / 3600)
+	local mins = math.floor((seconds % 3600) / 60)
+	local secs = seconds % 60
+	return string.format("%02d:%02d:%02d", hours, mins, secs)
+end
+
+-- Get Lua memory usage in KB
+function SL_Debug.GetMemoryKB()
+	return collectgarbage("count")
+end
+
+-- Format memory for logging
+function SL_Debug.FormatMemory()
+	local kb = SL_Debug.GetMemoryKB()
+	if kb > 1024 then
+		return string.format("%.2f MB", kb / 1024)
+	end
+	return string.format("%.2f KB", kb)
+end
+
+-- Log a debug message with timestamp and uptime
+function SL_Debug.Log(category, message)
+	if not SL_Debug.enabled then return end
+	
+	local uptime = SL_Debug.FormatUptime()
+	local mem = SL_Debug.FormatMemory()
+	local log_msg = string.format("[%s] [%s] [Mem: %s] %s", uptime, category, mem, message)
+	
+	Trace(log_msg)
+end
+
+-- Log screen transition
+function SL_Debug.LogScreenChange(screen_name)
+	if not SL_Debug.enabled or not SL_Debug.log_screen_changes then return end
+	
+	SL_Debug.screen_count = SL_Debug.screen_count + 1
+	local prev = SL_Debug.last_screen or "none"
+	SL_Debug.last_screen = screen_name
+	
+	SL_Debug.Log("SCREEN", string.format("#%d: %s (from: %s)", 
+		SL_Debug.screen_count, screen_name, prev))
+end
+
+-- Log periodic status (call from a recurring actor update)
+function SL_Debug.LogPeriodicStatus()
+	if not SL_Debug.enabled or not SL_Debug.log_memory then return end
+	
+	local now = GetTimeSinceStart and GetTimeSinceStart() or 0
+	if now - SL_Debug.last_periodic_log < SL_Debug.log_interval_seconds then
+		return
+	end
+	SL_Debug.last_periodic_log = now
+	
+	-- Force garbage collection to get accurate memory reading
+	collectgarbage("collect")
+	
+	local song = GAMESTATE:GetCurrentSong()
+	local song_name = song and song:GetDisplayMainTitle() or "none"
+	
+	SL_Debug.Log("STATUS", string.format(
+		"Screens: %d | Current Song: %s | Stage: %d",
+		SL_Debug.screen_count,
+		song_name,
+		GAMESTATE:GetCurrentStageIndex() + 1
+	))
+	
+	-- Log MusicWheel state if available
+	if SL and SL.MusicWheel and SL.MusicWheel.State then
+		local state = SL.MusicWheel.State
+		SL_Debug.Log("WHEEL", string.format(
+			"Items: %d | Focus: %d | Sort: %s",
+			#state.items,
+			state.focus_index,
+			state.sort_order
+		))
+	end
+end
+
+-- Log when entering a potentially crash-prone operation
+function SL_Debug.LogOperation(operation_name, details)
+	if not SL_Debug.enabled then return end
+	SL_Debug.Log("OP", string.format("%s: %s", operation_name, details or ""))
+end
+
+-- Log error with context
+function SL_Debug.LogError(context, error_msg)
+	-- Always log errors, even if debug is disabled
+	local uptime = SL_Debug.FormatUptime()
+	local mem = SL_Debug.FormatMemory()
+	local log_msg = string.format("[%s] [ERROR] [Mem: %s] [%s] %s", uptime, mem, context, error_msg)
+	Trace(log_msg)
+end
+
+-- Wrap a function with error logging
+function SL_Debug.SafeCall(context, fn, ...)
+	local success, result = pcall(fn, ...)
+	if not success then
+		SL_Debug.LogError(context, tostring(result))
+		return nil
+	end
+	return result
+end
+
+-- Create a timer for profiling operations
+-- Uses GetTimeSinceStart() which returns seconds with high precision
+function SL_Debug.StartTimer()
+	return GetTimeSinceStart and GetTimeSinceStart() or 0
+end
+
+function SL_Debug.EndTimer(start_time, operation_name, threshold_ms)
+	local now = GetTimeSinceStart and GetTimeSinceStart() or 0
+	local elapsed = (now - start_time) * 1000  -- Convert to ms
+	threshold_ms = threshold_ms or 100  -- Default 100ms threshold
+	
+	if elapsed > threshold_ms then
+		SL_Debug.Log("PERF", string.format("%s took %.2fms (threshold: %dms)", 
+			operation_name, elapsed, threshold_ms))
+	end
+	
+	return elapsed
+end
+
+-- Initialize session tracking
+SL_Debug.session_start = GetTimeSinceStart and GetTimeSinceStart() or 0
+-- Note: Can't call Log here because Trace may not be available during script load
