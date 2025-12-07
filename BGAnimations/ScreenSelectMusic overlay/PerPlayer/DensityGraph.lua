@@ -55,12 +55,6 @@ local af = Def.ActorFrame{
 			self:queuecommand("Redraw")
 		end
 	end,
-	TogglePatternInfoMessageCommand=function(self, params)
-		if params.PlayerNumber == player then
-			showPatternInfo = not showPatternInfo
-			self:queuecommand("TogglePatternInfo")
-		end
-	end,
 }
 
 -- Background quad for the density graph
@@ -121,12 +115,10 @@ af2[#af2+1] = NPS_Histogram(player, width, height)..{
 		self:visible(false)
 	end,
 	RedrawCommand=function(self)
-		self:visible(not showPatternInfo)
+		self:visible(true)
 	end,
-	TogglePatternInfoCommand=function(self)
-		self:visible(not showPatternInfo)
-	end
 }
+
 -- Don't let the density graph parse the chart.
 -- We do this in parent actorframe because we want to "stall" before we parse.
 af2[#af2]["CurrentSteps"..pn.."ChangedMessageCommand"] = nil

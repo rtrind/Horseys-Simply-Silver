@@ -9,15 +9,12 @@ local t = Def.ActorFrame{
     Name="GroupPanes"..pn,
     InitCommand=function(self)
         self:visible(showPatternInfo)
-        Trace("ZarzobPanes["..pn.."] InitCommand: visible="..tostring(showPatternInfo))
     end,
 
     TogglePatternInfoMessageCommand=function(self, params)
-        Trace("ZarzobPanes["..pn.."] received TogglePatternInfoMessage, params.PlayerNumber="..tostring(params.PlayerNumber)..", player="..tostring(player))
         if params.PlayerNumber == player then
             showPatternInfo = not showPatternInfo
             self:visible(showPatternInfo)
-            Trace("ZarzobPanes["..pn.."] toggled: visible="..tostring(showPatternInfo))
         end
     end,
 }

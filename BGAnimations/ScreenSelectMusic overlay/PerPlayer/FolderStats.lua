@@ -42,9 +42,7 @@ local af = Def.ActorFrame{
 		end
 	end,
 	TogglePatternInfoMessageCommand=function(self, params)
-		Trace("FolderStats["..pn.."] received TogglePatternInfoMessage")
 		if params.PlayerNumber == player then
-			Trace("FolderStats["..pn.."] triggering BuildSongLampArray")
 			self:queuecommand("BuildSongLampArray")
 		end
 	end
@@ -81,16 +79,13 @@ af2 = Def.ActorFrame {
 }
 
 af2.BuildSongLampArrayCommand=function(self)
-	Trace("FolderStats["..pn.."] BuildSongLampArray called")
 	if SCREENMAN:GetTopScreen():GetName() == "ScreenSelectMusic" then
 		local profile = PROFILEMAN:GetProfile(player)
 		local profileName = profile:GetDisplayName()
 		-- Use Lua wheel's sort order since engine sort order is nil with custom wheel
 		local sortOrder = SL.MusicWheel and SL.MusicWheel.State and SL.MusicWheel.State.sort_order or GAMESTATE:GetSortOrder()
-		Trace("FolderStats["..pn.."] playerEnabled="..tostring(GAMESTATE:IsPlayerEnabled(player))..", profileName="..profileName..", sortOrder="..tostring(sortOrder))
 		-- Accept both 'Group' (Lua wheel) and 'SortOrder_Group' (engine)
 		if (not GAMESTATE:IsPlayerEnabled(player)) or profileName == "" or (sortOrder ~= 'Group' and sortOrder ~= 'SortOrder_Group') then 
-			Trace("FolderStats["..pn.."] hiding - conditions not met")
 			self:visible(false)
 		else
 			self:visible(true)
@@ -106,7 +101,6 @@ af2.BuildSongLampArrayCommand=function(self)
 			-- Get folder name from current song (works for both song and group header focus)
 			local currentSong = GAMESTATE:GetCurrentSong()
 			local folderName = currentSong and currentSong:GetGroupName() or SL.MusicWheel.GetFocusedGroup() or ""
-			Trace("FolderStats["..pn.."] folderName="..folderName)
 			local songs = SONGMAN:GetSongsInGroup(folderName)
 			local stepstype = GAMESTATE:GetCurrentStyle():GetStepsType()
 			local steps = GAMESTATE:GetCurrentSteps(player)
