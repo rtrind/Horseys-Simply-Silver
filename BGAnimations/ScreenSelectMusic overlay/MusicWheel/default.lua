@@ -68,14 +68,6 @@ local function FindBestSteps(song, stepsType, preferredDiff)
 		return allSteps[1]
 	end
 
-	-- Try exact match first
-	for _, steps in ipairs(allSteps) do
-		if steps:GetDifficulty() == preferredDiff then
-			return steps
-		end
-	end
-
-	-- No exact match - find closest, preferring easier
 	-- Difficulty order: Beginner < Easy < Medium < Hard < Challenge < Edit
 	local difficultyOrder = {
 		Difficulty_Beginner = 1,
@@ -86,8 +78,16 @@ local function FindBestSteps(song, stepsType, preferredDiff)
 		Difficulty_Edit = 6
 	}
 
+	-- Try exact match first
+	for _, steps in ipairs(allSteps) do
+		if steps:GetDifficulty() == preferredDiff then
+			return steps
+		end
+	end
+
+	-- No exact match - find closest, preferring easier
 	local preferredValue = difficultyOrder[preferredDiff] or 3
-	local bestSteps = allSteps[1]
+	local bestSteps = nil
 	local bestDistance = 999
 
 	for _, steps in ipairs(allSteps) do
@@ -96,7 +96,10 @@ local function FindBestSteps(song, stepsType, preferredDiff)
 		local distance = math.abs(stepsValue - preferredValue)
 
 		-- If same distance, prefer easier (lower value)
-		if distance < bestDistance or (distance == bestDistance and stepsValue < difficultyOrder[bestSteps:GetDifficulty()]) then
+		if not bestSteps then
+			bestSteps = steps
+			bestDistance = distance
+		elseif distance < bestDistance or (distance == bestDistance and stepsValue < difficultyOrder[bestSteps:GetDifficulty()]) then
 			bestSteps = steps
 			bestDistance = distance
 		end
@@ -345,7 +348,22 @@ local t = Def.ActorFrame{
 			local currentSteps = GAMESTATE:GetCurrentSteps(pn)
 
 			if #allSteps > 0 and currentSteps then
-				-- Find current difficulty index
+				-- Sort steps by difficulty order
+				local difficultyOrder = {
+					Difficulty_Beginner = 1,
+					Difficulty_Easy = 2,
+					Difficulty_Medium = 3,
+					Difficulty_Hard = 4,
+					Difficulty_Challenge = 5,
+					Difficulty_Edit = 6
+				}
+				table.sort(allSteps, function(a, b)
+					local aVal = difficultyOrder[a:GetDifficulty()] or 99
+					local bVal = difficultyOrder[b:GetDifficulty()] or 99
+					return aVal < bVal
+				end)
+
+				-- Find current difficulty index in sorted list
 				local currentIndex = 1
 				for i, steps in ipairs(allSteps) do
 					if steps == currentSteps then
