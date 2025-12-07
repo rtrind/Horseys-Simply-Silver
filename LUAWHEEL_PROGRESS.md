@@ -113,6 +113,10 @@
   - Removed `CourseOnCommand` from `[MusicWheelItem]`
   - Removed `NumCourseGroupColors` and `CourseGroupColor1` from `[SongManager]`
   - Added comments documenting removed sections
+- [x] Simplify remaining WideScale() calls to 16:9 values only
+  - Removed all 30+ WideScale() calls from metrics.ini
+  - Replaced with direct 16:9 values (second parameter)
+  - Affected sections: MemoryCardDisplay, OptionRow, ScreenSystemLayer, EditMenu, MenuTimer, etc.
 
 ### Planned Tasks
 - [ ] Identify more elements not used in the dedicab (ITL, SRPG, GrooveStats have 118/227+ refs - significant refactor)
@@ -120,7 +124,6 @@
 - [ ] Optimize memory usage (unload off-screen items)
 - [ ] Test edge cases (large libraries, fast scrolling)
 - [ ] Performance profiling and optimization
-- [ ] Simplify remaining WideScale() calls to 16:9 values only
 
 ### Bug Fixes
 - [ ] TBD
