@@ -944,7 +944,10 @@ local function GetPeakNPS(steps)
 		if graph and #graph > 0 then
 			local max_nps = 0
 			for _, val in ipairs(graph) do
-				if val > max_nps then max_nps = val end
+				-- Guard against NaN, non-numbers, and invalid values
+				if type(val) == "number" and val == val and val > max_nps then
+					max_nps = val
+				end
 			end
 			return max_nps
 		end

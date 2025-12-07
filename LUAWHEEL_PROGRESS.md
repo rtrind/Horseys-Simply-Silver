@@ -73,7 +73,6 @@
 - [x] I can still activate the sort menu while the starting gameplay screen is awaiting for a possible start to go to the options
 - [x] Make the difficulty change as a metric on metrics.ini and adjust input handler accordingly
 - [x] Do we need to keep SSM codenames on metrics.ini? We either use them on the input handler, or we let them hardcoded there and remove them from the metrics.
-- [ ] Gameplay does not start when timer reaches zero.
 - [ ] When scrolling fast thru the songs on the wheel, sometimes it stops changing the audio to the current song and continues to play one of the other songs from before. When it finishes, you change to another song and the audio fixes itself.
 
 ## Phase 6: More efficient debugging and testing (Not Started)
