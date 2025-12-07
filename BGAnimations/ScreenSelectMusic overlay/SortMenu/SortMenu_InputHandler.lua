@@ -95,9 +95,6 @@ local input = function(event)
 					MESSAGEMAN:Broadcast('EnterCategory', { Category = focus.new_overlay })
 				elseif focus.new_overlay == "TestInput" then
 					sortmenu:queuecommand("DirectInputToTestInput")
-				elseif focus.new_overlay == "Leaderboard" then
-					-- The leaderboard entry is removed altogether if the service isn't available.
-					sortmenu:queuecommand("DirectInputToLeaderboard")
 				elseif focus.new_overlay == "SongSearch" then
 					-- Direct the input back to the engine, so that the ScreenTextEntry overlay
 					-- works correctly.
@@ -108,12 +105,6 @@ local input = function(event)
 					overlay:GetChild("PaneDisplayMaster"):GetChild("GetScoresRequester"):playcommand("Cancel")
 					overlay:playcommand("DirectInputToEngine")
 					SCREENMAN:SetNewScreen("ScreenReloadSongsSSM")
-				elseif focus.new_overlay == "ViewDownloads" then
-					-- Make sure we cancel the request if it's active before trying to switch screens.
-					-- This prevents the "Stale ActorFrame" error.
-					overlay:GetChild("PaneDisplayMaster"):GetChild("GetScoresRequester"):playcommand("Cancel")
-					overlay:playcommand("DirectInputToEngine")
-					SCREENMAN:SetNewScreen("ScreenViewDownloads")
                 elseif focus.new_overlay == "SwitchProfile" then
                     -- Prevent duplicate prompt openings and debounce rapid Start presses
                     if not canOpenProfilePrompt() then return true end

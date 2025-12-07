@@ -7,7 +7,7 @@ local sort_wheel = setmetatable({}, sick_wheel_mt)
 -- is large enough that I moved it to its own file
 local sortmenu_input = LoadActor("SortMenu_InputHandler.lua", sort_wheel)
 local testinput_input = LoadActor("TestInput_InputHandler.lua")
-local leaderboard_input = LoadActor("Leaderboard_InputHandler.lua")
+-- Leaderboard input handler removed - online features not used
 -- "MT" is my personal means of denoting that this thing (the file, the variable, whatever)
 -- has something to do with a Lua metatable.
 --
@@ -162,11 +162,9 @@ local DirectInputToEngine = function(self)
 
 	screen:RemoveInputCallback(sortmenu_input)
 	screen:RemoveInputCallback(testinput_input)
-	screen:RemoveInputCallback(leaderboard_input)
 
 	self:playcommand("HideSortMenu")
 	overlay:playcommand("HideTestInput")
-	overlay:playcommand("HideLeaderboard")
 	
 	-- Add a small delay before re-enabling input to prevent the Back button
 	-- from bubbling through to the main input handler
@@ -183,10 +181,8 @@ end
 
 
 
--- Only display the View Downloads option if we're connected to
--- GrooveStats and Auto-Downloads are enabled.
 local function DownloadsExist()
-    return SL.GrooveStats.IsConnected and ThemePrefs.Get("AutoDownloadUnlocks")
+    return false
 end
 
 local function AddPlayerSortOptions()
@@ -284,7 +280,6 @@ local wheel_options = {
 	-- If all submenu items are removed because of a condition, that empty submenu will not appear in the resulting list.
 
 	{ {"WhereforeArtThou", "SongSearch"}, not GAMESTATE:IsCourseMode() and ThemePrefs.Get("KeyboardFeatures") },
-	{ {"GrooveStats", "Leaderboard"}, function() return IsServiceAllowed(SL.GrooveStats.Leaderboard) and GAMESTATE:GetCurrentSong() ~= nil end},
 	{ {"SetSummaryText", "SetSummary"}, SL.Global.Stages.PlayedThisGame > 0 },
 	{ 
 		{"", "CategorySorts"}, 
@@ -403,14 +398,12 @@ local t = Def.ActorFrame {
 		local screen = SCREENMAN:GetTopScreen()
 		local overlay = self:GetParent()
 		screen:RemoveInputCallback(testinput_input)
-		screen:RemoveInputCallback(leaderboard_input)
 		screen:AddInputCallback(sortmenu_input)
 		for player in ivalues(PlayerNumber) do
 			SCREENMAN:set_input_redirected(player, true)
 		end
 		self:queuecommand("AssessAvailableChoices"):queuecommand("ShowSortMenu")
 		overlay:playcommand("HideTestInput")
-		overlay:playcommand("HideLeaderboard")
 	end,
 	DirectInputToTestInputCommand=function(self)
 		local screen = SCREENMAN:GetTopScreen()
@@ -424,18 +417,7 @@ local t = Def.ActorFrame {
 
 		overlay:playcommand("ShowTestInput")
 	end,
-	DirectInputToLeaderboardCommand=function(self)
-		local screen = SCREENMAN:GetTopScreen()
-		local overlay = self:GetParent()
-		screen:RemoveInputCallback(sortmenu_input)
-		screen:AddInputCallback(leaderboard_input)
-		for player in ivalues(PlayerNumber) do
-			SCREENMAN:set_input_redirected(player, true)
-		end
-		self:playcommand("HideSortMenu")
-
-		overlay:playcommand("ShowLeaderboard")
-	end,
+	-- DirectInputToLeaderboardCommand removed - online features not used
 	-- this returns input back to the engine and its ScreenSelectMusic
 	DirectInputToEngineCommand=function(self)
 		DirectInputToEngine(self)
@@ -516,20 +498,6 @@ local t = Def.ActorFrame {
 			local game = GAMESTATE:GetCurrentGame():GetName()
 			if (game=="dance" or game=="pump" or game=="smx" or game=="techno") then
 				table.insert(wheel_options, {"FeelingSalty", "TestInput"})
-			end
-		end
-
-		-- Only display the View Downloads option if we're connected to
-		-- GrooveStats and Auto-Downloads are enabled.
-		if SL.GrooveStats.IsConnected and ThemePrefs.Get("AutoDownloadUnlocks") then
-			table.insert(wheel_options, {"NeedMoreRam", "ViewDownloads"})
-		end
-
-		-- The relevant Leaderboard.lua actor is only added if these same conditions are met.
-		if IsServiceAllowed(SL.GrooveStats.Leaderboard) then
-			-- Also only add this if we're actually hovering over a song.
-			if GAMESTATE:GetCurrentSong() then
-				table.insert(wheel_options, {"GrooveStats", "Leaderboard"})
 			end
 		end
 

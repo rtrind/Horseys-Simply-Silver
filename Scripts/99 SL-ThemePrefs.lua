@@ -15,27 +15,9 @@ if type(ThemePrefs) ~= "table" or type(ThemePrefs.Get) ~= "function" then
 end
 
 SL_CustomPrefs.Get = function()
-	 -- emojis are our lingua franca for the 21st century
+	-- emojis are our lingua franca for the 21st century
 	local visualStyleChoices = { "❤", "↖", "🐻", "🦆", "😺", "🎃", "🌈", "⭐", "🤔", "🌀" }
 	local visualStyleValues  = { "Hearts", "Arrows", "Bears", "Ducks", "Cats", "Spooky", "Gay", "Stars", "Thonk", "Technique" }
-
-	local year = Year()
-	local month = MonthOfYear()+1
-	local day = DayOfMonth()
-	local today = year * 10000 + month * 100 + day
-
-	if today >= 20230619 then
-		visualStyleChoices[#visualStyleChoices+1] = "😈"
-		visualStyleValues[#visualStyleValues+1] = "SRPG8"
-	else
-		local prefs = IniFile.ReadFile("/Save/ThemePrefs.ini")
-		local theme = PREFSMAN:GetPreference("Theme")
-		local lastActiveEvent = nil
-		if prefs[theme] and prefs[theme].LastActiveEvent == "SRPG8" then
-			visualStyleChoices[#visualStyleChoices+1] = "😈"
-			visualStyleValues[#visualStyleValues+1] = "SRPG8"
-		end
-	end
 
 	return {
 		AllowFailingOutOfSet =
@@ -244,59 +226,8 @@ SL_CustomPrefs.Get = function()
  		},
 
 		-- - - - - - - - - - - - - - - - - - - -
-		LastActiveEvent =
-		{
-			Default = "",
-		},
-		-- - - - - - - - - - - - - - - - - - - -
-		EnableTournamentMode = {
-			Default = false,
-			Choices =  { THEME:GetString("ThemePrefs","Yes"), THEME:GetString("ThemePrefs", "No") },
-			Values  = { true, false }
-		},
-
-		ScoringSystem = {
-			Default = "EX",
-			Choices  = { "EX", "ITG" }
-		},
-
-		StepStats = {
-			Default = "Show",
-			Choices =  { "Show", "Hide" },
-		},
-
-		EnforceNoCmod = {
-			Default = true,
-			Choices =  { THEME:GetString("ThemePrefs","Yes"), THEME:GetString("ThemePrefs", "No") },
-			Values  = { true, false }
-		},
-		-- - - - - - - - - - - - - - - - - - - -
-		EnableGrooveStats = {
-			Default = false,
-			Choices =  { THEME:GetString("ThemePrefs","Yes"), THEME:GetString("ThemePrefs", "No") },
-			Values  = { true, false }
-		},
-
-		AutoDownloadUnlocks = {
-			Default = false,
-			Choices =  { THEME:GetString("ThemePrefs","Yes"), THEME:GetString("ThemePrefs", "No") },
-			Values  = { true, false }
-		},
-
-		SeparateUnlocksByPlayer = {
-			Default = false,
-			Choices =  { THEME:GetString("ThemePrefs","Yes"), THEME:GetString("ThemePrefs", "No") },
-			Values  = { true, false }
-		},
-
-		-- - - - - - - - - - - - - - - - - - - -
 		-- new Zmod stuff
 		-- - - - - - - - - - - - - - - - - - - -
-		EnableBoogieStats = {
-			Default = false,
-			Choices =  { THEME:GetString("ThemePrefs","Yes"), THEME:GetString("ThemePrefs", "No") },
-			Values  = { true, false }
-		},
 		
 		CloseFolderCodes = {
 			Default = "None",

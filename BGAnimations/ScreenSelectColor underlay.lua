@@ -8,7 +8,7 @@ local ColorSelected = false
 local NumHeartsToDraw = 11  -- 16:9 only
 
 local style = ThemePrefs.Get("VisualStyle")
-local colorTable = (style == "SRPG8") and SL.SRPG8.Colors or SL.DecorativeColors
+local colorTable = SL.DecorativeColors
 local factionBmt
 
 local text
@@ -80,10 +80,6 @@ local wheel_item_mt = {
 					self.heart = subself
 					subself:diffusealpha(0)
 					subself:zoom(0.25)
-					if style == "SRPG8" then
-						-- subself:blend("BlendMode_Add")
-						subself:zoom(0.7)
-					end
 				end,
 				OnCommand=function(subself)
 					subself:sleep(0.2)
@@ -140,10 +136,6 @@ local wheel_item_mt = {
 				self.container:effectmagnitude(0,0,0)
 			end
 
-			if style == "SRPG8" and has_focus then
-				local idx = self.color_index % #colorTable + 1
-				factionBmt:settext(SL.SRPG8.GetFactionName(idx))
-			end
 		end,
 
 		set = function(self, color)
@@ -198,32 +190,6 @@ local t = Def.ActorFrame{
 	wheel:create_actors( "ColorWheel", NumHeartsToDraw, wheel_item_mt, _screen.cx, _screen.cy )
 }
 
-if style == "SRPG8" then
-	t[#t+1] = Def.BitmapText{
-		Font=ThemePrefs.Get("ThemeFont") .. " Normal",
-		Text="Choose your faction!",
-		InitCommand=function(self)
-			self:xy(_screen.cx, 80)
-			self:zoom(1.5)
-			self:diffuse(color(SL.SRPG8.TextColor))
-			self:shadowlength(0.5)
-		end
-	}
-
-	t[#t+1] = Def.BitmapText{
-		Font=ThemePrefs.Get("ThemeFont") .. " Normal",
-		Text="",
-		InitCommand=function(self)
-			factionBmt = self
-
-			self:xy(_screen.cx, _screen.h - 110)
-			self:zoom(2.0)
-			self:diffuse(color(SL.SRPG8.TextColor))
-			self:shadowlength(0.5)
-			self:wrapwidthpixels(150)
-		end
-	}
-end
 
 t[#t+1] = LoadActor( THEME:GetPathS("ScreenSelectMaster", "change") )..{ Name="change_sound", IsAction=true, SupportPan=false }
 t[#t+1] = LoadActor( THEME:GetPathS("common", "start") )..{ Name="start_sound", IsAction=true, SupportPan=false }

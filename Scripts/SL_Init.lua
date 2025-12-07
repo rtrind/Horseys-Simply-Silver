@@ -120,10 +120,6 @@ local PlayerDefaults = {
 				Stats = {}
 			}
 			self.PlayerOptionsString = nil
-			self.ITLData = {
-				["pathMap"] = {},
-				["hashMap"] = {},
-			}
 
 			-- default panes to intialize ScreenEvaluation to
 			-- when only a single player is joined (single, double)
@@ -131,8 +127,6 @@ local PlayerDefaults = {
 			self.EvalPanePrimary   = 1 -- large score and judgment counts
 			self.EvalPaneSecondary = 5 -- offset histogram
 
-			-- The Groovestats API key loaded for this player
-			self.ApiKey = ""
 			-- Whether or not the player is playing on pad.
 			self.IsPadPlayer = false
 			self.Favorites = {}
@@ -445,57 +439,6 @@ SL = {
 		Held=1,
 		HitMine=-1
 	},
-	-- Fields used to determine whether or not we can connect to the
-	-- GrooveStats services.
-	GrooveStats = {
-		-- Whether we're connected to the internet or not.
-		-- Determined once on boot in ScreenSystemLayer.
-		IsConnected = false,
-
-		-- Available GrooveStats services. Subject to change while
-		-- StepMania is running.
-		GetScores = false,
-		Leaderboard = false,
-		AutoSubmit = false,
-
-		-- ************* CURRENT QR VERSION *************
-		-- * Update whenever we change relevant QR code *
-		-- *  and when GrooveStats backend is also      *
-		-- *   updated to properly consume this value.  *
-		-- **********************************************
-		ChartHashVersion = 3,
-
-		-- We want to cache the some of the requests/responses to prevent making the
-		-- same request multiple times in a small timeframe.
-		-- Each entry is keyed with some string hash which maps to a table with the
-		-- following keys:
-		--   Response: string, the JSON-ified response to cache
-		--   Timestamp: number, when the request was made
-		RequestCache = {},
-
-		-- Used to prevent redundant downloads for SRPG unlocks.
-		-- Each entry is keyed on the URL of the download which maps to a table of
-		-- PackNames the unlock has been unpacked to.
-		-- To see if we have already downloaded an unlock, one can just key on
-		-- SL.UnlocksCache[url][packName]
-		-- LoadUnlocksCache() is defined in SL-Helpers-GrooveStats.lua so that must
-		-- be loaded before this file.
-		UnlocksCache = LoadUnlocksCache(),
-	},
-	-- Stores all active/failed downloads.
-	-- Each entry is keyed on a string UUID which maps to a table with the
-	-- following keys:
-	--    Request: HttpRequestFuture, the closure returned by NETWORK:HttpRequest
-	--    Name: string, an identifier for this download.
-	--    Url: string, The URL of the download.
-	--    Destination: string, where the download should be unpacked to.
-	--    CurrentBytes: number, the bytes downloaded so far
-	--    TotalBytes: number, the total bytes of the file
-	--    Complete: bool, whether or not the download has completed
-	--              (either success or failure).
-	-- If a request fails, there will be another key:
-	--    ErrorMessage: string, the reasoning for the failure.
-	Downloads = {}
 }
 
 

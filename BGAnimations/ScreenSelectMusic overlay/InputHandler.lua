@@ -64,11 +64,15 @@ local waitingForOptions = false
 -- Get the MusicWheel actor
 local function GetMusicWheel()
 	local screen = SCREENMAN:GetTopScreen()
-	if screen then
-		local overlay = screen:GetChild("Overlay")
-		if overlay then
-			return overlay:GetChild("MusicWheel")
-		end
+	if not screen then return nil end
+	-- Only try to get MusicWheel on ScreenSelectMusic
+	local screenName = screen:GetName()
+	if screenName ~= "ScreenSelectMusic" and screenName ~= "ScreenSelectMusicWide" then
+		return nil
+	end
+	local overlay = screen:GetChild("Overlay")
+	if overlay and overlay.GetChild then
+		return overlay:GetChild("MusicWheel")
 	end
 	return nil
 end

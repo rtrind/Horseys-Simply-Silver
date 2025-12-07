@@ -7,7 +7,7 @@ return Def.ActorFrame{
 
 	Def.Quad{
 		InitCommand=function(self)
-			self:diffuse((ThemePrefs.Get("VisualStyle") == "SRPG6") and Color.Black or Color.White)
+			self:diffuse(Color.White)
 				:Center()
 				:FullScreen()
 				:sleep(0.6):linear(0.5):diffusealpha(0)

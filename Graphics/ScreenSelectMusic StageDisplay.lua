@@ -34,9 +34,6 @@ if not PREFSMAN:GetPreference("EventMode") then
 				-- StageToColor() is a function defined in _fallback/Scripts/02 Colors.lua
 				if curStage == "Stage_Final" then
 					-- FIXME: there's a really hilarious edge case whereby if _header.lua is recolored to red, this will be hard to see
-					-- 		  currently this only happens because the StaminaRPG recolors _header.lua to match the "faction" color selected by the user (if you play Stamina RPG outside of EventMode, you must just be just a contrarian)
-					-- 		  this may pose a problem in the future if _header.lua gets recolored for any other reason
-					-- 		  to further explain: Stamina RPG uses hardcoded if/then statements, so I would have to (annoyingly) update the conditional here every time there is a new Stamina RPG, for example: [if ThemePrefs.Get("VisualStyle") == "SRPG8" then]
 					self:diffuse(StageToColor(curStage))
 				else end
 			end,

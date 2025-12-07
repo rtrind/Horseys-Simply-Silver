@@ -3,9 +3,6 @@
 -- this is defined in:  ./Scripts/SL_Init.lua
 InitializeSimplyLove()
 
-if ThemePrefs.Get("VisualStyle") == "SRPG8" then
-	SL.SRPG8:MaybeRandomizeColor()
-end
 
 -- -----------------------------------------------------------------------
 -- preliminary Lua setup is done

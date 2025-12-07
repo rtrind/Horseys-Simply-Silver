@@ -734,7 +734,7 @@ GetExJudgmentCounts = function(player)
 		if RCType == "Mines" then
 			-- NoMines still report the total number of mines that exist in a chart, even if they weren't played in the chart.
 			-- If NoMines was set, report 0 for the number of mines as the chart actually didn't have any.
-			-- TODO(teejusb): Track AvoidMine in the future. This is fine for now as ITL compares serverside.
+			-- TODO(teejusb): Track AvoidMine in the future.
 			if po:NoMines() then
 				counts[RCType] = 0
 				counts["total"..RCType] = 0

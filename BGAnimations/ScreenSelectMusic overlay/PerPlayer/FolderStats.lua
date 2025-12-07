@@ -162,7 +162,7 @@ local height = 418
 local width = 164
 
 local style = ThemePrefs.Get("VisualStyle")
-local colorTable = (style == "SRPG6") and SL.SRPG6.Colors or SL.DecorativeColors
+local colorTable = SL.DecorativeColors
 
 -- Border Quad
 af2[#af2+1] = Def.Quad {

@@ -27,9 +27,6 @@ return Def.ActorFrame{
 	-- Record Texts (Machine and/or Personal)
 	LoadActor("./RecordTexts.lua", player),
 
-	-- Event Progress Box
-	LoadActor("./EventProgress.lua", player),
-
 	-- Player Profile card
 	LoadActor("./PlayerProfiles.lua", player)
 }

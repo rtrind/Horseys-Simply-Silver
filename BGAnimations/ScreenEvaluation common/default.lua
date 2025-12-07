@@ -91,9 +91,6 @@ for player in ivalues(Players) do
 	-- Save Ghost Data if player has improved their score
 	t[#t+1] = LoadActor("./PerPlayer/SaveGhostData.lua", player)
 
-	-- Generate the .itl file for the player.
-	-- When the event isn't active, this actor is nil.
-	t[#t+1] = LoadActor("./PerPlayer/ItlFile.lua", player)
 
 	-- Generate the .rpg file for the player to keep track of best rate mod on the songwheel
 	-- When the event isn't active, this actor is nil.
@@ -111,9 +108,7 @@ t[#t+1] = LoadActor("./Panes/default.lua", NumPanes)
 t[#t+1] = LoadActor("./ScoreVocalization.lua")
 -- -----------------------------------------------------------------------
 
--- The actor that will automatically upload scores to GrooveStats.
--- This is only added in "dance" mode and if the service is available.
--- Since this actor also spawns the event overlay it must go on top of everything else
+-- Score submission actor (currently unused)
 t[#t+1] = LoadActor("./Shared/AutoSubmitScore.lua")
 
 return t

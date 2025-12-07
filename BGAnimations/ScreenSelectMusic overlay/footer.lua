@@ -8,9 +8,7 @@ return Def.Quad{
 	Name="SSMWFooter",
 	InitCommand=function(self)
 		self:draworder(90):zoomto(_screen.cx/1.335, 31):vertalign(bottom):xy(_screen.cx,SCREEN_BOTTOM)
-		if ThemePrefs.Get("VisualStyle") == "SRPG6" then
-			self:diffuse(GetCurrentColor(true))
-		elseif DarkUI() then
+		if DarkUI() then
 			self:diffuse(dark)
 		else
 			self:diffuse(light)

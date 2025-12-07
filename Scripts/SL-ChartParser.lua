@@ -192,8 +192,7 @@ local GetSimfileChartString = function(SimfileString, StepsType, Difficulty, Ste
 			-- WHY? Why does StepMania allow the same fields to be defined multiple times
 			-- in a single NOTEDATA stanza.
 			-- We'll just use the first non-empty one.
-			-- TODO(teejsub): Double check the expected behavior even though it is
-			-- currently sufficient for all ranked charts on GrooveStats.
+			-- TODO(teejsub): Double check the expected behavior.
 			local stepsType = ''
 			for st in normalizedNoteData:gmatch("#"..STEPSTYPE..":(.-);") do
 				if stepsType == '' and st ~= '' then
@@ -791,7 +790,7 @@ ParseChartInfo = function(steps, pn)
 			-- Parse out just the contents of the notes
 			local chartString, BPMs = GetSimfileChartString(simfileString, stepsType, difficulty, description, fileType)
 			if chartString ~= nil and BPMs ~= nil then
-				-- We use 16 characters for the V3 GrooveStats hash.
+				-- We use 16 characters for the chart hash.
 				local Hash = BinaryToHex(CRYPTMAN:SHA1String(chartString..BPMs)):sub(1, 16)
 
 				-- Check if there is an & present, we're dealing with a couples chart:

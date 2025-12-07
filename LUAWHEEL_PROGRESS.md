@@ -117,9 +117,54 @@
   - Removed all 30+ WideScale() calls from metrics.ini
   - Replaced with direct 16:9 values (second parameter)
   - Affected sections: MemoryCardDisplay, OptionRow, ScreenSystemLayer, EditMenu, MenuTimer, etc.
+- [x] Remove ITL, SRPG, and GrooveStats code (in progress - major refactor)
+  - **Deleted script files:**
+    - `Scripts/SL_ITL.lua` - ITL tournament integration
+    - `Scripts/SL_SRPG6.lua` - SRPG mode support
+    - `Scripts/SL-Helpers-GrooveStats.lua` - GrooveStats API
+  - **Deleted BGAnimation files:**
+    - `ScreenPromptToSetSrpgVisualStyle overlay.lua`
+    - `ScreenEvaluation common/Shared/EventOverlay.lua`
+    - `ScreenEvaluation common/Shared/AutoSubmitScore.lua`
+    - `ScreenEvaluation common/PerPlayer/Upper/EventProgress.lua`
+    - `ScreenEvaluation common/PerPlayer/ItlFile.lua`
+    - `ScreenEvaluation common/PerPlayer/RpgRatemod.lua`
+    - `ScreenSelectMusic overlay/Leaderboard.lua`
+    - `ScreenSelectMusic overlay/SortMenu/Leaderboard_InputHandler.lua`
+  - **Deleted Graphics files:**
+    - `Graphics/MusicWheelItem RPGRate.lua`
+    - `Graphics/ITL Online/` folder (14 PNG files)
+  - **Modified files:**
+    - `Scripts/SL_Init.lua` - Removed ITLData, ApiKey, SL.GrooveStats, SL.Downloads
+    - `Scripts/99 SL-ThemePrefs.lua` - Removed SRPG8, EnableGrooveStats, BoogieStats prefs
+    - `BGAnimations/ScreenSystemLayer overlay.lua` - Removed GrooveStats service pane
+    - `BGAnimations/ScreenSelectMusic overlay/default.lua` - Removed Leaderboard LoadActor
+    - `BGAnimations/ScreenSelectMusic overlay/SortMenu/default.lua` - Removed leaderboard options
+    - `Graphics/MusicWheelItem Song NormalPart/GetLamp.lua` - Removed ITL lamp logic
+  - **Stubbed files (return empty actor):**
+    - `BGAnimations/ScreenSelectMusic overlay/PerPlayer/Scorebox.lua`
+    - `BGAnimations/ScreenGameplay underlay/PerPlayer/StepStatistics/Scorebox.lua`
+  - **Added stub functions in `Scripts/SL-Helpers.lua`:**
+    - `IsServiceAllowed()` - Always returns false
+    - `IsItlSong()` - Always returns false
+    - `UpdatePathMap()` - No-op
+    - `WriteItlFile()` - No-op
+    - `LoadUnlocksCache()` - Returns empty table
+    - `RemoveStaleCachedRequests()` - No-op
+    - `RequestResponseActor()` - Returns empty ActorFrame
+    - `ParseGrooveStatsIni()` - Returns empty table
+    - `GetGrooveStatsIni()` - Returns nil
+  - **Status:** Theme loads and runs without errors. Remaining ~540 references are mostly:
+    - Comments documenting removed features
+    - Language strings (can be cleaned up later)
+    - Conditional checks that now always evaluate to false (safe)
 
 ### Planned Tasks
-- [ ] Identify more elements not used in the dedicab (ITL, SRPG, GrooveStats have 118/227+ refs - significant refactor)
+- [x] Continue ITL/SRPG/GrooveStats removal (remaining files)
+- [ ] Remove tournament mode
+- [ ] Remove files from the original engine wheel
+- [ ] Remove Outfox online features
+- [ ] Simplify remaining GAMESTATE:IsCourseMode() calls
 - [ ] Optimize lazy loading to prevent stuttering
 - [ ] Optimize memory usage (unload off-screen items)
 - [ ] Test edge cases (large libraries, fast scrolling)
@@ -132,5 +177,5 @@
 - [ ] Timer is broken on SSM, but I won't ever use it.
 - [ ] NotefieldPreview shows some frames of something (I don't know what it is) before showing proper steps (this bug already exists on upstream fork)
 
-## Ideas
+## Ideas for the future
 - [ ] A way to automate testing and make it easier to detect regressions

@@ -1,7 +1,7 @@
 local player = ...
 local pn = ToEnumShortString(player)
 
--- ZarzobPanes contains FolderStats and ScoreBox (pattern info)
+-- ZarzobPanes contains FolderStats (pattern info)
 -- Visible when showPatternInfo is true, hidden when false
 local showPatternInfo = false
 
@@ -20,6 +20,5 @@ local t = Def.ActorFrame{
 }
 
 t[#t+1] = LoadActor("./FolderStats.lua", player)
-t[#t+1] = LoadActor("./ScoreBox.lua", player)
 
 return t

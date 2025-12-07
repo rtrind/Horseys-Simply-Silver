@@ -8,9 +8,7 @@ return Def.ActorFrame{
 	Def.Quad{
 		InitCommand=function(self)
 			self:zoomto(_screen.w, 32):vertalign(top):x(_screen.cx)
-			if ThemePrefs.Get("VisualStyle") == "SRPG8" then
-				self:diffuse(GetCurrentColor(true))
-			elseif DarkUI() then
+			if DarkUI() then
 				self:diffuse(dark)
 			elseif ThemePrefs.Get("VisualStyle") == "Technique" then
 				self:diffusealpha(0)
@@ -20,9 +18,6 @@ return Def.ActorFrame{
 		end,
 		ScreenChangedMessageCommand=function(self)
 			local topscreen = SCREENMAN:GetTopScreen():GetName()
-			if ThemePrefs.Get("VisualStyle") == "SRPG8" then
-				self:diffuse(GetCurrentColor(true))
-			end
 			if ThemePrefs.Get("VisualStyle") == "Technique" then
 				if topscreen == "ScreenSelectMusic" and not ThemePrefs.Get("RainbowMode") then
 					self:diffuse(0, 0, 0, 0.5)
@@ -31,11 +26,6 @@ return Def.ActorFrame{
 				end
 			end
 			self:visible(topscreen ~= "ScreenCRTTestPatterns")
-		end,
-		ColorSelectedMessageCommand=function(self)
-			if ThemePrefs.Get("VisualStyle") == "SRPG8" then
-				self:diffuse(GetCurrentColor(true))
-			end
 		end,
 		VisualStyleSelectedMessageCommand=function(self)
 			if ThemePrefs.Get("VisualStyle") == "Technique" then

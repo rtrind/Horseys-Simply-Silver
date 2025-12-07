@@ -10,9 +10,7 @@ local NoteFieldIsCentered = (GetNotefieldX(player) == _screen.cx)
 local stylename = GAMESTATE:GetCurrentStyle():GetName()
 
 if (not IsUltraWide and stylename == "versus")
-	or (not ThemePrefs.Get("EnableTournamentMode") and
-	    SL[pn].ActiveModifiers.DataVisualizations ~= "Step Statistics")
-	or (ThemePrefs.Get("EnableTournamentMode") and ThemePrefs.Get("StepStats") == "Hide")
+	or SL[pn].ActiveModifiers.DataVisualizations ~= "Step Statistics"
 	or (GetNotefieldWidth() > _screen.w/2)
 	or (NoteFieldIsCentered and not IsUsingWideScreen())
 	or (not IsUltraWide and stylename ~= "single")
@@ -93,7 +91,6 @@ af[#af+1] = Def.ActorFrame{
 	LoadActor("./HoldsMinesRolls.lua", player),
 	LoadActor("./Time.lua", player),
 	LoadActor("./StepsInfo.lua", player),
-	LoadActor("./Scorebox.lua", player),
 	LoadActor("./OffsetCalc.lua", player)
 }
 

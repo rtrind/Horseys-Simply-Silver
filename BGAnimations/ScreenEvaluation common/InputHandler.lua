@@ -168,14 +168,7 @@ return function(event)
 				-- don't allow duplicate panes to show in single/double
 				-- if the above change would result in duplicate panes, increment again
 				
-				-- Skip QR code pane if it has already been submitted
-				-- Is there any other instances we want to skip?
-				QRPane = panes[cn][active_pane[cn]]:GetChild(""):GetChild("HelpText")
-				if QRPane ~= nil and QRPane:GetText() == "Score has already been submitted :)" then
-					active_pane[cn] = ((active_pane[cn]) % #panes[cn]) + 1
-				end
-
-				-- Only show the leaderboard panes (GS/RPG/ITL) if they contain any entries.
+				-- Only show the leaderboard panes if they contain any entries.
 				-- Can't check the results when the screen loads because of response times,
 				-- so we have to check when we change panes.
 
@@ -204,15 +197,7 @@ return function(event)
 				if #players==1 and active_pane[cn] == active_pane[ocn] then
 					active_pane[cn] = (active_pane[cn] % #panes[cn]) + 1
 
-					
-					-- Skip QR code pane if it has already been submitted
-					-- Is there any other instances we want to skip?
-					QRPane = panes[cn][active_pane[cn]]:GetChild(""):GetChild("HelpText")
-					if QRPane ~= nil and QRPane:GetText() == "Score has already been submitted :)" then
-						active_pane[cn] = ((active_pane[cn]) % #panes[cn]) + 1
-					end
-
-					-- Only show the leaderboard panes (GS/RPG/ITL) if they contain any entries.
+					-- Only show the leaderboard panes if they contain any entries.
 					-- Can't check the results when the screen loads because of response times,
 					-- so we have to check when we change panes.
 
@@ -245,7 +230,7 @@ return function(event)
 				-- don't allow duplicate panes to show in single/double
 				-- if the above change would result in duplicate panes, decrement again
 
-				-- Only show the leaderboard panes (GS/RPG/ITL) if they contain any entries.
+				-- Only show the leaderboard panes if they contain any entries.
 				-- Can't check the results when the screen loads because of response times,
 				-- so we have to check when we change panes.
 
@@ -271,13 +256,6 @@ return function(event)
 					if panes[cn][active_pane[cn]]:GetChild(""):GetChild("HighScoreList") == nil then checkskip = false end
 				end
 				
-				-- Skip QR code pane if it has already been submitted
-				-- Is there any other instances we want to skip?
-				QRPane = panes[cn][active_pane[cn]]:GetChild(""):GetChild("HelpText")
-				if QRPane ~= nil and QRPane:GetText() == "Score has already been submitted :)" then
-					active_pane[cn] = ((active_pane[cn] - 2) % #panes[cn]) + 1
-				end
-					
 				if #players==1 and active_pane[cn] == active_pane[ocn] then
 					active_pane[cn] = ((active_pane[cn] - 2) % #panes[cn]) + 1
 
@@ -299,14 +277,6 @@ return function(event)
 						if panes[cn][active_pane[cn]]:GetChild(""):GetChild("HighScoreList") == nil then checkskip = false end
 					end
 					
-					-- Skip QR code pane if it has already been submitted
-					-- Is there any other instances we want to skip?
-					QRPane = panes[cn][active_pane[cn]]:GetChild(""):GetChild("HelpText")
-					if QRPane ~= nil and QRPane:GetText() == "Score has already been submitted :)" then
-						active_pane[cn] = ((active_pane[cn] - 2) % #panes[cn]) + 1
-					end
-
-
 				end
 			end
 

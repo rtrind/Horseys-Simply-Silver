@@ -17,8 +17,7 @@ local args = {
 				--   https://quietly-turning.github.io/Lua-For-SM5/LuaAPI#Screens-Screen-PostScreenMessage
 				--   https://github.com/stepmania/stepmania/blob/1c869edab5/Docs/Themerdocs/ScreenMessages.txt
 
-				-- Force fail the player on this stage, since for some reason it treats the score as a pass
-				-- (and submits to GrooveStats!!) otherwise.
+				-- Force fail the player on this stage, since for some reason it treats the score as a pass otherwise.
 				local pss = STATSMAN:GetCurStageStats():GetPlayerStageStats(player)
 				pss:FailPlayer()
 				

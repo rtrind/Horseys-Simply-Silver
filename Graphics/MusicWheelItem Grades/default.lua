@@ -39,7 +39,6 @@ local function GetLamp(song)
 	
 	if steps == nil then return nil end
 	
-	-- Check ITL File
 	local itl_lamp = nil
 	local song_dir = song:GetSongDir()
 	if song_dir ~= nil and #song_dir ~= 0 then

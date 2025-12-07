@@ -37,7 +37,7 @@ if not GAMESTATE:IsCourseMode() then
 	local song_dir = song:GetSongDir()
 	local group = string.lower(song:GetGroupName())
 	local tourneyPack = false
-	local tourneyPacks = {"itl", "rip"}
+	local tourneyPacks = {"rip"}
 	for pack in ivalues(tourneyPacks) do
 		if string.find(group,pack) ~= nil then tourneyPack = true end
 	end
