@@ -2,6 +2,97 @@
 -- Restores functionality lost by switching to ScreenWithMenuElements
 -- Reads codes from metrics.ini to preserve original bindings
 
+-- Keyboard letter to Title sort jump feature
+-- Maps DeviceButton_X to uppercase letter for quick navigation
+local function GetLetterFromDeviceButton(deviceButton)
+	if not deviceButton then return nil end
+	-- DeviceButton format: "DeviceButton_a", "DeviceButton_b", etc.
+	-- Also handle potential variations like "DeviceButton_A" or with spaces
+	local letter = deviceButton:match("DeviceButton_([a-zA-Z])$")
+	if letter and #letter == 1 then
+		return letter:upper()
+	end
+	return nil
+end
+
+-- Jump to a letter group in Title sort
+local function JumpToLetterGroup(letter)
+	if not letter or not SL.MusicWheel then return false end
+	
+	-- Switch to Title sort if not already
+	local state = SL.MusicWheel.State
+	if state.sort_order ~= "SortOrder_Title" then
+		SL.MusicWheel.RebuildWheelData("SortOrder_Title")
+	end
+	
+	-- Find the group header that starts with this letter
+	local target_index = nil
+	for i, item in ipairs(state.items) do
+		if item.type == "group_header" then
+			local group_letter = item.group_name:sub(1, 1):upper()
+			if group_letter == letter then
+				target_index = i
+				break
+			elseif group_letter > letter then
+				-- Passed the letter, use previous group or this one
+				if not target_index then target_index = i end
+				break
+			end
+			target_index = i -- Keep track of last group before target
+		end
+	end
+	
+	if target_index then
+		-- Get the target group name
+		local group_item = state.items[target_index]
+		if group_item and group_item.type == "group_header" then
+			local group_name = group_item.group_name
+			
+			-- Close all groups and open only the target group
+			state.open_groups = {}
+			state.open_groups[group_name] = true
+			state.items = SL.MusicWheel.BuildWheelData(state.sort_order)
+			
+			-- Re-find the group header after rebuild
+			for i, item in ipairs(state.items) do
+				if item.type == "group_header" and item.group_name == group_name then
+					target_index = i
+					break
+				end
+			end
+			
+			-- Focus on first song after the group header
+			for i = target_index + 1, #state.items do
+				if state.items[i].type == "song" then
+					state.focus_index = i
+					local song = state.items[i].song
+					GAMESTATE:SetCurrentSong(song)
+					
+					-- Update steps for all players
+					local steps_type = GAMESTATE:GetCurrentStyle():GetStepsType()
+					local compatible_steps = song:GetStepsByStepsType(steps_type)
+					if compatible_steps and #compatible_steps > 0 then
+						for player in ivalues(GAMESTATE:GetHumanPlayers()) do
+							GAMESTATE:SetCurrentSteps(player, compatible_steps[1])
+						end
+					end
+					break
+				elseif state.items[i].type == "group_header" then
+					-- Hit next group, stay on header
+					state.focus_index = target_index
+					break
+				end
+			end
+		end
+		
+		-- Broadcast to update wheel display
+		MESSAGEMAN:Broadcast("MusicWheelRebuilt", {letter_jump = letter})
+		return true
+	end
+	
+	return false
+end
+
 -- Shared state for Back button cooldown (set by EscapeFromEventMode)
 if not _G.SSM_ignore_back_until then
 	_G.SSM_ignore_back_until = 0
@@ -160,13 +251,42 @@ local scrollQueue = {
 local chordDetectionWindow = 0.05 -- 50ms window
 
 local input = function(event)
-	if not event.PlayerNumber or not event.GameButton then return false end
+	-- Keyboard letter jump feature (only when KeyboardFeatures is enabled)
+	-- Check for unmapped keyboard letter presses FIRST (before PlayerNumber check)
+	-- Keyboard input may not have PlayerNumber set
+	if ThemePrefs.Get("KeyboardFeatures") and event.type == "InputEventType_FirstPress" then
+		-- event.button is empty string for unmapped keys
+		local rawButton = event.button
+		if rawButton == "" and event.DeviceInput and event.DeviceInput.button then
+			local deviceButton = event.DeviceInput.button
+			local letter = GetLetterFromDeviceButton(deviceButton)
+			if letter and not _G.SSM_OverlayActive and not waitingForOptions then
+				-- Don't process if input is redirected (overlay open)
+				local anyRedirected = false
+				for player in ivalues(GAMESTATE:GetHumanPlayers()) do
+					if SCREENMAN:get_input_redirected(player) then
+						anyRedirected = true
+						break
+					end
+				end
+				if not anyRedirected and JumpToLetterGroup(letter) then
+					return true
+				end
+			end
+		end
+	end
+	
+	-- For other input handling, require PlayerNumber
+	if not event.PlayerNumber then return false end
 	
 	local pn = event.PlayerNumber
 	local button = event.GameButton
 	local screen = SCREENMAN:GetTopScreen()
 	local overlay = screen:GetChild("Overlay")
 	local wheel = GetMusicWheel()
+	
+	-- For other input handling, require GameButton
+	if not button then return false end
 	
 	-- Track button state
 	if event.type == "InputEventType_FirstPress" then
