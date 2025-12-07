@@ -63,10 +63,6 @@ t[#t+1] = LoadActor("./Shared/Background.lua")
 -- the title of the song and its graphical banner, if there is one
 t[#t+1] = LoadActor("./Shared/TitleAndBanner.lua")
 
--- text to display BPM range (and ratemod if ~= 1.0) and song length immediately
--- under the banner
-t[#t+1] = LoadActor("./Shared/SongFeatures.lua")
-
 -- store some attributes of this playthrough of this song in the global SL table
 -- for later retrieval on ScreenEvaluationSummary
 t[#t+1] = LoadActor("./Shared/GlobalStorage.lua")
