@@ -125,9 +125,9 @@ local function UpdateScrollInterval()
 	-- Protect against divide by zero or negative
 	if speed < 1 then speed = 1 end
 	
-	-- Use square root curve to compress high speeds
-	-- Formula: ItemsPerSec = sqrt(Speed) * 3
-	local itemsPerSec = math.sqrt(speed) * 3
+	-- Since rapid scrolling no longer triggers song previews, we can scroll faster
+	-- Speed 1 = 4 items/sec, Speed 15 = 19 items/sec, Speed 25 = 29 items/sec
+	local itemsPerSec = speed + 3
 	scrollInterval = 1 / itemsPerSec
 end
 
