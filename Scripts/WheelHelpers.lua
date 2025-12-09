@@ -14,9 +14,12 @@ local AwardMap = {
 
 
 local LampCache = {}
+local LampCacheSize = 0
+local MAX_CACHE_SIZE = 500  -- Limit cache to prevent memory accumulation
 
 function WheelHelpers.ClearCache()
 	LampCache = {}
+	LampCacheSize = 0
 end
 
 function WheelHelpers.GetLamp(song, player)
@@ -118,7 +121,14 @@ function WheelHelpers.GetLamp(song, player)
         end
 	end
 
+	-- Limit cache size to prevent memory accumulation during long sessions
+	if LampCacheSize >= MAX_CACHE_SIZE then
+		LampCache = {}
+		LampCacheSize = 0
+	end
+	
 	LampCache[key] = {best_lamp, tap_count, best_grade}
+	LampCacheSize = LampCacheSize + 1
 	return best_lamp, tap_count, best_grade
 end
 
