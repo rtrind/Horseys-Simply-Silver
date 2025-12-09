@@ -229,12 +229,6 @@ SL_CustomPrefs.Get = function()
 		-- new Zmod stuff
 		-- - - - - - - - - - - - - - - - - - - -
 		
-		CloseFolderCodes = {
-			Default = "None",
-			Choices = { "None", "Up-Down", "Down-Up", "Select-MenuUp" },
-			Values = { "Off", "CloseFolder1", "CloseFolder2", "CloseFolder3" },
-		},
-
 		ThemeFont = {
 			Default = "Common",
 			Choices = { THEME:GetString("ThemePrefs","Wendy"), THEME:GetString("ThemePrefs", "Mega"), THEME:GetString("ThemePrefs", "Unprofessional") },
