@@ -519,6 +519,37 @@ local t = Def.ActorFrame{
 		if not updates then return end
 
 		local state = SL.MusicWheel.State
+
+		-- If <Favorites> section needs to appear or disappear, do a full rebuild
+		if updates.needs_rebuild then
+			-- Calculate position adjustment before rebuild
+			-- When favorites_added: new header appears at index 1, so current focus shifts down by 1
+			-- When favorites_removed: header at index 1 disappears, so current focus shifts up by 1
+			local focus_adjustment = 0
+			if updates.rebuild_type == "favorites_added" then
+				-- <Favorites> header will be inserted at position 1
+				-- All existing items shift down by 1
+				focus_adjustment = 1
+			elseif updates.rebuild_type == "favorites_removed" then
+				-- <Favorites> header at position 1 will be removed
+				-- All items shift up by 1
+				focus_adjustment = -1
+			end
+			
+			-- Rebuild wheel data for current sort order
+			state.items = SL.MusicWheel.BuildWheelData(state.sort_order)
+			
+			-- Adjust focus index to compensate for the structural change
+			local new_focus = state.focus_index + focus_adjustment
+			-- Clamp to valid range
+			new_focus = math.max(1, math.min(new_focus, #state.items))
+			state.focus_index = new_focus
+			
+			wheel:set_info_set(state.items, state.focus_index)
+			return
+		end
+
+		-- Otherwise, just update the specific items that changed
 		if updates.focused_item_index and state.items[updates.focused_item_index] then
 			wheel:set_element_info(updates.focused_item_index, state.items[updates.focused_item_index])
 		end

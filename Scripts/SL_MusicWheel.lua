@@ -252,6 +252,126 @@ local function GetAllGroups()
 	return groups
 end
 
+-- Get all groups sorted alphabetically (matches wheel display order)
+local function GetAllGroupsSorted()
+	local groups = GetAllGroups()
+	table.sort(groups, function(a, b)
+		return a:lower() < b:lower()
+	end)
+	return groups
+end
+
+-- Get numeric value for a difficulty (for comparison)
+-- Handles both enum values and string keys
+local function GetDifficultyValue(difficulty)
+	if not difficulty then return 3 end  -- Default to Medium
+	
+	-- Map of difficulty values (built lazily to avoid issues with enum loading order)
+	local order = {
+		[Difficulty_Beginner] = 1,
+		[Difficulty_Easy] = 2,
+		[Difficulty_Medium] = 3,
+		[Difficulty_Hard] = 4,
+		[Difficulty_Challenge] = 5,
+		[Difficulty_Edit] = 6,
+		-- String versions for profile file compatibility
+		["Difficulty_Beginner"] = 1,
+		["Difficulty_Easy"] = 2,
+		["Difficulty_Medium"] = 3,
+		["Difficulty_Hard"] = 4,
+		["Difficulty_Challenge"] = 5,
+		["Difficulty_Edit"] = 6,
+	}
+	
+	return order[difficulty] or 3
+end
+
+-- Find the first song item in a list of wheel items
+-- Returns: song, index or nil, nil if not found
+local function FindFirstSongInItems(items)
+	if not items then return nil, nil end
+	for i, item in ipairs(items) do
+		if item.type == "song" then
+			return item.song, i
+		end
+	end
+	return nil, nil
+end
+
+-- Find the first group header in a list of wheel items
+-- Returns: group_name, index or nil, nil if not found
+local function FindFirstGroupHeaderInItems(items)
+	if not items then return nil, nil end
+	for i, item in ipairs(items) do
+		if item.type == "group_header" and item.group_name then
+			return item.group_name, i
+		end
+	end
+	return nil, nil
+end
+
+-- Find steps matching a preferred difficulty from a list of compatible steps
+-- Returns the best matching steps, or first available if no match
+-- @param compatible_steps: array of Steps objects
+-- @param preferred_difficulty: Difficulty enum or string
+-- @return Steps object or nil
+local function FindStepsByPreferredDifficulty(compatible_steps, preferred_difficulty)
+	if not compatible_steps or #compatible_steps == 0 then return nil end
+	
+	-- If no preference, return first available
+	if not preferred_difficulty then
+		return compatible_steps[1]
+	end
+	
+	-- Convert string difficulty to enum if needed
+	local diff_to_match = preferred_difficulty
+	if type(preferred_difficulty) == "string" then
+		diff_to_match = _G[preferred_difficulty] or preferred_difficulty
+	end
+	
+	-- Try to find exact match
+	for _, steps in ipairs(compatible_steps) do
+		if steps:GetDifficulty() == diff_to_match then
+			return steps
+		end
+	end
+	
+	-- No exact match - find closest
+	local target_value = GetDifficultyValue(diff_to_match)
+	local best_steps = nil
+	local best_distance = 999
+	
+	for _, steps in ipairs(compatible_steps) do
+		local steps_value = GetDifficultyValue(steps:GetDifficulty())
+		local distance = math.abs(steps_value - target_value)
+		if distance < best_distance then
+			best_distance = distance
+			best_steps = steps
+		end
+	end
+	
+	return best_steps or compatible_steps[1]
+end
+
+-- Get player's preferred difficulty from various sources
+-- Priority: 1. Provided difficulties table, 2. Engine preference
+-- @param pn: PlayerNumber
+-- @param difficulties_table: optional table {[pn] = difficulty}
+-- @return Difficulty enum or nil
+local function GetPlayerPreferredDifficulty(pn, difficulties_table)
+	-- Check provided difficulties table first
+	if difficulties_table and difficulties_table[pn] then
+		return difficulties_table[pn]
+	end
+	
+	-- Fallback to engine's preferred difficulty
+	if PROFILEMAN:IsPersistentProfile(pn) then
+		return GAMESTATE:GetPreferredDifficulty(pn)
+	end
+	
+	return nil
+end
+
 -- ============================================================================
 -- Favorites Management
 -- ============================================================================
@@ -351,6 +471,8 @@ end
 
 -- Update state metadata for favorites changes without rebuilding the full wheel.
 -- Returns a table describing which indices changed so the visuals can be refreshed.
+-- If needs_rebuild is true, the caller should rebuild the entire wheel.
+-- rebuild_type: "favorites_added" (0->1+) or "favorites_removed" (1+->0)
 function SL.MusicWheel.UpdateFavoritesMetadata()
 	local state = SL.MusicWheel.State
 	if not state or not state.items or #state.items == 0 then return nil end
@@ -358,7 +480,9 @@ function SL.MusicWheel.UpdateFavoritesMetadata()
 	local result = {
 		focused_item_index = nil,
 		favorites_header_index = nil,
-		favorites_count = nil
+		favorites_count = nil,
+		needs_rebuild = false,  -- True when <Favorites> section needs to appear/disappear
+		rebuild_type = nil,     -- "favorites_added" or "favorites_removed"
 	}
 
 	-- Update focused song metadata so heart icons and other per-item data stay in sync.
@@ -379,19 +503,48 @@ function SL.MusicWheel.UpdateFavoritesMetadata()
 	-- When using Group sort, keep the <Favorites> header count in sync.
 	if state.sort_order == "SortOrder_Group" then
 		local favorites = SL.MusicWheel.BuildFavoritesSection()
+		local new_count = #favorites
 		state.favorites_cache = favorites
-		result.favorites_count = #favorites
+		result.favorites_count = new_count
 
+		-- Check if <Favorites> header currently exists and find its position
+		local header_exists = false
+		local header_index = nil
 		for index, item in ipairs(state.items) do
 			if item.type == "group_header" and item.group_name == "<Favorites>" then
-				item.song_count = #favorites
+				header_exists = true
+				header_index = index
+				item.song_count = new_count
 				result.favorites_header_index = index
 				break
 			end
 		end
+
+		-- Check if we're currently inside the <Favorites> section
+		-- (focused on header or on a song within the favorites group)
+		local inside_favorites = false
+		if focused_item then
+			if focused_item.type == "group_header" and focused_item.group_name == "<Favorites>" then
+				inside_favorites = true
+			elseif focused_item.type == "song" and focused_item.group == "<Favorites>" then
+				inside_favorites = true
+			end
+		end
+
+		-- Detect transitions that require a full rebuild:
+		-- 1. No header exists but we now have favorites (0 -> 1+)
+		if not header_exists and new_count > 0 then
+			result.needs_rebuild = true
+			result.rebuild_type = "favorites_added"
+		-- 2. Header exists but we now have 0 favorites (1+ -> 0)
+		--    BUT: Don't remove if we're currently inside the favorites section
+		elseif header_exists and new_count == 0 and not inside_favorites then
+			result.needs_rebuild = true
+			result.rebuild_type = "favorites_removed"
+		end
 	end
 
-	if not result.focused_item_index and not result.favorites_header_index then
+	if not result.focused_item_index and not result.favorites_header_index and not result.needs_rebuild then
 		return nil
 	end
 
@@ -544,14 +697,8 @@ function SL.MusicWheel.BuildWheelData_Group()
 		end
 	end
 	
-	-- 2. Add Normal Groups
-	local groups = GetAllGroups()
-	
-	-- Sort groups alphabetically
-	table.sort(groups, function(a, b)
-		return a:lower() < b:lower()
-	end)
-	
+	-- 2. Add Normal Groups (sorted alphabetically)
+	local groups = GetAllGroupsSorted()
 	local group_index_counter = 0
 	
 	-- Add each group as a header, and songs if open
@@ -1989,15 +2136,34 @@ function SL.MusicWheel.Initialize()
 			SL.MusicWheel.State.open_groups[song_group] = true
 		end
 	else
-		-- Fallback: Open first group by default
-		local groups = GetAllGroups()
-		if #groups > 0 then
-			SL.MusicWheel.State.open_groups[groups[1]] = true
+		-- Fallback: Open first group that has songs for current style
+		local sorted_groups = GetAllGroupsSorted()
+		Trace("[MusicWheel] Fallback: checking " .. #sorted_groups .. " groups for songs")
+		for _, group_name in ipairs(sorted_groups) do
+			local songs = GetSongsInGroupForCurrentStyle(group_name)
+			Trace("[MusicWheel] Group '" .. group_name .. "' has " .. #songs .. " songs")
+			if #songs > 0 then
+				SL.MusicWheel.State.open_groups[group_name] = true
+				Trace("[MusicWheel] Opened group: " .. group_name)
+				break
+			end
 		end
 	end
 	
-	-- Build initial wheel data
-	SL.MusicWheel.RebuildWheelData("SortOrder_Group")
+	-- Log open_groups state
+	local open_count = 0
+	for k, v in pairs(SL.MusicWheel.State.open_groups) do
+		if v then open_count = open_count + 1 end
+	end
+	Trace("[MusicWheel] Open groups count: " .. open_count)
+	
+	-- Build initial wheel data (after setting which groups are open)
+	-- Use BuildWheelData directly instead of RebuildWheelData to preserve open_groups
+	SL.MusicWheel.State.sort_order = "SortOrder_Group"
+	SL.MusicWheel.State.items = SL.MusicWheel.BuildWheelData("SortOrder_Group")
+	SL.MusicWheel.State.last_rebuild_time = GetTimeSinceStart and GetTimeSinceStart() or 0
+	
+	Trace("[MusicWheel] After rebuild, items count: " .. #SL.MusicWheel.State.items)
 	
 	-- Try to focus on the target song, or fall back to first song
 	local focus_song = nil
@@ -2013,89 +2179,31 @@ function SL.MusicWheel.Initialize()
 	end
 	
 	-- If no target song found, use first song in wheel
+	-- (The fallback logic above ensures at least one group with songs is open)
 	if not focus_song then
-		for i, item in ipairs(SL.MusicWheel.State.items) do
-			if item.type == "song" then
-				focus_song = item.song
-				focus_index = i
-				break
-			end
-		end
+		focus_song, focus_index = FindFirstSongInItems(SL.MusicWheel.State.items)
+		focus_index = focus_index or 1
+		Trace("[MusicWheel] FindFirstSongInItems returned: " .. tostring(focus_song and focus_song:GetDisplayMainTitle() or "nil") .. " at index " .. tostring(focus_index))
 	end
 	
 	SL.MusicWheel.State.focus_index = focus_index
+	Trace("[MusicWheel] Final focus_index: " .. focus_index .. ", focus_song: " .. tostring(focus_song and focus_song:GetDisplayMainTitle() or "nil"))
 	
 	-- Set initial song in GAMESTATE
 	if focus_song then
 		GAMESTATE:SetCurrentSong(focus_song)
+		Trace("[MusicWheel] Set GAMESTATE song: " .. focus_song:GetDisplayMainTitle())
 		
 		-- Set initial steps for all players
 		local steps_type = GAMESTATE:GetCurrentStyle():GetStepsType()
+		local difficulties_table = last_played and last_played.difficulties
 		
 		for pn in ivalues(GAMESTATE:GetHumanPlayers()) do
-			local steps_to_set = nil
-			
-			-- Determine the player's preferred difficulty
-			-- Priority: 1. Per-player difficulty from last_played, 2. Session data, 3. Engine preference
-			local player_difficulty = nil
-			
-			-- First check per-player difficulties from last_played (includes session data)
-			if last_played and last_played.difficulties and last_played.difficulties[pn] then
-				player_difficulty = last_played.difficulties[pn]
-			end
-			
-			-- Fallback to engine's preferred difficulty
-			if not player_difficulty and PROFILEMAN:IsPersistentProfile(pn) then
-				player_difficulty = GAMESTATE:GetPreferredDifficulty(pn)
-			end
-			
-			-- Find steps matching the preferred difficulty
+			local player_difficulty = GetPlayerPreferredDifficulty(pn, difficulties_table)
 			local compatible_steps = focus_song:GetStepsByStepsType(steps_type)
-			if compatible_steps and #compatible_steps > 0 then
-				if player_difficulty then
-					-- Convert string difficulty to enum if needed (profile file stores as string)
-					local diff_to_match = player_difficulty
-					if type(player_difficulty) == "string" then
-						diff_to_match = _G[player_difficulty] or player_difficulty
-					end
-					
-					-- Try to find exact match
-					for _, steps in ipairs(compatible_steps) do
-						if steps:GetDifficulty() == diff_to_match then
-							steps_to_set = steps
-							break
-						end
-					end
-					
-					-- If no exact match, find closest
-					if not steps_to_set then
-						local diff_order = {
-							[Difficulty_Beginner] = 1, ["Difficulty_Beginner"] = 1,
-							[Difficulty_Easy] = 2, ["Difficulty_Easy"] = 2,
-							[Difficulty_Medium] = 3, ["Difficulty_Medium"] = 3,
-							[Difficulty_Hard] = 4, ["Difficulty_Hard"] = 4,
-							[Difficulty_Challenge] = 5, ["Difficulty_Challenge"] = 5,
-							[Difficulty_Edit] = 6, ["Difficulty_Edit"] = 6
-						}
-						local target_value = diff_order[diff_to_match] or diff_order[player_difficulty] or 3
-						local best_distance = 999
-						
-						for _, steps in ipairs(compatible_steps) do
-							local steps_value = diff_order[steps:GetDifficulty()] or 3
-							local distance = math.abs(steps_value - target_value)
-							if distance < best_distance then
-								best_distance = distance
-								steps_to_set = steps
-							end
-						end
-					end
-				end
-				
-				-- Fallback to first available steps
-				if not steps_to_set then
-					steps_to_set = compatible_steps[1]
-				end
-				
+			local steps_to_set = FindStepsByPreferredDifficulty(compatible_steps, player_difficulty)
+			
+			if steps_to_set then
 				GAMESTATE:SetCurrentSteps(pn, steps_to_set)
 			end
 		end
