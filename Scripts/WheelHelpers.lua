@@ -110,13 +110,12 @@ function WheelHelpers.GetLamp(song, player)
 			else best_lamp = 51 end
 		end
 
-        -- Track best grade (HIGHER enum value is BETTER grade)
-        -- Grade enum: Grade_Tier01 (AAAA) < ... < Grade_Tier17 (D) < Grade_Failed
-        -- So we want the MAXIMUM grade value (best performance)
-        local prev_best = best_grade
+        -- Track best grade (LOWER tier number is BETTER grade)
+        -- Grade enum: Grade_Tier01 (AAAA) > Grade_Tier02 (AAA) > ... > Grade_Tier17 (D) > Grade_Failed
+        -- So we want the MINIMUM grade value (best performance)
         if best_grade == nil then
             best_grade = grade
-        elseif grade ~= nil and grade > best_grade then
+        elseif grade ~= nil and grade ~= "Grade_Failed" and (best_grade == "Grade_Failed" or grade < best_grade) then
             best_grade = grade
         end
 	end
