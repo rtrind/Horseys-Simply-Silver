@@ -200,8 +200,8 @@ for i, pn in ipairs(GAMESTATE:GetEnabledPlayers()) do
             OptionsListStartMessageCommand=function(self) self:playcommand("Refresh") end,
 
             RefreshCommand=function(self)
-                -- Hide INSTANTLY to prevent garbage frames from showing, then fade in after delay
-                self:stoptweening():diffusealpha(0)
+                -- Hide instantly - use finishtweening instead of stoptweening to avoid NoteField state issues
+                self:finishtweening():diffusealpha(0)
                 self:AutoPlay(false)
                 local ChartArray = nil
 
