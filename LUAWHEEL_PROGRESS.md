@@ -196,9 +196,9 @@
 
 ### Extra features
 - [x] Clear song (set to nil) when rapid scrolling starts to stop preview immediately
-- [ ] Remove extra languages from the menu (leave only en + pt-br)
-- [ ] Remove Lock Course Difficulties in Arcade Options
-- [ ] Rename all instances of Simply Love to Simply DDR (like the options menu)
+- [x] Remove extra languages from the menu (leave only en + pt-br)
+- [x] Remove Lock Course Difficulties in Arcade Options
+- [x] Rename all instances of Simply Love to Simply DDR (like the options menu)
 
 ## Won't fix
 

@@ -49,6 +49,34 @@ OperatorMenuOptionRows.Theme = function()
 	}
 end
 
+OperatorMenuOptionRows.Language = function()
+	-- Only show English and Brazilian Portuguese
+	local choices = { "en", "pt-br" }
+	local display = { "English", "Português Brasileiro" }
+
+	return {
+		Name = "Language",
+		Choices = display,
+		LayoutType = "ShowAllInRow",
+		SelectType = "SelectOne",
+		OneChoiceForAllPlayers = true,
+		ExportOnChange = false,
+		LoadSelections = function(self, list, pn)
+			local lang = PREFSMAN:GetPreference("Language") or "en"
+			local i = FindInTable(lang, choices) or 1
+			list[i] = true
+		end,
+		SaveSelections = function(self, list, pn)
+			for i = 1, #choices do
+				if list[i] then
+					PREFSMAN:SetPreference("Language", choices[i])
+					break
+				end
+			end
+		end,
+	}
+end
+
 OperatorMenuOptionRows.EditorNoteskin = function()
 	local skins = NOTESKIN:GetNoteSkinNames()
 	return {
