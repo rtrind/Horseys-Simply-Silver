@@ -405,6 +405,9 @@ local input = function(event)
 					startPressPlayer = nil
 					waitingForOptions = false
 
+					-- Play confirmation sound
+					SOUND:PlayOnce(THEME:GetPathS("Common", "start"))
+
 					-- Verify we have a valid song selected in GAMESTATE
 					if GAMESTATE:GetCurrentSong() then
 						-- Show "Entering Options..." and navigate to options
@@ -425,6 +428,9 @@ local input = function(event)
 					startPressTime = now
 					startPressPlayer = pn
 					waitingForOptions = true
+
+					-- Play confirmation sound
+					SOUND:PlayOnce(THEME:GetPathS("Common", "start"))
 
 					-- Show "Press Start for Options" overlay
 					MESSAGEMAN:Broadcast("ShowPressStartForOptions")
