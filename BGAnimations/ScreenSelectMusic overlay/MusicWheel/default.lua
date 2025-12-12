@@ -16,14 +16,12 @@ local wheel_y = SCREEN_CENTER_Y + 197
 -- ============================================================================
 -- Song Preview Debounce System
 -- ============================================================================
--- Prevents audio stuttering when rapidly scrolling (holding the button).
--- Single taps play the preview immediately for responsiveness.
--- Continuous scrolling waits until you stop before playing.
+-- Every scroll clears the current song immediately (stops preview).
+-- Song selection is deferred until scrolling stops (settle delay elapsed).
+-- This prevents stuttering from rapid taps or holding the button.
 
-local scroll_settle_delay = 0.15     -- seconds to wait after rapid scroll stops before updating GAMESTATE
-local scroll_rapid_threshold = 0.20  -- if next scroll comes within this time, it's "rapid"
+local scroll_settle_delay = 0.20     -- seconds to wait after scrolling stops before selecting song
 local last_scroll_time = 0           -- timestamp of last scroll action
-local is_rapid_scrolling = false     -- true when user is holding the button
 local gamestate_update_pending = false  -- whether we need to update GAMESTATE after scrolling stops
 -- Debug
 -- local wheel_x = SCREEN_CENTER_X + 309
@@ -108,29 +106,19 @@ local function FindBestSteps(song, stepsType, preferredDiff)
 	return bestSteps
 end
 
--- Check if we're in rapid scrolling mode
--- Returns true if we should defer GAMESTATE updates
-local function CheckRapidScrolling()
+-- Stop music on scroll, but keep song info visible
+-- Song selection is deferred until scrolling stops
+local function OnScrollStart()
 	local now = GetTimeSinceStart()
-	local time_since_last = now - last_scroll_time
 	last_scroll_time = now
 	
-	-- Detect if this is rapid scrolling (button held) vs single tap
-	if time_since_last < scroll_rapid_threshold and time_since_last > 0 then
-		-- This scroll came quickly after the last one = rapid scrolling
-		if not is_rapid_scrolling then
-			-- Just started rapid scrolling - stop music once
-			is_rapid_scrolling = true
-			if stop_music then
-				stop_music()
-			end
-		end
-		return true  -- Defer GAMESTATE update
-	else
-		-- Single tap (or first scroll after a pause)
-		is_rapid_scrolling = false
-		return false  -- Update GAMESTATE immediately
+	-- Stop music immediately but keep song/banner visible
+	if stop_music then
+		stop_music()
 	end
+	
+	-- Mark that we need to update GAMESTATE after scrolling stops
+	gamestate_update_pending = true
 end
 
 -- Apply the focused song to GAMESTATE and broadcast messages
@@ -217,16 +205,8 @@ local function PerformScroll(direction, pn)
 	SL.MusicWheel.Scroll(direction)
 	wheel:scroll_by_amount(direction)
 
-	-- Check if we're rapid scrolling
-	local defer_gamestate = CheckRapidScrolling()
-	
-	if defer_gamestate then
-		-- Rapid scrolling - just mark that we need to update GAMESTATE later
-		gamestate_update_pending = true
-	else
-		-- Single tap - update GAMESTATE immediately
-		ApplyFocusedSongToGamestate()
-	end
+	-- Clear song immediately and defer selection until scrolling stops
+	OnScrollStart()
 end
 
 -- ============================================================================
@@ -251,13 +231,12 @@ local t = Def.ActorFrame{
 		end
 		
 		-- Set up the update function for deferred GAMESTATE updates
-		-- Only triggers after rapid scrolling stops
+		-- Triggers after scrolling stops (settle delay elapsed)
 		self:SetUpdateFunction(function(actor)
-			if gamestate_update_pending and is_rapid_scrolling then
+			if gamestate_update_pending then
 				local now = GetTimeSinceStart()
 				if now - last_scroll_time >= scroll_settle_delay then
-					-- Rapid scrolling has stopped, now update GAMESTATE
-					is_rapid_scrolling = false
+					-- Scrolling has stopped, now update GAMESTATE
 					ApplyFocusedSongToGamestate()
 				end
 			end

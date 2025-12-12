@@ -188,7 +188,7 @@
 - [x] Group name still shows folder prefix on ScreenEvaluation
 
 ### Extra features
-- [ ] 
+- [x] Clear song (set to nil) when rapid scrolling starts to stop preview immediately
 
 ## Won't fix
 - [ ] Timer is broken on SSM, but I won't ever use it.
