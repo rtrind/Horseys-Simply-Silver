@@ -139,32 +139,50 @@ SL_CustomPrefs.Get = function()
 		ScreenSelectMusicMenuTimer =
 		{
 			Default = 300,
-			Choices = map(SecondsToMSS, range(60, 450, 15)),
-			Values  = range(60, 450, 15),
+			Choices = {"0:05", unpack(map(SecondsToMSS, range(60, 450, 15)))},
+			Values  = {5, unpack(range(60, 450, 15))},
 		},
 		ScreenPlayerOptionsMenuTimer =
 		{
 			Default = 90,
-			Choices = map(SecondsToMSS, range(30, 450, 15)),
-			Values  = range(30, 450, 15),
+			Choices = {"0:05", unpack(map(SecondsToMSS, range(30, 450, 15)))},
+			Values  = {5, unpack(range(30, 450, 15))},
 		},
 		ScreenEvaluationMenuTimer =
 		{
 			Default = 60,
-			Choices = map(SecondsToMSS, range(15, 450, 15)),
-			Values  = range(15, 450, 15),
+			Choices = {"0:05", unpack(map(SecondsToMSS, range(15, 450, 15)))},
+			Values  = {5, unpack(range(15, 450, 15))},
 		},
 		ScreenEvaluationSummaryMenuTimer =
 		{
 			Default = 60,
-			Choices = map(SecondsToMSS, range(30, 450, 15)),
-			Values  = range(30, 450, 15),
+			Choices = {"0:05", unpack(map(SecondsToMSS, range(30, 450, 15)))},
+			Values  = {5, unpack(range(30, 450, 15))},
 		},
 		ScreenNameEntryMenuTimer =
 		{
 			Default = 60,
-			Choices = map(SecondsToMSS, range(15, 450, 15)),
-			Values  = range(15, 450, 15),
+			Choices = {"0:05", unpack(map(SecondsToMSS, range(15, 450, 15)))},
+			Values  = {5, unpack(range(15, 450, 15))},
+		},
+		ScreenSelectProfileMenuTimer =
+		{
+			Default = 30,
+			Choices = {"0:05", unpack(map(SecondsToMSS, range(30, 180, 15)))},
+			Values  = {5, unpack(range(30, 180, 15))},
+		},
+		ScreenSelectStyleMenuTimer =
+		{
+			Default = 20,
+			Choices = {"0:05", unpack(map(SecondsToMSS, range(15, 180, 15)))},
+			Values  = {5, unpack(range(15, 180, 15))},
+		},
+		ScreenGameOverMenuTimer =
+		{
+			Default = 30,
+			Choices = {"0:05", unpack(map(SecondsToMSS, range(15, 180, 15)))},
+			Values  = {5, unpack(range(15, 180, 15))},
 		},
 
 		-- - - - - - - - - - - - - - - - - - - -

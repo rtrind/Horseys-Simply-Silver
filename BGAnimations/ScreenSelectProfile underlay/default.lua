@@ -69,7 +69,7 @@ local invalid_count = 0
 local t = Def.ActorFrame {
 
 	InitCommand=function(self) self:queuecommand("Stall") end,
-    OnCommand=function(self) end,
+	OnCommand=function(self) end,
 	StallCommand=function(self)
 		-- FIXME: Stall for 0.5 seconds so that the Lua InputCallback doesn't get immediately added to the screen.
 		-- It's otherwise possible to enter the screen with MenuLeft/MenuRight already held and firing off events,
@@ -86,8 +86,12 @@ local t = Def.ActorFrame {
 	InitInputCommand=function(self) SCREENMAN:GetTopScreen():AddInputCallback( LoadActor("./Input.lua", {af=self, Scrollers=scrollers, ProfileData=profile_data}) ) end,
 
 	CheckMenuTimerCommand=function(self)
-		-- if the MenuTimer has reached 0, it's time to queue the OffCommand and force a transition to the next screen
-		if SCREENMAN:GetTopScreen():GetChild("Timer"):GetSeconds() <= 0 then
+		local timer = SCREENMAN:GetTopScreen():GetChild("Timer")
+		local seconds = timer and timer:GetSeconds() or 0
+		
+		-- if the MenuTimer has reached 0 (or close to it), it's time to queue the OffCommand
+		-- Use < 0.5 instead of <= 0 because the display shows ceil(seconds)
+		if seconds < 0.5 then
 
 			-- It's possible that both players had the same local profile selected when the MenuTimer
 			-- reached 0.  Queueing the OffCommand like this would assign the same local profile to

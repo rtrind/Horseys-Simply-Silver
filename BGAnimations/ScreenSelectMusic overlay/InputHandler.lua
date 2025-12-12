@@ -396,7 +396,8 @@ local input = function(event)
 				local now = GetTimeSinceStart()
 
 				-- Check if this is a second Start press within timeout
-				if startPressTime and (now - startPressTime) < optionsPromptTimeout and startPressPlayer == pn then
+				-- Also allow if startPressPlayer is "timer" (timer expired, any player can confirm)
+				if startPressTime and (now - startPressTime) < optionsPromptTimeout and (startPressPlayer == pn or startPressPlayer == "timer") then
 					if SL and SL.MusicWheel and SL.MusicWheel.RememberSelectionContext then
 						SL.MusicWheel.RememberSelectionContext()
 					end
@@ -573,5 +574,21 @@ return Def.ActorFrame{
 	
 	CaptureCommand=function(self)
 		SCREENMAN:GetTopScreen():AddInputCallback(input)
+	end,
+	
+	-- When timer expires and shows "Press Start for Options", set the waiting flag
+	-- Set startPressPlayer to a special value so any player's Start press will work
+	ShowPressStartForOptionsMessageCommand=function(self)
+		waitingForOptions = true
+		startPressTime = GetTimeSinceStart()
+		-- Use "timer" as a special marker - any player can confirm
+		startPressPlayer = "timer"
+	end,
+	
+	-- When hiding the prompt (cancelled or timed out), reset the waiting flag
+	HidePressStartForOptionsMessageCommand=function(self)
+		waitingForOptions = false
+		startPressTime = nil
+		startPressPlayer = nil
 	end
 }

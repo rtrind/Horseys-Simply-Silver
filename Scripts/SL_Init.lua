@@ -166,11 +166,14 @@ local GlobalDefaults = {
 			self.GameMode = "ITG"
 			self.ScreenshotTexture = nil
 			self.MenuTimer = {
+				ScreenSelectProfile = ThemePrefs.Get("ScreenSelectProfileMenuTimer"),
+				ScreenSelectStyle = ThemePrefs.Get("ScreenSelectStyleMenuTimer"),
 				ScreenSelectMusic = ThemePrefs.Get("ScreenSelectMusicMenuTimer"),
 				ScreenPlayerOptions = ThemePrefs.Get("ScreenPlayerOptionsMenuTimer"),
 				ScreenEvaluation = ThemePrefs.Get("ScreenEvaluationMenuTimer"),
 				ScreenEvaluationSummary = ThemePrefs.Get("ScreenEvaluationSummaryMenuTimer"),
 				ScreenNameEntry = ThemePrefs.Get("ScreenNameEntryMenuTimer"),
+				ScreenGameOver = ThemePrefs.Get("ScreenGameOverMenuTimer"),
 			}
 			self.TimeAtSessionStart = nil
 			self.SampleMusicLoops = ThemePrefs.Get("SampleMusicLoops")

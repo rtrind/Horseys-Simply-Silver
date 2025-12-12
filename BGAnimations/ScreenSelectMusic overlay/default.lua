@@ -32,6 +32,52 @@ local af = Def.ActorFrame{
 		-- to a random song from ITG-Mode-DefaultSongs.txt
 	end,
 
+	-- Start polling the menu timer after screen loads
+	OnCommand=function(self)
+		if PREFSMAN:GetPreference("MenuTimer") then
+			self:queuecommand("ListenTimer")
+		end
+	end,
+
+	-- Poll the menu timer and trigger song start when it reaches zero
+	-- ScreenWithMenuElements doesn't automatically handle timer expiration,
+	-- so we need to poll it manually (same pattern as ScreenSelectStyle, ScreenSelectProfile, etc.)
+	ListenTimerCommand=function(self)
+		local topscreen = SCREENMAN:GetTopScreen()
+		if not topscreen then return end
+		
+		local timer = topscreen:GetChild("Timer")
+		if not timer then return end
+		
+		local seconds = timer:GetSeconds()
+		-- Use < 0.5 instead of <= 0 because the display shows ceil(seconds)
+		if seconds < 0.5 then
+			-- Timer expired - show "Press Start for Options" prompt (same as first Start press)
+			-- This gives the player a chance to enter options before going to gameplay
+			if GAMESTATE:GetCurrentSong() then
+				-- Remember the selection context (for restoring <Favorites> after gameplay)
+				if SL and SL.MusicWheel and SL.MusicWheel.RememberSelectionContext then
+					SL.MusicWheel.RememberSelectionContext()
+				end
+				
+				-- Set PlayMode to Regular (prevents crash)
+				GAMESTATE:SetCurrentPlayMode("PlayMode_Regular")
+				
+				-- Play confirmation sound
+				SOUND:PlayOnce(THEME:GetPathS("Common", "start"))
+				
+				-- Show "Press Start for Options" overlay (same as first Start press)
+				MESSAGEMAN:Broadcast("ShowPressStartForOptions")
+				
+				-- Schedule timeout to go directly to gameplay after 3 seconds
+				self:GetChild("StartTimeoutHandler"):queuecommand("StartTimeout")
+			end
+		else
+			-- Keep polling every 0.25 seconds
+			self:sleep(0.25):queuecommand("ListenTimer")
+		end
+	end,
+
 
 	SSM_RequestReloadMessageCommand=function(self, params)
 		-- Defer one frame to ensure we're still on the profile screen as top
@@ -60,9 +106,7 @@ local af = Def.ActorFrame{
 	-- ---------------------------------------------------
 	--  first, load files that contain no visual elements, just code that needs to run
 
-	-- MenuTimer code for preserving SSM's timer value when going
-	-- from SSM to a different screen and back to SSM (i.e. returning from PlayerOptions).
-	LoadActor("./PreserveMenuTimer.lua"),
+	-- PreserveMenuTimer.lua was removed - timer now always resets to full when entering SSM
 	-- Apply player modifiers from profile
 	LoadActor("./PlayerModifiers.lua"),
 	-- Custom Input Handler for ScreenWithMenuElements

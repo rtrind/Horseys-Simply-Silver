@@ -297,8 +297,10 @@ local t = Def.ActorFrame{
 	end,
 	ListenCommand=function(self)
 		local topscreen = SCREENMAN:GetTopScreen()
-		local seconds = topscreen:GetChild("Timer"):GetSeconds()
-		if seconds <= 0 and not StyleSelected then
+		local timer = topscreen:GetChild("Timer")
+		local seconds = timer and timer:GetSeconds() or 0
+		-- Use < 0.5 instead of <= 0 because the display shows ceil(seconds)
+		if seconds < 0.5 and not StyleSelected then
 			StyleSelected = true
 			self:playcommand("Finish")
 		else

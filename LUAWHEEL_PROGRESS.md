@@ -184,15 +184,22 @@
 
 ### Bug Fixes
 - [x] All known bugs fixed
-- [x] No Start sound on SSM when selecting song
 - [x] Group name still shows folder prefix on ScreenEvaluation
 - [x] NotefieldPreview shows some frames of something (I don't know what it is) before showing proper steps (this bug already exists on upstream fork)
+- [x] Timer is broken on SSM, it does not start song.
+- [ ] Beginner Fail Off is always activated, regardless of the option selection on the options
+- [ ] Remove MusicWheel Stype from Simply Love Options
+- [ ] Remove preffered style option
+- [ ] Remove songwheel background option
+- [ ] Slowing song down on options freezes program
 
 ### Extra features
 - [x] Clear song (set to nil) when rapid scrolling starts to stop preview immediately
+- [ ] Remove extra languages from the menu (leave only en + pt-br)
+- [ ] Remove Lock Course Difficulties in Arcade Options
+- [ ] Rename all instances of Simply Love to Simply DDR (like the options menu)
 
 ## Won't fix
-- [ ] Timer is broken on SSM, but I won't ever use it.
 
 ## Ideas for the future
 - [ ] A way to automate testing and make it easier to detect regressions
