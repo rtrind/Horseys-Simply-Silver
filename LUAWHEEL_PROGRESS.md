@@ -186,13 +186,13 @@
 - [x] All known bugs fixed
 - [x] No Start sound on SSM when selecting song
 - [x] Group name still shows folder prefix on ScreenEvaluation
+- [x] NotefieldPreview shows some frames of something (I don't know what it is) before showing proper steps (this bug already exists on upstream fork)
 
 ### Extra features
 - [x] Clear song (set to nil) when rapid scrolling starts to stop preview immediately
 
 ## Won't fix
 - [ ] Timer is broken on SSM, but I won't ever use it.
-- [ ] NotefieldPreview shows some frames of something (I don't know what it is) before showing proper steps (this bug already exists on upstream fork)
 
 ## Ideas for the future
 - [ ] A way to automate testing and make it easier to detect regressions

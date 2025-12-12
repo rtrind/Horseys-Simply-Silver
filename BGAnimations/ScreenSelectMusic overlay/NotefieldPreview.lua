@@ -2,6 +2,8 @@
 
 local NotefieldRenderAfter = 0 --THEME:GetMetric("Player","DrawDistanceAfterTargetsPixels")
 local PreviewDelay = THEME:GetMetric("ScreenSelectMusic", "SampleMusicDelay")
+-- Delay before showing the notefield preview to hide initial garbage frames (upstream bug workaround)
+local NotefieldShowDelay = 0.05
 
 local function GetCurrentChartIndex(pn, ChartArray)
     local PlayerSteps = GAMESTATE:GetCurrentSteps(pn)
@@ -174,6 +176,8 @@ for i, pn in ipairs(GAMESTATE:GetEnabledPlayers()) do
             YReverseOffsetPixels = ReceptorOffset,
             FieldID=-1,
             OnCommand=function(self)
+              -- Start hidden to avoid showing garbage frames (upstream bug workaround)
+              self:diffusealpha(0)
               -- Set up positioning and options first
               self:y(NotefieldY):GetPlayerOptions("ModsLevel_Current"):StealthPastReceptors(true, true)
               self:AutoPlay(true)
@@ -186,6 +190,8 @@ for i, pn in ipairs(GAMESTATE:GetEnabledPlayers()) do
               if steps then
                 self:ChangeReload(steps)
               end
+              -- Fade in after delay to hide garbage frames
+              self:sleep(NotefieldShowDelay):linear(0.15):diffusealpha(1)
             end,
 
             CurrentStepsP1ChangedMessageCommand=function(self) self:playcommand("Refresh") end,
@@ -194,6 +200,8 @@ for i, pn in ipairs(GAMESTATE:GetEnabledPlayers()) do
             OptionsListStartMessageCommand=function(self) self:playcommand("Refresh") end,
 
             RefreshCommand=function(self)
+                -- Hide INSTANTLY to prevent garbage frames from showing, then fade in after delay
+                self:stoptweening():diffusealpha(0)
                 self:AutoPlay(false)
                 local ChartArray = nil
 
@@ -213,6 +221,8 @@ for i, pn in ipairs(GAMESTATE:GetEnabledPlayers()) do
                 --SCREENMAN:SystemMessage("Loading ChartIndex!")
                 self:SetNoteDataFromLua(NoteData)
                 self:AutoPlay(true)
+                -- Fade in after delay to hide garbage frames
+                self:sleep(NotefieldShowDelay):linear(0.15):diffusealpha(1)
             end
         }
     }
