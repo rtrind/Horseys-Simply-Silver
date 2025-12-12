@@ -97,9 +97,8 @@ af[#af+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 			InitCommand=function(self) self:maxwidth(banner.width*banner.zoom):xy(-91,y_offset+68):zoom(.7):horizalign(left) end,
 			OnCommand=function(self)
 				local song = GAMESTATE:GetCurrentSong()
-				local text = ""
 				if song then
-					self:settext(song:GetGroupName())
+					self:settext(StripGroupPrefix(song:GetGroupName()))
 				else
 					self:settext("")
 				end

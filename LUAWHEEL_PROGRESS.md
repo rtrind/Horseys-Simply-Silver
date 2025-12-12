@@ -184,6 +184,11 @@
 
 ### Bug Fixes
 - [x] All known bugs fixed
+- [x] No Start sound on SSM when selecting song
+- [x] Group name still shows folder prefix on ScreenEvaluation
+
+### Extra features
+- [ ] 
 
 ## Won't fix
 - [ ] Timer is broken on SSM, but I won't ever use it.
