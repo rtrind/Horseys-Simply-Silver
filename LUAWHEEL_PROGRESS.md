@@ -188,10 +188,10 @@
 - [x] NotefieldPreview shows some frames of something (I don't know what it is) before showing proper steps (this bug already exists on upstream fork)
 - [x] Timer is broken on SSM, it does not start song.
 - [ ] Beginner Fail Off is always activated, regardless of the option selection on the options
-- [ ] Remove MusicWheel Stype from Simply Love Options
-- [ ] Remove preffered style option
-- [ ] Remove songwheel background option
-- [ ] Slowing song down on options freezes program
+- [x] Remove MusicWheel Style from Simply Love Options
+- [x] Remove preferred style option (AutoStyle) - kept 2-player auto-versus behavior
+- [x] Remove songwheel background option
+- [x] Remove engine wheel sections from metrics.ini ([MusicWheel], [MusicWheelItem])
 
 ### Extra features
 - [x] Clear song (set to nil) when rapid scrolling starts to stop preview immediately

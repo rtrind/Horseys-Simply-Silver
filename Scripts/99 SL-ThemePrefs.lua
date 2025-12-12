@@ -38,11 +38,6 @@ SL_CustomPrefs.Get = function()
 			Choices = { THEME:GetString("ThemePrefs", "Show"), THEME:GetString("ThemePrefs", "Hide") },
 			Values  = { false, true }
 		},
-		MusicWheelStyle =
-		{
-			Default = "ITG",
-			Choices = { "ITG", "IIDX" }
-		},
 		AllowDanceSolo =
 		{
 			Default = false,
@@ -50,17 +45,6 @@ SL_CustomPrefs.Get = function()
 			Values  = { true, false }
 		},
 
-		AutoStyle =
-		{
-			Default = "none",
-			Choices = {
-				THEME:GetString("ScreenSelectStyle", "None"),
-				THEME:GetString("ScreenSelectStyle", "Single"),
-				THEME:GetString("ScreenSelectStyle", "Versus"),
-				THEME:GetString("ScreenSelectStyle", "Double")
-			},
-			Values = { "none", "single", "versus", "double" }
-		},
 		VisualStyle =
 		{
 			Default = "Technique",
@@ -268,12 +252,6 @@ SL_CustomPrefs.Get = function()
 			Default = true,
 			Choices = { THEME:GetString("ThemePrefs", "On"), THEME:GetString("ThemePrefs", "Off") },
 			Values  = { true, false }
-		},
-		SongSelectBG =
-		{
-			Default = "Off",
-			Choices = { THEME:GetString("ThemePrefs", "Off"), THEME:GetString("ThemePrefs", "Banner"), THEME:GetString("ThemePrefs", "BG") },
-			Values = { "Off", "Banner", "BG" }
 		},
 		ResultsBG =
 		{
