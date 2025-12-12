@@ -329,6 +329,46 @@ GetDefaultFailType = function()
 end
 
 -- -----------------------------------------------------------------------
+-- GetFailTypeForPlayer() checks difficulty-based fail preferences
+-- (FailOffInBeginner, FailOffForFirstStageEasy) and returns the appropriate
+-- FailType for the given player based on their current difficulty.
+--
+-- This should be called after a song/difficulty is selected (e.g., in ScreenGameplay in)
+-- to override the default fail type when these operator menu options are enabled.
+
+GetFailTypeForPlayer = function(player)
+	local default_fail = GetDefaultFailType()
+	
+	local steps = GAMESTATE:GetCurrentSteps(player)
+	if not steps then return default_fail end
+	
+	local difficulty = steps:GetDifficulty()
+	
+	-- Check FailOffInBeginner preference
+	-- The engine may automatically set fail off for Beginner, so we need to
+	-- explicitly return the default fail type when the preference is OFF
+	if difficulty == "Difficulty_Beginner" then
+		local failOffInBeginner = PREFSMAN:GetPreference("FailOffInBeginner")
+		if failOffInBeginner then
+			return "FailType_Off"
+		else
+			-- Explicitly return default fail to override engine's automatic behavior
+			return default_fail
+		end
+	end
+	
+	-- Check FailOffForFirstStageEasy preference (only on first stage)
+	if difficulty == "Difficulty_Easy" then
+		local failOffForFirstStageEasy = PREFSMAN:GetPreference("FailOffForFirstStageEasy")
+		if failOffForFirstStageEasy and GAMESTATE:GetCurrentStageIndex() == 0 then
+			return "FailType_Off"
+		end
+	end
+	
+	return default_fail
+end
+
+-- -----------------------------------------------------------------------
 
 SetGameModePreferences = function()
 	-- apply the preferences associated with this SL GameMode (ITG, FA+)

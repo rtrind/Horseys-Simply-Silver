@@ -187,11 +187,12 @@
 - [x] Group name still shows folder prefix on ScreenEvaluation
 - [x] NotefieldPreview shows some frames of something (I don't know what it is) before showing proper steps (this bug already exists on upstream fork)
 - [x] Timer is broken on SSM, it does not start song.
-- [ ] Beginner Fail Off is always activated, regardless of the option selection on the options
+- [x] Beginner Fail Off is always activated, regardless of the option selection on the options (ENGINE BUG - removed options from menu, user must manually set FailOffInBeginner=0 in Preferences.ini)
 - [x] Remove MusicWheel Style from Simply Love Options
 - [x] Remove preferred style option (AutoStyle) - kept 2-player auto-versus behavior
 - [x] Remove songwheel background option
 - [x] Remove engine wheel sections from metrics.ini ([MusicWheel], [MusicWheelItem])
+- [x] Bad notefield position on P2 after implementing hiding for a brief moment.
 
 ### Extra features
 - [x] Clear song (set to nil) when rapid scrolling starts to stop preview immediately

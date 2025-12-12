@@ -30,6 +30,7 @@ local t = Def.ActorFrame{
 		if ThemePrefs.Get("KeyboardFeatures") and PREFSMAN:GetPreference("EventMode")  then
 			SCREENMAN:GetTopScreen():AddInputCallback(RestartHandler)
 		end
+		
 	end
 }
 
