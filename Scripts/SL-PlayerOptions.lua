@@ -504,12 +504,8 @@ local Overrides = {
 
 			-- Never available in double
 			if style and style:GetName() == "double"
-			-- In 4:3 versus mode
-			or (not IsUsingWideScreen() and style and style:GetName() == "versus")
 			-- if the notefield takes up more than half the screen width
 			or (notefieldwidth and notefieldwidth > _screen.w/2)
-			-- if the notefield is centered with 4:3 aspect ratio
-			or (mpn and GetNotefieldX(mpn) == _screen.cx and not IsUsingWideScreen())
 			then
 				table.remove(choices, 3)
 			end

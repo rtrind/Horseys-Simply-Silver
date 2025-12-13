@@ -193,6 +193,7 @@
 - [x] Remove songwheel background option
 - [x] Remove engine wheel sections from metrics.ini ([MusicWheel], [MusicWheelItem])
 - [x] Bad notefield position on P2 after implementing hiding for a brief moment.
+- [ ] Practice mode broken, no input is recognized
 
 ### Extra features
 - [x] Clear song (set to nil) when rapid scrolling starts to stop preview immediately

@@ -91,7 +91,7 @@ af.InitCommand=function(self)
 	self:x(player==PLAYER_1 and 155 or -85)
 	self:y(-140)
 
-	if NoteFieldIsCentered and IsUsingWideScreen() then
+	if NoteFieldIsCentered then
 		self:x( player==PLAYER_1 and 155 or -88 )
 	end
 

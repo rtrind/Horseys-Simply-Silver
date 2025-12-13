@@ -11,7 +11,7 @@ return Def.Banner{
 		self:SetDecodeMovie(ThemePrefs.Get("AnimateBanners"))
 
 		-- offset a bit more when NoteFieldIsCentered
-		if NoteFieldIsCentered and IsUsingWideScreen() then
+		if NoteFieldIsCentered then
 			self:x( 72 * (player==PLAYER_1 and 1 or -1) )
 		end
 

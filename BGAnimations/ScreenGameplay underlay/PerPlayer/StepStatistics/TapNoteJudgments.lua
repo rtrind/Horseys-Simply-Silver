@@ -73,7 +73,7 @@ af.InitCommand=function(self)
 	self:zoom(0.8)
 	self:x( SL_WideScale(152,204) * (player==PLAYER_1 and -1 or 1))
 
-	if NoteFieldIsCentered and IsUsingWideScreen() then
+	if NoteFieldIsCentered then
 		self:x( 156 * (player==PLAYER_1 and -1 or 1))
 	end
 

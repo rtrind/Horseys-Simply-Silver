@@ -12,7 +12,6 @@ local stylename = GAMESTATE:GetCurrentStyle():GetName()
 if (not IsUltraWide and stylename == "versus")
 	or SL[pn].ActiveModifiers.DataVisualizations ~= "Step Statistics"
 	or (GetNotefieldWidth() > _screen.w/2)
-	or (NoteFieldIsCentered and not IsUsingWideScreen())
 	or (not IsUltraWide and stylename ~= "single")
 	or (    IsUltraWide and not (stylename == "single" or stylename == "versus"))
 then
@@ -28,7 +27,7 @@ local sidepane_width  = _screen.w/2
 local sidepane_pos_x  = _screen.w * (player==PLAYER_1 and 0.75 or 0.25)
 
 if not IsUltraWide then
-	if NoteFieldIsCentered and IsUsingWideScreen() then
+	if NoteFieldIsCentered then
 		sidepane_width = (_screen.w - GetNotefieldWidth()) / 2
 
 		if player==PLAYER_1 then
@@ -73,7 +72,7 @@ af[#af+1] = Def.ActorFrame{
 		}
 
 		if not IsUltraWide then
-			if (NoteFieldIsCentered and IsUsingWideScreen()) then
+			if NoteFieldIsCentered then
 				local zoom = scale(GetScreenAspectRatio(), 16/10, 16/9, zoomfactor.sixteen_ten, zoomfactor.sixteen_nine)
 				self:zoom( zoom )
 			end

@@ -182,13 +182,8 @@ t[#t+1] = Def.Sprite {
 		self:croptop(0.02)
 		self:cropbottom(0.02)
 		self:halign( 0.5 + 0.5*(pn*2-3) )
-		if IsUsingWideScreen() then
-			self:x(220*(pn*2-3))
-			self:zoom(1.3)
-		else
-			self:x(150*(pn*2-3))
-			self:zoom(.3)
-		end
+		self:x(220*(pn*2-3))
+		self:zoom(1.3)
 		self:y(-40)
 	end
 	

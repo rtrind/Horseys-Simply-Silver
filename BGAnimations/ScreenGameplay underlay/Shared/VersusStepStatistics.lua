@@ -7,8 +7,8 @@ local ShouldDisplayStatsForPlayer = function(player)
 end
 
 local ShouldDisplayStats = function()
-    -- Only use this in Versus + Widescreen.
-    if GAMESTATE:GetCurrentStyle():GetName() ~= "versus" or not IsUsingWideScreen() then
+    -- Only use this in Versus mode
+    if GAMESTATE:GetCurrentStyle():GetName() ~= "versus" then
         return false
     end
 

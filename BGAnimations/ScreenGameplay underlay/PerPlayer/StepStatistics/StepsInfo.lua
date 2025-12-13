@@ -7,17 +7,16 @@ if not SL[pn].ActiveModifiers.StepInfo then return end
 -- Positioning
 local c = PREFSMAN:GetPreference("Center1Player")
 local ar = GetScreenAspectRatio()
-local ws = IsUsingWideScreen()
 
-local x = ws and -190 or -155
-local xoffset = pnum == 1 and (ws and 285 or 225) or 0
+local x = -190
+local xoffset = pnum == 1 and 285 or 0
 
 local y = -8
 local yoffset = 0
 
 local zoom = 0.75
 local xvalues = (not c and ar < 1.5) and 0 or 45
-local maxwidth = ws and 320 or 300
+local maxwidth = 320
 
 local row_height = 16
 
