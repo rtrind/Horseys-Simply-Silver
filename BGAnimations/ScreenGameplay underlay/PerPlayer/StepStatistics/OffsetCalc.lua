@@ -43,7 +43,7 @@ local avg_timing_error = 0
 local af = Def.ActorFrame{}
 af.InitCommand=function(self)
 	self:SetUpdateFunction(Update)
-	self:x(SL_WideScale(150,202) * (player==PLAYER_1 and -1 or 1))
+	self:x(202 * (player==PLAYER_1 and -1 or 1))
 	self:y(-40)
 
 	if NoteFieldIsCentered then

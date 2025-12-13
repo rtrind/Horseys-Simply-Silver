@@ -249,7 +249,7 @@ af2[#af2+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 }
 af2[#af2+1] = Def.Sprite{
 	Texture=THEME:GetPathG("MusicWheelItem","Grades/quint.png"),
-	InitCommand=function(self) self:zoom( SL_WideScale(0.18, 0.3) ):animate(false) end,
+	InitCommand=function(self) self:zoom(0.3):animate(false) end,
 	FolderSummaryCommand=function(self, params)
 		if params.bestGrade < 5 then
 			self:visible(false)
@@ -280,7 +280,7 @@ for i=1,4 do
 	}
 	af2[#af2+1] = Def.Sprite{
 		Texture=THEME:GetPathG("MusicWheelItem","Grades/grades 1x18.png"),
-		InitCommand=function(self) self:zoom( SL_WideScale(0.18, 0.3) ):animate(false) end,
+		InitCommand=function(self) self:zoom(0.3):animate(false) end,
 		FolderSummaryCommand=function(self, params)
 			if params.bestGrade < 5-i then
 				self:visible(false)

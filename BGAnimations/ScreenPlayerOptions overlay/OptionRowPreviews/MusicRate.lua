@@ -21,7 +21,7 @@ for player in ivalues(GAMESTATE:GetHumanPlayers()) do
 	t[#t+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 		Name=pn.."_MusicRate_",
 		InitCommand=function(self)
-			self:zoom(2):x(SL_WideScale(-222,-238)):visible(false)
+			self:zoom(2):x(-238):visible(false)
 		end,
 
 		-- OptionRowChanged is broadcast from Metrics.ini under [OptionRow] via TitleGainFocusCommand

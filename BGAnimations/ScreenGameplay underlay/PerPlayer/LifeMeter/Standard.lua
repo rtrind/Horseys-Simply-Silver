@@ -3,7 +3,7 @@ local pn = ToEnumShortString(player)
 
 local w = 136
 local h = 18
-local _x = _screen.cx + (player==PLAYER_1 and -1 or 1) * SL_WideScale(243, 293)
+local _x = _screen.cx + (player==PLAYER_1 and -1 or 1) * 293
 local oldlife = 0
 local IsNotWide = (GetScreenAspectRatio() < 16/9)
 

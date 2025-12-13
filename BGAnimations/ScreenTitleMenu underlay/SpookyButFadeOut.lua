@@ -7,7 +7,7 @@ af.OffCommand=function(self)  self:finishtweening() end
 af[#af+1] = LoadActor(THEME:GetPathG("", "_VisualStyles/Spooky/ExtraSpooky/Cobweb (doubleres).png"))..{
 	InitCommand=function(self)
 		self:align(0,0):xy(_screen.w * -0.615, _screen.h * -0.65)
-		self:rotationz(15):zoom(SL_WideScale(0.8,1))
+		self:rotationz(15):zoom(1)
 	end
 }
 
@@ -15,7 +15,7 @@ af[#af+1] = LoadActor(THEME:GetPathG("", "_VisualStyles/Spooky/ExtraSpooky/Cobwe
 af[#af+1] = LoadActor(THEME:GetPathG("", "_VisualStyles/Spooky/ExtraSpooky/Cobweb (doubleres).png"))..{
 	InitCommand=function(self)
 		self:align(0,0):xy(_screen.w * 0.475, _screen.h * -0.71)
-		self:rotationy(180):rotationx(180):rotationz(-120):zoom(SL_WideScale(0.8,1))
+		self:rotationy(180):rotationx(180):rotationz(-120):zoom(1)
 	end
 }
 

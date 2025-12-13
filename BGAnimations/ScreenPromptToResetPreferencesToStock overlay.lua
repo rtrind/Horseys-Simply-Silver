@@ -1,8 +1,8 @@
 local text_width = 420
 
 local _zoom = {
-	active   = WideScale(1.15,1.1),
-	inactive = WideScale(0.55,0.5)
+	active   = 1.1,
+	inactive = 0.5
 }
 local active_index = 0
 local choice_actors = {}
@@ -46,7 +46,7 @@ local t = Def.ActorFrame{ OnCommand=function(self) af=self; SCREENMAN:GetTopScre
 t[#t+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 	Text=ScreenString("Paragraph1"),
 	InitCommand=function(self)
-		self:xy(_screen.cx-text_width/2, 25):_wrapwidthpixels(text_width):align(0,0):diffusealpha(0):zoom(WideScale(1.15,1))
+		self:xy(_screen.cx-text_width/2, 25):_wrapwidthpixels(text_width):align(0,0):diffusealpha(0):zoom(1)
 	end,
 	OnCommand=function(self) self:linear(0.15):diffusealpha(1) end
 }
@@ -54,7 +54,7 @@ t[#t+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 t[#t+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 	Text=ScreenString("Paragraph2"),
 	InitCommand=function(self)
-		self:xy(_screen.cx-text_width/2, 300):_wrapwidthpixels(text_width):align(0,0):diffusealpha(0):zoom(WideScale(1.15,1))
+		self:xy(_screen.cx-text_width/2, 300):_wrapwidthpixels(text_width):align(0,0):diffusealpha(0):zoom(1)
 	end,
 	OnCommand=function(self) self:linear(0.15):diffusealpha(1) end
 }
@@ -66,7 +66,7 @@ local choices_af = Def.ActorFrame{
 
 choices_af[#choices_af+1] = Def.ActorFrame{
 	InitCommand=function(self)
-		self:x(_screen.cx-text_width/WideScale(2.15,2)):diffuse( PlayerColor(PLAYER_2) ):zoom(_zoom.active)
+		self:x(_screen.cx-text_width/2):diffuse( PlayerColor(PLAYER_2) ):zoom(_zoom.active)
 		choice_actors[0] = self
 	end,
 
@@ -83,7 +83,7 @@ choices_af[#choices_af+1] = Def.ActorFrame{
 
 choices_af[#choices_af+1] = Def.ActorFrame{
 	InitCommand=function(self)
-		self:x(_screen.cx-WideScale(17.5,15)):zoom(_zoom.inactive)
+		self:x(_screen.cx-15):zoom(_zoom.inactive)
 		choice_actors[1] = self
 	end,
 
@@ -99,7 +99,7 @@ choices_af[#choices_af+1] = Def.ActorFrame{
 
 choices_af[#choices_af+1] = Def.ActorFrame{
 	InitCommand=function(self)
-		self:x(_screen.cx+text_width/WideScale(2.35,2)):zoom(_zoom.inactive)
+		self:x(_screen.cx+text_width/2):zoom(_zoom.inactive)
 		choice_actors[2] = self
 	end,
 

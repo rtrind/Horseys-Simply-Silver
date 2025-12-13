@@ -1,5 +1,5 @@
 local af = Def.ActorFrame{}
-local bg_width = WideScale(287, 292)
+local bg_width = 292
 local bg_height = 350
 local padding = 10
 local recommended_bmt
@@ -13,7 +13,7 @@ af.OnCommand=function(self)
 		return
 	end
 
-	self:xy(WideScale(490,683), _screen.cy - 15.5)
+	self:xy(683, _screen.cy - 15.5)
 end
 
 af.OptionRowChangedMessageCommand=function(self, params)

@@ -106,7 +106,7 @@ local text = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 		end
 
 		if player == PLAYER_1 then
-			self:x(_screen.w*0.5 - SL_WideScale(6,329))
+			self:x(_screen.w*0.5 - 329)
 
 			if NoteFieldIsCentered then
 				self:x(_screen.w*0.5 - 134)
@@ -115,7 +115,7 @@ local text = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 				self:x(52)
 			end
 		else
-			self:x(_screen.w*0.5 - SL_WideScale(6,98))
+			self:x(_screen.w*0.5 - 98)
 			if NoteFieldIsCentered then
 				self:x(69)
 			end

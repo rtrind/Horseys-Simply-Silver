@@ -98,9 +98,9 @@ return LoadFont(ThemePrefs.Get("ThemeFont") .. " numbers")..{
 				if step_stats then
 					if player==PLAYER_1 then
 						if NoteFieldIsCentered then
-							self:x( pos[ OtherPlayer[player] ].x + SL_WideScale( 94, 112.5) )
+							self:x( pos[ OtherPlayer[player] ].x + 112.5 )
 						else
-							self:x( pos[ OtherPlayer[player] ].x - SL_WideScale(-84, -60) )
+							self:x( pos[ OtherPlayer[player] ].x - (-60) )
 						end
 
 					-- PLAYER_2
@@ -108,7 +108,7 @@ return LoadFont(ThemePrefs.Get("ThemeFont") .. " numbers")..{
 						if NoteFieldIsCentered then
 							self:x( pos[ OtherPlayer[player] ].x - 65.5 )
 						else
-							self:x( pos[ OtherPlayer[player] ].x - SL_WideScale(-6, -2))
+							self:x( pos[ OtherPlayer[player] ].x - (-2))
 						end
 					end
 

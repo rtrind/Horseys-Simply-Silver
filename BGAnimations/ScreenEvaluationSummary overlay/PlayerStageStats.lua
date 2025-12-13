@@ -179,7 +179,7 @@ af[#af+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 -- letter grade
 af[#af+1] = Def.ActorProxy{
 	InitCommand=function(self)
-		self:zoom(WideScale(0.275,0.3)):x( WideScale(194,250) * (player==PLAYER_1 and -1 or 1) ):y(-6)
+		self:zoom(0.3):x( 250 * (player==PLAYER_1 and -1 or 1) ):y(-6)
 	end,
 	DrawStageCommand=function(self)
 		if playerStats and grade then

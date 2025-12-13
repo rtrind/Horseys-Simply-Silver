@@ -15,7 +15,7 @@ local af = Def.ActorFrame{
 		-- so here I'm using 0 as a stand-in for false and 1 for true.
 		self:aux(0)
 
-		self:zoom(0.5):xy( frame_x, _screen.cy + WideScale(0,10) )
+		self:zoom(0.5):xy( frame_x, _screen.cy + 10 )
 
 		if ThemePrefs.Get("VisualStyle")=="Gay" and not HolidayCheer() then
 			self:bob():effectmagnitude(0,0,0):effectclock('bgm'):effectperiod(0.666)

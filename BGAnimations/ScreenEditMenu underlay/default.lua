@@ -116,19 +116,19 @@ for i=1,7 do
 	-- a row
 	t[#t+1] = Def.Quad {
 		InitCommand=function(self) self:zoomto(_screen.w*0.745, _screen.h*0.0885):diffuse(color("#071016")) end,
-		OnCommand=function(self) self:xy(_screen.cx + WideScale(49,65), 40 + (i*45)) end
+		OnCommand=function(self) self:xy(_screen.cx + 65, 40 + (i*45)) end
 	}
 end
 
 -- the grey BG for row labels
 t[#t+1] = Def.Quad{
-	InitCommand=function(self) self:Center():zoomto(_screen.w*0.15,_screen.h*0.725):diffuse(color("#212831")):x(_screen.cx-WideScale(240,320)) end
+	InitCommand=function(self) self:Center():zoomto(_screen.w*0.15,_screen.h*0.725):diffuse(color("#212831")):x(_screen.cx-320) end
 }
 
 -- the grey BG for the instructions at the bottom
 t[#t+1] = Def.Quad{
 	InitCommand=function(self) self:zoomto(_screen.w*0.745,_screen.h*0.0725):diffuse(color("#212831")) end,
-	OnCommand=function(self) self:xy(_screen.cx + WideScale(49,65), 396) end,
+	OnCommand=function(self) self:xy(_screen.cx + 65, 396) end,
 }
 
 t[#t+1] = Def.Quad{

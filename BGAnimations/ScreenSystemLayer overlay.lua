@@ -338,7 +338,7 @@ t[#t+1] = Def.ActorFrame {
 		end,
 		OnCommand=function(self)
 			self:finishtweening():diffusealpha(0.85)
-			self:zoomto(_screen.w, (bmt:GetHeight() + 16) * SL_WideScale(0.8, 1) )
+			self:zoomto(_screen.w, (bmt:GetHeight() + 16) )
 		end,
 		OffCommand=function(self, params)
 			-- use 3.33 seconds as a default duration if none was provided as the second arg in SM()
@@ -354,7 +354,7 @@ t[#t+1] = Def.ActorFrame {
 
 			self:maxwidth(_screen.w-20)
 			self:horizalign(left):vertalign(top):xy(10, 10)
-			self:diffusealpha(0):zoom(SL_WideScale(0.8, 1))
+			self:diffusealpha(0):zoom(1)
 		end,
 		OnCommand=function(self)
 			self:finishtweening():diffusealpha(1)

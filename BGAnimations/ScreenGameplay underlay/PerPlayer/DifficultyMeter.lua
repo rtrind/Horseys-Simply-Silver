@@ -1,6 +1,6 @@
 local player = ...
 
-local _x = _screen.cx + (player==PLAYER_1 and -1 or 1) * SL_WideScale(292.5, 342.5)
+local _x = _screen.cx + (player==PLAYER_1 and -1 or 1) * 342.5
 
 return Def.ActorFrame{
 	InitCommand=function(self)

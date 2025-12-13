@@ -341,7 +341,7 @@ for player in ivalues(GAMESTATE:GetHumanPlayers()) do
 		InitCommand=function(self)
 			self:diffuse(PlayerColor(player)):diffusealpha(0)
 			self:zoom(0.5):y(48)
-			self:x(player==PLAYER_1 and WideScale(-77, -100) or WideScale(140,154))
+			self:x(player==PLAYER_1 and -100 or 154)
 			self:shadowlength(0.55)
 		end,
 		OnCommand=function(self) self:linear(0.4):diffusealpha(1) end,
@@ -356,7 +356,7 @@ for player in ivalues(GAMESTATE:GetHumanPlayers()) do
 		InitCommand=function(self)
 			self:diffuse(PlayerColor(player)):diffusealpha(0)
 			self:zoom(0.3):y(52)
-			self:x(player==PLAYER_1 and WideScale(-77, -100) or WideScale(140,154))
+			self:x(player==PLAYER_1 and -100 or 154)
 			self:shadowlength(0.55)
 		end,
 		OnCommand=function(self) self:linear(0.4):diffusealpha(0) end,
@@ -365,7 +365,7 @@ for player in ivalues(GAMESTATE:GetHumanPlayers()) do
 			local scroll = CalculateScrollSpeed(player)
 			local pScroll = CalculatePerspectiveSpeed(player)
 			if scroll == pScroll then self:finishtweening():linear(0.5):diffusealpha(0) else self:finishtweening():linear(0.5):diffusealpha(0.8) end
-			self:x(player==PLAYER_1 and WideScale(-77 + (w * 0.4), -100 + (w * 0.4)) or WideScale(140 + (w * 0.4),154 + (w * 0.4)))
+			self:x(player==PLAYER_1 and (-100 + (w * 0.4)) or (154 + (w * 0.4)))
 			self:settext( ("%s%s"):format(SL[pn].ActiveModifiers.SpeedModType, pScroll) )
 		end
 	}

@@ -44,12 +44,6 @@ end
 -- ---------------------------------------------------------------
 -- calculate size and position data for graph(s)
 
--- FIXME: replace this custom helper function with WideScale()
-local get43size = function(size4_3)
-	return 640*(size4_3/854)
-end
-
-
 local pos_data = {}
 
 pos_data.BorderWidth = 2
@@ -61,7 +55,7 @@ pos_data.bar = {}
 
 if use_smaller_graph then
 	-- this graph is horizontally condensed compared to the full-width alternative
-	pos_data.graph.w = SL_WideScale(25, 70)
+	pos_data.graph.w = 70
 	pos_data.graph.y = 429
 
 	-- smaller border for the target bar
@@ -81,7 +75,7 @@ if use_smaller_graph then
 	if notefield_is_centered then
 		-- if 4:3 force the smaller graph to be 60px from the right edge of the screen
 		-- if widescreen, adapt to the width of the notefield
-		pos_data.graph.x = WideScale( _screen.w-60, GetNotefieldX(player) + GetNotefieldWidth()/2 + 20)
+		pos_data.graph.x = GetNotefieldX(player) + GetNotefieldWidth()/2 + 20
 	end
 
 	pos_data.bar.w = pos_data.graph.w * 0.25
@@ -91,14 +85,14 @@ if use_smaller_graph then
 
 -- full-width graph
 else
-	pos_data.graph.w = WideScale(250, 300)
+	pos_data.graph.w = 300
 	pos_data.graph.y = 432
 
 	-- put the graph on the other side of the screen
 	if (player == PLAYER_1) then
-		pos_data.graph.x = WideScale( get43size(500), 500)
+		pos_data.graph.x = 500
 	else
-		pos_data.graph.x = WideScale( get43size(40), 40)
+		pos_data.graph.x = 40
 	end
 
 	pos_data.bar.w = pos_data.graph.w * 0.25

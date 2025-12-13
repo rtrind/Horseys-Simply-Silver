@@ -6,7 +6,7 @@ padNum = padNum or 1
 style  = style  or (GAMESTATE:GetCurrentStyle() and GAMESTATE:GetCurrentStyle():GetName())
 
 
-local zoom = SL_WideScale(0.435, 0.525)
+local zoom = 0.525
 local game = GAMESTATE:GetCurrentGame():GetName()
 
 local init_panel = function(self, col, row, z)

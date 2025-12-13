@@ -1,6 +1,6 @@
 local height = 40
-local width  = WideScale(614, 792)
-local x_offset = WideScale(13, 30.666) -- hhhhhhhhhhh
+local width  = 792
+local x_offset = 30.666
 
 -- Quad at the bottom of the screen behind the explanation of the current OptionRow.
 return Def.Quad{

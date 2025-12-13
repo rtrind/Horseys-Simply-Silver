@@ -3,7 +3,7 @@ local pn = ToEnumShortString(player)
 
 local width = 16
 local height = 250
-local _x = _screen.cx + (player==PLAYER_1 and -1 or 1) * SL_WideScale(302, 400)
+local _x = _screen.cx + (player==PLAYER_1 and -1 or 1) * 400
 local oldlife = 0
 
 -- if double

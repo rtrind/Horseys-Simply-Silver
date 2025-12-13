@@ -15,19 +15,6 @@ Border = function(width, height, bw)
 end
 
 -- -----------------------------------------------------------------------
--- SL_WideScale() - Simplified for 16:9 only (4:3 support removed)
---
--- This function now always returns the 16:9 value since 4:3 support has been removed.
--- The function is kept for backwards compatibility with existing code that calls it.
--- First arg (AR4_3) is ignored, second arg (AR16_9) is always returned.
-
-SL_WideScale = function(AR4_3, AR16_9)
-	-- Always return the 16:9 value (4:3 support removed)
-	return AR16_9
-end
-
-
--- -----------------------------------------------------------------------
 -- get timing window in milliseconds
 
 GetTimingWindow = function(n, mode, tenms)

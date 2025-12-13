@@ -11,7 +11,7 @@ local first_row_y = 66
 local af = Def.ActorFrame{
 		-- a gray Quad to highlight which specific button/row the player is hovering on
 		Def.Quad{
-			InitCommand=function(self) self:zoomto(_screen.w-WideScale(24,240),20):diffuse(1,1,1,0.2):xy(_screen.cx, first_row_y) end,
+			InitCommand=function(self) self:zoomto(_screen.w-240,20):diffuse(1,1,1,0.2):xy(_screen.cx, first_row_y) end,
 			MapControllersFocusChangedMessageCommand=function(self, params)
 				local y = first_row_y
 				if num_buttons and params.bmt:GetParent().ItemIndex > num_buttons-10 then
@@ -90,7 +90,7 @@ end
 af[#af+1] = Def.Quad{
 	Name="DevicesBG",
 	InitCommand=function(self)
-		self:x(_screen.cx):y(headerHeight/2):zoomto(SL_WideScale(160, 200), headerHeight*0.65):diffuse(0.5,0.5,0.5,0.9)
+		self:x(_screen.cx):y(headerHeight/2):zoomto(200, headerHeight*0.65):diffuse(0.5,0.5,0.5,0.9)
 	end
 }
 
