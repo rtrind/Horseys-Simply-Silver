@@ -67,8 +67,8 @@ if use_smaller_graph then
 	-- smaller border for the target bar
 	pos_data.BorderWidth = 1
 
-	-- if widescreen, nudge each graph over 5px, potentially creating a 10px gap if bothWantBars
-	local separator = IsUsingWideScreen() and 5 or 0
+	-- nudge each graph over 5px, potentially creating a 10px gap if bothWantBars
+	local separator = 5
 
 	-- put the graph directly beside the note field
 	if player == PLAYER_1 then
@@ -86,7 +86,7 @@ if use_smaller_graph then
 
 	pos_data.bar.w = pos_data.graph.w * 0.25
 	pos_data.bar.spacing = pos_data.bar.w / 4
-	pos_data.bar.offset = pos_data.bar.spacing * (IsUsingWideScreen() and 1 or 1.5)
+	pos_data.bar.offset = pos_data.bar.spacing
 
 
 -- full-width graph

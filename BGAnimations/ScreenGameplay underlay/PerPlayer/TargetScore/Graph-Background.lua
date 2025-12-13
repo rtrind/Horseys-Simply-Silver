@@ -67,30 +67,24 @@ for i = 1,#gradeBorders do
 		end,
 	}
 
-	-- in 4:3 the graphs touch each other, so the labels for P2 are redundant
-	if not (isTwoPlayers and bothWantBars and player == PLAYER_2 and not IsUsingWideScreen()) then
-		bg[#bg+1] = Def.BitmapText{
-			Font=ThemePrefs.Get("ThemeFont") .. " Normal",
-			Text=gradeNames[i],
-			InitCommand=function(self)
-				self:valign(1):halign(0)
-					:xy( 2, yStart-2 )
-				-- make stars a little smaller
-				if i<4 then
-					self:zoom(0.75)
-				end
-			end,
-			-- zoom the label once we reach a grade, but only in 16:9
-			GradeChangedCommand=function(self)
-				if (bothWantBars and not IsUsingWideScreen()) then
-					return
-				end
-				if (pss:GetGrade() == ("Grade_Tier" .. string.format("%02d", gradeBorders[i])) ) then
-					self:decelerate(0.5):zoom(1.5)
-				end
-			end,
-		}
-	end
+	bg[#bg+1] = Def.BitmapText{
+		Font=ThemePrefs.Get("ThemeFont") .. " Normal",
+		Text=gradeNames[i],
+		InitCommand=function(self)
+			self:valign(1):halign(0)
+				:xy( 2, yStart-2 )
+			-- make stars a little smaller
+			if i<4 then
+				self:zoom(0.75)
+			end
+		end,
+		-- zoom the label once we reach a grade
+		GradeChangedCommand=function(self)
+			if (pss:GetGrade() == ("Grade_Tier" .. string.format("%02d", gradeBorders[i])) ) then
+				self:decelerate(0.5):zoom(1.5)
+			end
+		end,
+	}
 end
 
 return bg

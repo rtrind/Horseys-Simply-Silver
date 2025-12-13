@@ -16,8 +16,6 @@ local w = 114
 local h = 269.5
 -----
 
-if IsUsingWideScreen() then
-
 return Def.ActorFrame{
 	Name="PlayerProfileEval_" .. pn,
 
@@ -256,5 +254,3 @@ return Def.ActorFrame{
 			end,
 	},
 }
-
-else end
