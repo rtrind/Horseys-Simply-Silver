@@ -118,9 +118,6 @@ local input = function(event)
                     PROFILEMAN:SaveMachineProfile()
 
                     overlay:queuecommand("DirectInputToEngineForSelectProfile")
-				elseif focus.new_overlay == "PracticeMode" then
-					SCREENMAN:GetTopScreen():SetNextScreenName("ScreenPractice")
-					SCREENMAN:GetTopScreen():StartTransitioningScreen("SM_GoToNextScreen")
 				end
 			end
 

@@ -179,12 +179,6 @@ end
 
 ------------------------------------------------------------
 
-
-
-local function DownloadsExist()
-    return false
-end
-
 local function AddPlayerSortOptions()
     local player_sort_options = {}
     for player in ivalues(GAMESTATE:GetHumanPlayers()) do
@@ -293,18 +287,12 @@ local wheel_options = {
 			{ {"SortBy", "MostPlayed"} },
 			{ {"SortBy", "MachineMostPlayed"} },
 			{ {"SortBy", "TopScores"} },
-			-- these sort methods are not supported by OutFox
-			{ {"SortBy", "Meter"}, not IsOutFox() },
-			{ {"SortBy", "TopP1Grades"}, PROFILEMAN:IsPersistentProfile(PLAYER_1) and not IsOutFox() },
-			{ {"SortBy", "TopP2Grades"}, PROFILEMAN:IsPersistentProfile(PLAYER_2) and not IsOutFox() },
 		}
 	},
 	{
 		{"", "CategoryAdvanced"},
 		{
 			{ {"FeelingSalty", "TestInput"} },
-			{ {"HardTime", "PracticeMode"}, function() return GAMESTATE:IsEventMode() and GAMESTATE:GetCurrentSong() ~= nil and ThemePrefs.Get("KeyboardFeatures") end},
-			{ {"NeedMoreRam", "ViewDownloads"}, DownloadsExist },
 			{ {"NextPlease", "SwitchProfile"}, ThemePrefs.Get("AllowScreenSelectProfile") },
 		}
 	},
