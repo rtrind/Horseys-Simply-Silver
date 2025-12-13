@@ -199,8 +199,12 @@
 - [x] Remove extra languages from the menu (leave only en + pt-br)
 - [x] Remove Lock Course Difficulties in Arcade Options
 - [x] Rename all instances of Simply Love to Simply DDR (like the options menu)
+- [ ] Dead metrics removal
+- [ ] Not needed old conditionals
+- [ ] Unused actors removal
 
 ## Won't fix
+- [ ] Several missing translations hardcoded
 
 ## Ideas for the future
 - [ ] A way to automate testing and make it easier to detect regressions
