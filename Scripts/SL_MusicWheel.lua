@@ -2044,7 +2044,7 @@ end
 -- Find a song in the wheel items and return its index
 -- Also opens the containing group if needed
 -- Returns: index in items array, or nil if not found
-function SL.MusicWheel.FindSongIndex(target_song)
+function SL.MusicWheel.FindSongIndex(target_song, target_steps)
 	if not target_song then return nil end
 	
 	local state = SL.MusicWheel.State
@@ -2056,13 +2056,22 @@ function SL.MusicWheel.FindSongIndex(target_song)
 	
 	for i, item in ipairs(state.items) do
 		if item.type == "song" and item.song == target_song then
-			-- If Favorites is open and this is the Favorites version, return it immediately
-			if favorites_open and item.group == "<Favorites>" then
-				return i
-			end
-			-- Otherwise, remember this index as a fallback
-			if not fallback_index then
-				fallback_index = i
+			-- For Difficulty sort, also match steps if provided
+			if target_steps and item.steps then
+				if item.steps == target_steps then
+					return i
+				end
+				-- Don't set fallback if we're looking for specific steps
+				-- (we want exact match or nothing)
+			else
+				-- If Favorites is open and this is the Favorites version, return it immediately
+				if favorites_open and item.group == "<Favorites>" then
+					return i
+				end
+				-- Otherwise, remember this index as a fallback
+				if not fallback_index then
+					fallback_index = i
+				end
 			end
 		end
 	end
@@ -2097,11 +2106,19 @@ function SL.MusicWheel.FindSongIndex(target_song)
 	fallback_index = nil
 	for i, item in ipairs(state.items) do
 		if item.type == "song" and item.song == target_song then
-			if favorites_open and item.group == "<Favorites>" then
-				return i
-			end
-			if not fallback_index then
-				fallback_index = i
+			-- For Difficulty sort, also match steps if provided
+			if target_steps and item.steps then
+				if item.steps == target_steps then
+					return i
+				end
+				-- Don't set fallback if we're looking for specific steps
+			else
+				if favorites_open and item.group == "<Favorites>" then
+					return i
+				end
+				if not fallback_index then
+					fallback_index = i
+				end
 			end
 		end
 	end
@@ -2159,8 +2176,11 @@ function SL.MusicWheel.Initialize()
 	
 	-- Build initial wheel data (after setting which groups are open)
 	-- Use BuildWheelData directly instead of RebuildWheelData to preserve open_groups
-	SL.MusicWheel.State.sort_order = "SortOrder_Group"
-	SL.MusicWheel.State.items = SL.MusicWheel.BuildWheelData("SortOrder_Group")
+	-- Preserve the sort order if it was already set (e.g., returning from gameplay)
+	if not SL.MusicWheel.State.sort_order then
+		SL.MusicWheel.State.sort_order = "SortOrder_Group"
+	end
+	SL.MusicWheel.State.items = SL.MusicWheel.BuildWheelData(SL.MusicWheel.State.sort_order)
 	SL.MusicWheel.State.last_rebuild_time = GetTimeSinceStart and GetTimeSinceStart() or 0
 	
 	Trace("[MusicWheel] After rebuild, items count: " .. #SL.MusicWheel.State.items)
@@ -2171,7 +2191,21 @@ function SL.MusicWheel.Initialize()
 	
 	if target_song then
 		-- Find the target song in the wheel
-		local song_index = SL.MusicWheel.FindSongIndex(target_song)
+		-- For Difficulty sort, also try to match the specific steps
+		local target_steps_obj = nil
+		if (SL.MusicWheel.State.sort_order == "SortOrder_ModeMenu" or SL.MusicWheel.State.sort_order == "Difficulty") and target_difficulty then
+			-- Convert difficulty enum to steps object
+			local steps_type = GAMESTATE:GetCurrentStyle():GetStepsType()
+			local all_steps = target_song:GetStepsByStepsType(steps_type)
+			for _, steps in ipairs(all_steps) do
+				if steps:GetDifficulty() == target_difficulty then
+					target_steps_obj = steps
+					break
+				end
+			end
+		end
+		
+		local song_index = SL.MusicWheel.FindSongIndex(target_song, target_steps_obj)
 		if song_index then
 			focus_index = song_index
 			focus_song = target_song
