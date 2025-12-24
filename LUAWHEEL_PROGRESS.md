@@ -193,16 +193,16 @@
 - [x] Remove songwheel background option
 - [x] Remove engine wheel sections from metrics.ini ([MusicWheel], [MusicWheelItem])
 - [x] Bad notefield position on P2 after implementing hiding for a brief moment.
-- [ ] Practice mode broken, no input is recognized
+- [x] Practice mode broken, no input is recognized
 
 ### Extra features
 - [x] Clear song (set to nil) when rapid scrolling starts to stop preview immediately
 - [x] Remove extra languages from the menu (leave only en + pt-br)
 - [x] Remove Lock Course Difficulties in Arcade Options
 - [x] Rename all instances of Simply Love to Simply DDR (like the options menu)
-- [ ] Dead metrics removal
-- [ ] Not needed old conditionals
-- [ ] Unused actors removal
+- [x] Dead metrics removal
+- [x] Not needed old conditionals
+- [x] Unused actors removal
 
 ## Won't fix
 - [ ] Several missing translations hardcoded
