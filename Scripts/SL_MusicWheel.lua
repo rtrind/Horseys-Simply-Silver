@@ -713,9 +713,24 @@ function SL.MusicWheel.BuildWheelData_Group()
 			
 			-- If group is open, add all songs in the group
 			if SL.MusicWheel.State.open_groups[group_name] then
-				-- Sort songs alphabetically by title
+				-- Sort songs alphabetically by title, with symbols at the end
 				table.sort(songs, function(a, b)
-					return a:GetDisplayMainTitle():lower() < b:GetDisplayMainTitle():lower()
+					local text_a = a:GetDisplayMainTitle():lower()
+					local text_b = b:GetDisplayMainTitle():lower()
+					
+					local char_a = text_a:sub(1, 1):upper()
+					local char_b = text_b:sub(1, 1):upper()
+					
+					local is_letter_a = char_a:match("[A-Z]")
+					local is_letter_b = char_b:match("[A-Z]")
+					
+					-- If both are letters or both are non-letters, sort normally
+					if (is_letter_a and is_letter_b) or (not is_letter_a and not is_letter_b) then
+						return text_a < text_b
+					end
+					
+					-- If one is a letter and the other isn't, put the letter first (non-letter at end)
+					return is_letter_a
 				end)
 				AddSongsToItems(items, songs, group_name)
 			end
@@ -725,7 +740,7 @@ function SL.MusicWheel.BuildWheelData_Group()
 	return items
 end
 
--- Helper function: Sort songs alphabetically with non-letters forced to the top
+-- Helper function: Sort songs alphabetically with non-letters forced to the end
 -- field_getter: function that takes a song and returns the string to sort by
 local function SortSongsAlphabetically(songs, field_getter)
 	table.sort(songs, function(a, b)
@@ -743,8 +758,8 @@ local function SortSongsAlphabetically(songs, field_getter)
 			return text_a < text_b
 		end
 		
-		-- If one is a letter and the other isn't, put the non-letter first
-		return not is_letter_a
+		-- If one is a letter and the other isn't, put the letter first (non-letter at end)
+		return is_letter_a
 	end)
 end
 
