@@ -5,18 +5,19 @@ local mods = SL[pn].ActiveModifiers or {}
 
 -- Skip drawing if option disabled or player is using CMod (constant speed)
 if mods.BPMLines == "Off" or (mods.SpeedModType and mods.SpeedModType:upper() == "C") then
-    return
+    return Def.Actor{}
 end
 
 local LINE_HEIGHT = 6
 
--- If a BPM change is less than this ratio, it will not be drawn. DeltaMax was the song used to calibrate this value and not show any lines, since they are gradual.
+-- Maximum number of BPM lines to support (pool size)
+-- Most songs have < 20 BPM changes, but some complex charts may have more
+local MAX_POOL_SIZE = 50
+
+-- If a BPM change is less than this ratio, it will not be drawn
 local RATIO_TO_IGNORE = 0.0741
 
--- Vertical offset (in pixels) that positions the horizontal line close to the
--- first upcoming arrow when playing with a normal (non-reverse) scroll
--- direction.  The value is borrowed from Simply Love's other NoteField
--- decorations (e.g. ColumnCues.lua).
+-- Vertical offset for positioning
 local NOTEFIELD_Y_OFFSET = 80
 
 local ps   = GAMESTATE:GetPlayerState(player)
@@ -24,97 +25,25 @@ local opts = ps:GetCurrentPlayerOptions()
 local reverseOffset = THEME:GetMetric("Player", "ReceptorArrowsYReverse")
 local receptorStandard = THEME:GetMetric("Player", "ReceptorArrowsYStandard")
 
--- Helper: convert an absolute beat value into Y-pixels on the NoteField.
--- Uses ArrowEffects functions to properly calculate Y positions based on
--- the player's current timing data, speed mods, and other effects.
-local function BeatToPixels(beat)
-
-	local yOffset = ArrowEffects.GetYOffset(ps, 1, beat)
-	
-	-- Pass 0 for fYReverseOffsetPixels to avoid adding any extra offset that
-	-- would shift the line relative to the receptor.
-	local yPos = ArrowEffects.GetYPos(ps, 1, yOffset, 0)
-	
-	return yPos
-end
-
 local show_number = (mods.BPMLines == "Number")
 local show_colored_lines = (mods.BPMLines == "ColoredLines")
 
--- Build an ActorFrame that draws and animates a single BPM-indicator line for
--- the given BPM-change entry (beat + info).
-local function CreateLineActor(entry)
-    local target_beat = entry.beat
-    local is_up       = entry.is_up
-    local new_bpm     = entry.bpm
-	
-	return Def.ActorFrame{
-		InitCommand=function(self)
-			self:x( GetNotefieldX(player) )
+-- Pre-calculate these once
+local zoom_factor = 1 - scale( mods.Mini:gsub("%%","")/100, 0, 2, 0, 1)
+local nf_width = GetNotefieldWidth() or 256
+local spacing_str = tostring(mods.Spacing or "0"):gsub("%%", "")
+local spacing = (tonumber(spacing_str) or 0) / 100
+local full_width = nf_width + nf_width * 2 * spacing
+local nf_x = GetNotefieldX(player)
 
-			local zoom_factor = 1 - scale( mods.Mini:gsub("%%","")/100, 0, 2, 0, 1)
-			self.zoom_factor = zoom_factor
-			self:zoomx( zoom_factor )
-
-			self.target_beat = target_beat
-			self:queuecommand("SetUpdate")
-		end,
-
-		SetUpdateCommand=function(self)
-			self:SetUpdateFunction(function(self, _)
-				local pixels = BeatToPixels(self.target_beat)
-
-				-- The BeatToPixels function already handles reverse mods and positioning
-				local arrow_half = (32 + (LINE_HEIGHT / 2)) * (self.zoom_factor or 1)
-				local extra_reverse_offset = (opts:Reverse() == 1) and (math.abs(receptorStandard) + reverseOffset) or 0
-				self:y( pixels + NOTEFIELD_Y_OFFSET + extra_reverse_offset + arrow_half )
-
-			end)
-		end,
-
-		Def.Quad{
-			InitCommand=function(self)
-				local width = GetNotefieldWidth() or 256
-				local spacing_str = tostring(mods.Spacing or "0"):gsub("%%", "")
-				local spacing = (tonumber(spacing_str) or 0) / 100
-				local full_width = width + width * 2 * spacing
-
-				self:zoomto(full_width, LINE_HEIGHT)
-
-				if show_colored_lines or show_number then
-					if is_up then
-						self:diffuse(0,1,0,0.6) -- green
-					else
-						self:diffuse(1,0,0,0.6) -- red
-					end
-				else -- show_lines
-					self:diffuse(1,1,0,0.6) -- yellow
-				end
-			end
-		},
-
-		-- Optional bpm number display
-		(show_number and Def.BitmapText{
-			Font="Wendy/_wendy small",
-			InitCommand=function(self)
-				self:x(-145)
-
-				new_bpm = math.round(new_bpm)
-				self:zoom(0.25):shadowlength(1):y(0)
-				self:settext(new_bpm)
-
-				if is_up then
-					self:diffuse(0,1,0,0.9) -- green
-				else
-					self:diffuse(1,0,0,0.9) -- red
-				end
-			end
-		}) or nil,
-	}
+-- Helper: convert beat to Y-pixels
+local function BeatToPixels(beat)
+	local yOffset = ArrowEffects.GetYOffset(ps, 1, beat)
+	local yPos = ArrowEffects.GetYPos(ps, 1, yOffset, 0)
+	return yPos
 end
 
--- Examine the song's timing data and build a list of beats where the BPM
--- changes by ≥ RATIO_TO_IGNORE% (ignoring beat 0).
+-- Gather BPM change data
 local beats_to_draw = {}
 local song = GAMESTATE:GetCurrentSong()
 if song and song:GetTimingData() and song:GetTimingData().GetBPMsAndTimes then
@@ -141,11 +70,11 @@ if song and song:GetTimingData() and song:GetTimingData().GetBPMsAndTimes then
 	end
 end
 
--- Now do the same thing but with scrolls
+-- Also gather scroll changes
 if song and song:GetTimingData() and song:GetTimingData().GetScrolls then
 	local scroll_table = song:GetTimingData():GetScrolls()
-	if scroll_table and #scroll_table >= 1 then -- Single scroll, try backup method		
-		local steps = GAMESTATE:GetCurrentSteps(pn) -- current Steps (chart) for the player
+	if scroll_table and #scroll_table >= 1 then
+		local steps = GAMESTATE:GetCurrentSteps(pn)
 		if steps and steps:GetTimingData() then
 			scroll_table = steps:GetTimingData():GetScrolls()
 		end
@@ -161,7 +90,7 @@ if song and song:GetTimingData() and song:GetTimingData().GetScrolls then
 				if not prev_scroll then
 					prev_scroll = scroll_value
 				else
-					local ratio = math.abs(scroll_value - prev_scroll) -- Already a ratio
+					local ratio = math.abs(scroll_value - prev_scroll)
 					if ratio >= RATIO_TO_IGNORE then
 						table.insert(beats_to_draw, {beat=beat, is_up=(scroll_value>prev_scroll), bpm=(song:GetTimingData():GetBPMAtBeat(beat) * scroll_value)})
 					end
@@ -172,12 +101,131 @@ if song and song:GetTimingData() and song:GetTimingData().GetScrolls then
 	end
 end
 
+-- If no BPM changes, return empty actor
 if #beats_to_draw == 0 then return Def.Actor{} end
--- SM("BPMs and scrolls: " .. #beats_to_draw)
 
-local children = {}
-for _, entry in ipairs(beats_to_draw) do
-    table.insert(children, CreateLineActor(entry))
+-- Limit to pool size
+local num_lines = math.min(#beats_to_draw, MAX_POOL_SIZE)
+
+-- Create pooled line actors (pre-allocated, reusable)
+local function CreatePooledLineActor(index)
+	return Def.ActorFrame{
+		Name="BPMLine_"..index,
+		InitCommand=function(self)
+			self:x(nf_x)
+			self:zoomx(zoom_factor)
+			self.zoom_factor = zoom_factor
+			self:visible(false) -- Start hidden, will be configured later
+		end,
+		
+		-- Configure this line for a specific beat/bpm entry
+		ConfigureCommand=function(self, params)
+			if not params or not params.beat then
+				self:visible(false)
+				self:SetUpdateFunction(nil) -- Clear update function to save CPU
+				return
+			end
+			
+			local target_beat = params.beat
+			local is_up = params.is_up
+			local new_bpm = params.bpm
+			
+			self.target_beat = target_beat
+			self:visible(true)
+			
+			-- Configure the quad child
+			local quad = self:GetChild("LineQuad")
+			if quad then
+				if show_colored_lines or show_number then
+					if is_up then
+						quad:diffuse(0,1,0,0.6)
+					else
+						quad:diffuse(1,0,0,0.6)
+					end
+				else
+					quad:diffuse(1,1,0,0.6)
+				end
+			end
+			
+			-- Configure the text child (if exists)
+			local text = self:GetChild("BPMText")
+			if text and show_number then
+				text:visible(true)
+				text:settext(math.round(new_bpm))
+				if is_up then
+					text:diffuse(0,1,0,0.9)
+				else
+					text:diffuse(1,0,0,0.9)
+				end
+			elseif text then
+				text:visible(false)
+			end
+			
+			-- Set up the update function for this line
+			self:SetUpdateFunction(function(af, _)
+				local pixels = BeatToPixels(af.target_beat)
+				local arrow_half = (32 + (LINE_HEIGHT / 2)) * (af.zoom_factor or 1)
+				local extra_reverse_offset = (opts:Reverse() == 1) and (math.abs(receptorStandard) + reverseOffset) or 0
+				af:y(pixels + NOTEFIELD_Y_OFFSET + extra_reverse_offset + arrow_half)
+			end)
+		end,
+		
+		-- Cleanup when leaving screen
+		OffCommand=function(self)
+			self:SetUpdateFunction(nil) -- Clear update function to free closure
+			self:visible(false)
+		end,
+
+		Def.Quad{
+			Name="LineQuad",
+			InitCommand=function(self)
+				self:zoomto(full_width, LINE_HEIGHT)
+			end
+		},
+
+		-- Always create BitmapText but control visibility
+		Def.BitmapText{
+			Name="BPMText",
+			Font="Wendy/_wendy small",
+			InitCommand=function(self)
+				self:x(-145)
+				self:zoom(0.25):shadowlength(1):y(0)
+				self:visible(show_number)
+			end
+		},
+	}
 end
 
-return Def.ActorFrame(children)
+-- Build the pool of line actors
+local children = {}
+for i = 1, num_lines do
+	children[#children+1] = CreatePooledLineActor(i)
+end
+
+-- Main ActorFrame that manages the pool
+local af = Def.ActorFrame{
+	Name="BPMLinesContainer_"..pn,
+	
+	-- Configure all pooled lines when screen loads
+	OnCommand=function(self)
+		for i = 1, num_lines do
+			local line = self:GetChild("BPMLine_"..i)
+			if line and beats_to_draw[i] then
+				line:playcommand("Configure", beats_to_draw[i])
+			end
+		end
+	end,
+	
+	-- Clean up on screen exit
+	OffCommand=function(self)
+		-- Clear references to help GC
+		beats_to_draw = nil
+	end,
+}
+
+-- Add pooled children to the container
+for _, child in ipairs(children) do
+	af[#af+1] = child
+end
+
+return af

@@ -19,5 +19,9 @@ return Def.Banner{
 		if IsUltraWide and #GAMESTATE:GetHumanPlayers() > 1 then
 			self:x(self:GetX() * -1)
 		end
+	end,
+	-- Unload banner texture when leaving screen to free memory
+	OffCommand=function(self)
+		self:UnloadBanner()
 	end
 }

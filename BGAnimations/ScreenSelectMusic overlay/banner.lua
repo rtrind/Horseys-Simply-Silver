@@ -3,6 +3,9 @@ local banner_directory = FILEMAN:DoesFileExist(path) and path or THEME:GetPathG(
 
 local song = GAMESTATE:GetCurrentSong()
 
+-- Reference to actor pool for memory management
+local Pool = SL and SL.ActorPool or nil
+
 local bannerWidth = 418
 local bannerHeight = 164
 
@@ -17,7 +20,16 @@ local t = Def.ActorFrame{
 t[#t+1] = Def.Sprite{
 	Name="FallbackBanner",
 	Texture=banner_directory.."/banner"..SL.Global.ActiveColorIndex.." (doubleres).png",
-	InitCommand=function(self) self:setsize(bannerWidth, bannerHeight) end,
+	InitCommand=function(self) 
+		self:setsize(bannerWidth, bannerHeight) 
+		-- Register with pool for tracking
+		if Pool then Pool.RegisterBanner("FallbackBannerSprite", self) end
+	end,
+
+	-- Unload texture when leaving screen to free memory
+	OffCommand=function(self)
+		self:unloadtexture()
+	end,
 
 	CurrentSongChangedMessageCommand=function(self) self:playcommand("Set") end,
 	CurrentCourseChangedMessageCommand=function(self) self:playcommand("Set") end,
@@ -53,9 +65,15 @@ t[#t+1] = Def.Sprite{
 	InitCommand=function(self)
 		self:setsize(bannerWidth, bannerHeight)
 		self:visible(false)
+		-- Register with pool for tracking
+		if Pool then Pool.RegisterBanner("GroupBannerSprite", self) end
 	end,
 	OnCommand=function(self)
 		self:playcommand("Set")
+	end,
+	-- Unload texture when leaving screen to free memory
+	OffCommand=function(self)
+		self:unloadtexture()
 	end,
 	CurrentSongChangedMessageCommand=function(self)
 		self:playcommand("Set")
@@ -101,6 +119,12 @@ if PREFSMAN:GetPreference("ShowBanners") then
 		Name="SongBanner",
 		InitCommand=function(self)
 			self:setsize(bannerWidth, bannerHeight)
+			-- Register with pool for tracking
+			if Pool then Pool.RegisterBanner("BannerSprite", self) end
+		end,
+		-- Unload texture when leaving screen to free memory
+		OffCommand=function(self)
+			self:UnloadBanner()
 		end,
 		CurrentSongChangedMessageCommand=function(self)
 			self:playcommand("Set")
@@ -141,15 +165,19 @@ t[#t+1] = Def.ActorFrame{
 	}
 }
 
-
 if ThemePrefs.Get("ShowCDTitles") then
 	t[#t+1] = Def.Sprite {
-		OnCommand=function(self)
+		InitCommand=function(self)
+			-- Register with pool for tracking
+			if Pool then Pool.RegisterBanner("CDTitleSprite", self) end
 			self:draworder(101)
+		end,
+		OnCommand=function(self)
 			self:playcommand("SetCD")
 		end,
+		-- Unload texture when leaving screen to free memory
 		OffCommand=function(self)
-			self:bouncebegin(0.15)
+			self:unloadtexture()
 		end,
 		CurrentSongChangedMessageCommand=function(self) self:playcommand("SetCD") end,
 		SwitchFocusToGroupsMessageCommand=function(self) self:GetChild("CdTitle"):visible(false) end,

@@ -3,6 +3,9 @@ if PREFSMAN:GetPreference("MenuTimer") then
 	SL.Global.MenuTimer.ScreenSelectMusic = ThemePrefs.Get("ScreenSelectMusicMenuTimer")
 end
 
+-- Reference to actor pool for memory management
+local Pool = SL and SL.ActorPool or nil
+
 local Players = GAMESTATE:GetHumanPlayers()
 local holdingCtrl = false
 
@@ -26,11 +29,18 @@ end
 
 local t = Def.ActorFrame{
 	Name="GameplayUnderlay",
+	InitCommand=function(self)
+		-- Force garbage collection on screen enter to reclaim memory from SSM
+		if Pool then Pool.OnScreenEnter("ScreenGameplay") end
+	end,
 	OnCommand=function(self)
 		if ThemePrefs.Get("KeyboardFeatures") and PREFSMAN:GetPreference("EventMode")  then
 			SCREENMAN:GetTopScreen():AddInputCallback(RestartHandler)
 		end
-		
+	end,
+	OffCommand=function(self)
+		-- Clean up on screen exit
+		if Pool then Pool.OnScreenExit("ScreenGameplay") end
 	end
 }
 

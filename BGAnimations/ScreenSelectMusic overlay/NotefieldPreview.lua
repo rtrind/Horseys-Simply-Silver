@@ -1,9 +1,13 @@
 -- Majority of code borrowed from Mr. ThatKid and Sudospective; with much help from the OutFox discord.
+-- Modified to use SL.ActorPool for memory efficiency (reuses NoteField instances)
 
 local NotefieldRenderAfter = 0 --THEME:GetMetric("Player","DrawDistanceAfterTargetsPixels")
 local PreviewDelay = THEME:GetMetric("ScreenSelectMusic", "SampleMusicDelay")
 -- Delay before showing the notefield preview to hide initial garbage frames (upstream bug workaround)
 local NotefieldShowDelay = 0.05
+
+-- Track if we've already created NoteFields (for reuse across screen reloads)
+local Pool = SL and SL.ActorPool or nil
 
 local function GetCurrentChartIndex(pn, ChartArray)
     local PlayerSteps = GAMESTATE:GetCurrentSteps(pn)
@@ -192,6 +196,11 @@ for i, pn in ipairs(GAMESTATE:GetEnabledPlayers()) do
               end
               -- Fade in after delay to hide garbage frames
               self:sleep(NotefieldShowDelay):linear(0.15):diffusealpha(1)
+              
+              -- Register with pool for tracking
+              if Pool then
+                Pool.RegisterNotefieldPreview(pnNoteField, self)
+              end
             end,
 
             CurrentStepsP1ChangedMessageCommand=function(self) self:playcommand("Refresh") end,
@@ -217,12 +226,20 @@ for i, pn in ipairs(GAMESTATE:GetEnabledPlayers()) do
                 local NoteData = Song:GetNoteData(ChartIndex)
                 if not NoteData then return end
 
+                -- Clear previous note data before loading new (prevents accumulation)
                 self:SetNoteDataFromLua({})
                 --SCREENMAN:SystemMessage("Loading ChartIndex!")
                 self:SetNoteDataFromLua(NoteData)
                 self:AutoPlay(true)
                 -- Fade in after delay to hide garbage frames
                 self:sleep(NotefieldShowDelay):linear(0.15):diffusealpha(1)
+            end,
+            
+            -- Clean up when leaving screen
+            OffCommand=function(self)
+              -- Clear note data to free memory
+              self:SetNoteDataFromLua({})
+              self:AutoPlay(false)
             end
         }
     }

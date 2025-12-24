@@ -1,6 +1,9 @@
 local Players = GAMESTATE:GetHumanPlayers()
 local NumPanes = 6
 
+-- Reference to actor pool for memory management
+local Pool = SL and SL.ActorPool or nil
+
 local InputHandler = nil
 local EventOverlayInputHandler = nil
 
@@ -25,11 +28,19 @@ local t = Def.ActorFrame{Name="ScreenEval Common"}
 -- add a lua-based InputCallback to this screen so that we can navigate
 -- through multiple panes of information; pass a reference to this ActorFrame
 -- and the number of panes there are to InputHandler.lua
+t.InitCommand=function(self)
+	-- Force garbage collection on screen enter to reclaim memory from Gameplay
+	if Pool then Pool.OnScreenEnter("ScreenEvaluation") end
+end
 t.OnCommand=function(self)
 	InputHandler = LoadActor("./InputHandler.lua", {self, NumPanes})
 	EventOverlayInputHandler = LoadActor("./Shared/EventInputHandler.lua")
 	SCREENMAN:GetTopScreen():AddInputCallback(InputHandler)
 	PROFILEMAN:SaveMachineProfile()
+end
+t.OffCommand=function(self)
+	-- Clean up on screen exit
+	if Pool then Pool.OnScreenExit("ScreenEvaluation") end
 end
 t.DirectInputToEngineCommand=function(self)
 	SCREENMAN:GetTopScreen():RemoveInputCallback(EventOverlayInputHandler)

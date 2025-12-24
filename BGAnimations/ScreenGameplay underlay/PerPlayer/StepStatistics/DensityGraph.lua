@@ -240,6 +240,11 @@ local graph_and_lifeline = Def.ActorFrame{
 		CurrentSongChangedMessageCommand=function(self)
 			life_verts = {}
 			self:SetNumVertices(#life_verts):SetVertices(life_verts)
+		end,
+		-- Clear vertices on screen exit to free memory
+		OffCommand=function(self)
+			life_verts = {}
+			self:SetNumVertices(0):SetVertices({})
 		end
 	},
 }

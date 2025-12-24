@@ -36,5 +36,9 @@ return Def.Banner{
 			self:linear(1):diffusealpha(1):glow(0,0,0,0)
 			self:linear(0):rotationz(0)
 		end
+	end,
+	-- Unload banner texture when leaving screen to free memory
+	OffCommand=function(self)
+		self:UnloadBanner()
 	end
 }

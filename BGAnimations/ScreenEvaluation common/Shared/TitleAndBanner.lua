@@ -22,6 +22,10 @@ if song and song:HasBanner() then
 			self:zoom(0.6)
 			self:y(41)
 		end,
+		-- Unload banner texture when leaving screen to free memory
+		OffCommand=function(self)
+			self:UnloadBanner()
+		end,
 	}
 else
 	if HasGroupBanner() then
@@ -36,6 +40,10 @@ else
  				self:zoom(0.6)
  				self:y(41)
  			end,
+ 			-- Unload banner texture when leaving screen to free memory
+ 			OffCommand=function(self)
+ 				self:UnloadBanner()
+ 			end,
  		};
  	else
  		--fallback banner
@@ -44,6 +52,10 @@ else
  				self:setsize(banner.width, 164)
  				self:zoom(0.6)
  				self:y(41)
+ 			end,
+ 			-- Unload texture when leaving screen to free memory
+ 			OffCommand=function(self)
+ 				self:unloadtexture()
  			end
  		}
 	end

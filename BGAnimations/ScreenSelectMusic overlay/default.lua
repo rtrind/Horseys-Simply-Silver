@@ -4,12 +4,18 @@ if SL.MusicWheel then
 	SL.MusicWheel.Initialize()
 end
 
+-- Reference to actor pool for memory management
+local Pool = SL and SL.ActorPool or nil
+
 local af = Def.ActorFrame{
 	-- GameplayReloadCheck is a kludgy global variable used in ScreenGameplay in.lua to check
 	-- if ScreenGameplay is being entered "properly" or being reloaded by a scripted mod-chart.
 	-- If we're here in SelectMusic, set GameplayReloadCheck to false, signifying that the next
 	-- time ScreenGameplay loads, it should have a properly animated entrance.
 	InitCommand=function(self)
+		-- Force garbage collection on screen enter to reclaim memory from previous screens
+		if Pool then Pool.OnScreenEnter("ScreenSelectMusic") end
+		
 		-- Clear the GetLamp cache to ensure fresh data
 		if WheelHelpers.ClearCache then
 			WheelHelpers.ClearCache()
@@ -34,6 +40,8 @@ local af = Def.ActorFrame{
 
 	-- Start polling the menu timer after screen loads
 	OnCommand=function(self)
+		if SL.ActorPool then SL.ActorPool.EnableDebug() end
+
 		if PREFSMAN:GetPreference("MenuTimer") then
 			self:queuecommand("ListenTimer")
 		end

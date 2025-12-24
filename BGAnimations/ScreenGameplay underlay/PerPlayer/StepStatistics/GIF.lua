@@ -19,6 +19,24 @@ t = Def.ActorFrame {
 		self:xy(x,y)	
 		self:zoom(zoom)
 	end,
+	-- Unload sprite textures when leaving screen to free memory (GIF sprites can be large)
+	OffCommand=function(self)
+		-- Recursively unload textures from all sprite children
+		local function UnloadSprites(actor)
+			if actor.unloadtexture then
+				actor:unloadtexture()
+			end
+			if actor.GetChildren then
+				local children = actor:GetChildren()
+				if children then
+					for _, child in pairs(children) do
+						UnloadSprites(child)
+					end
+				end
+			end
+		end
+		UnloadSprites(self)
+	end,
 	LoadActor("./GIFs/".. mods.StepStatsExtra .. ".lua", player)	
 }
 

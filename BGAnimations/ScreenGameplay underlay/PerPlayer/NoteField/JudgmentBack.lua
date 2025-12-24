@@ -369,7 +369,11 @@ return Def.ActorFrame{
 				self:Load( THEME:GetPathG("", "_judgments/" .. file_to_load) )
 			end
 		end,
-		ResetCommand=function(self) self:finishtweening():stopeffect():visible(false) end
+		ResetCommand=function(self) self:finishtweening():stopeffect():visible(false) end,
+		-- Unload texture when leaving screen to free memory
+		OffCommand=function(self)
+			self:unloadtexture()
+		end
 	},
 	
 	Def.Sprite{
@@ -397,6 +401,10 @@ return Def.ActorFrame{
 				self:Load( THEME:GetPathG("", "_judgments/" .. file_to_load) )
 			end
 		end,
-		ResetFaultCommand=function(self) self:finishtweening():stopeffect():visible(false) end
+		ResetFaultCommand=function(self) self:finishtweening():stopeffect():visible(false) end,
+		-- Unload texture when leaving screen to free memory
+		OffCommand=function(self)
+			self:unloadtexture()
+		end
 	},
 }
