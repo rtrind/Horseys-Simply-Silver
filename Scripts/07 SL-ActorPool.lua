@@ -1,37 +1,71 @@
 -- SL-ActorPool.lua
--- Global actor pooling and memory management system
--- Prevents memory leaks by reusing actors instead of creating/destroying them
+-- Global Actor Pool and Memory Management System
+-- Prevents memory leaks from actor recreation and texture accumulation
 
 -- Initialize the global pool in SL table (SL is defined in SL_Init.lua)
 if not SL then SL = {} end
 
-SL.ActorPool = {
-	-- Stored actor references (populated at runtime by actual actors)
-	Actors = {
-		NotefieldPreview = {}, -- [player] = actor reference
-		BannerSprite = nil,    -- Single banner sprite for SSM
-		GroupBannerSprite = nil,
-		CDTitleSprite = nil,
-	},
-	
-	-- Pool of reusable Quads for BPMLines (created lazily)
-	QuadPool = {},
-	QuadPoolSize = 0,
-	QuadPoolUsed = 0,
-	
-	-- Pool of reusable BitmapText for BPMLines
-	TextPool = {},
-	TextPoolSize = 0,
-	TextPoolUsed = 0,
-	
-	-- Memory tracking
-	LastGCTime = 0,
-	GCInterval = 30, -- Force GC every 30 seconds during gameplay
-	
-	-- Debug/monitoring
-	DebugMode = false,
-	MemoryLog = {},
+SL.ActorPool = SL.ActorPool or {}
+
+-- Font Caching System
+-- Caches loaded fonts to avoid repeated texture loading
+SL.ActorPool.FontCache = SL.ActorPool.FontCache or {}
+local FontCache = SL.ActorPool.FontCache
+
+-- Get or create a cached font
+function SL.ActorPool.GetCachedFont(fontPath)
+	if not FontCache[fontPath] then
+		FontCache[fontPath] = LoadFont(fontPath)
+		if SL.ActorPool.Debug then
+			print(string.format("[FontCache] Created new font: %s", fontPath))
+		end
+	else
+		if SL.ActorPool.Debug then
+			print(string.format("[FontCache] Reusing cached font: %s", fontPath))
+		end
+	end
+	return FontCache[fontPath]
+end
+
+-- Clear font cache (call on screen transitions if needed)
+function SL.ActorPool.ClearFontCache()
+	for fontPath, font in pairs(FontCache) do
+		if font.unloadtexture then
+			font:unloadtexture()
+		end
+	end
+	FontCache = {}
+	SL.ActorPool.FontCache = FontCache
+	if SL.ActorPool.Debug then
+		print("[FontCache] Cleared all cached fonts")
+	end
+end
+
+-- Stored actor references (populated at runtime by actual actors)
+SL.ActorPool.Actors = {
+	NotefieldPreview = {}, -- [player] = actor reference
+	BannerSprite = nil,    -- Single banner sprite for SSM
+	GroupBannerSprite = nil,
+	CDTitleSprite = nil,
 }
+
+-- Pool of reusable Quads for BPMLines (created lazily)
+SL.ActorPool.QuadPool = {}
+SL.ActorPool.QuadPoolSize = 0
+SL.ActorPool.QuadPoolUsed = 0
+
+-- Pool of reusable BitmapText for BPMLines
+SL.ActorPool.TextPool = {}
+SL.ActorPool.TextPoolSize = 0
+SL.ActorPool.TextPoolUsed = 0
+
+-- Memory tracking
+SL.ActorPool.LastGCTime = 0
+SL.ActorPool.GCInterval = 30 -- Force GC every 30 seconds during gameplay
+
+-- Debug/monitoring
+SL.ActorPool.DebugMode = false
+SL.ActorPool.MemoryLog = {}
 
 local Pool = SL.ActorPool
 

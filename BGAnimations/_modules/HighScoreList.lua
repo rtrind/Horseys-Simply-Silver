@@ -22,7 +22,8 @@ local song = args.song or GAMESTATE:GetCurrentSong()
 local steps = args.steps or ((args.RoundsAgo==nil or args.RoundsAgo==1) and GAMESTATE:GetCurrentSteps(player))
 if not (song and steps) then return af end
 
-local Font = args.Font or ThemePrefs.Get("ThemeFont") .. " Normal"
+local FontPath = args.Font or ThemePrefs.Get("ThemeFont") .. " Normal"
+local Font = (SL and SL.ActorPool and SL.ActorPool.GetCachedFont or LoadFont)(FontPath)
 local row_height = args.RowHeight or 22
 
 -- ---------------------------------------------
@@ -143,26 +144,31 @@ for i=lower,upper do
 			end
 		end
 	end
+	
+	-- Stop effects and clean up when leaving screen
+	row.OffCommand=function(self)
+		self:stopeffect()
+	end
 
-	row[#row+1] = LoadFont(Font)..{
+	row[#row+1] = Font..{
 		Name="Rank",
 		Text=i..". ",
 		InitCommand=function(self) self:horizalign(right):xy(-130, row_index*row_height):maxwidth(55) end,
 	}
 
-	row[#row+1] = LoadFont(Font)..{
+	row[#row+1] = Font..{
 		Name="Name",
 		Text=name,
 		InitCommand=function(self) self:horizalign(center):xy(-75, row_index*row_height):maxwidth(80) end
 	}
 
-	row[#row+1] = LoadFont(Font)..{
+	row[#row+1] = Font..{
 		Name="Score",
 		Text=score,
 		InitCommand=function(self) self:horizalign(left):xy(16, row_index*row_height) end,
 	}
 
-	row[#row+1] = LoadFont(Font)..{
+	row[#row+1] = Font..{
 		Name="Date",
 		Text=date,
 		InitCommand=function(self) self:horizalign(left):xy(72, row_index*row_height) end,

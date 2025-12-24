@@ -133,7 +133,7 @@ af2[#af2+1] = Def.ActorFrame{
 	},
 
 	-- Stream Breakdown
-	LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
+	(SL and SL.ActorPool and SL.ActorPool.GetCachedFont or LoadFont)(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 		Text="",
 		Name="BreakdownText",
 		InitCommand=function(self)
@@ -163,7 +163,7 @@ af2[#af2+1] = Def.ActorFrame{
 
 	-- Peak NPS/eBPM
 	-- by moving PeakNPS here, there's more room for the Stepartist text
-	LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
+	(SL and SL.ActorPool and SL.ActorPool.GetCachedFont or LoadFont)(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 		Text="",
 		Name="PeakNPS_eBPM",
 		InitCommand=function(self)
@@ -211,7 +211,7 @@ local layout = {
   	{"Brackets"}
  }
 
- af3[#af3+1] = LoadFont("Common normal")..{
+ af3[#af3+1] = (SL and SL.ActorPool and SL.ActorPool.GetCachedFont or LoadFont)("Common normal")..{
 	Text="",
 	Name="Total Stream",
 	InitCommand=function(self)
@@ -244,7 +244,7 @@ local rowSpacing = 15
 
 for i, row in ipairs(layout) do
 	for j, col in pairs(row) do
-		af3[#af3+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
+		af3[#af3+1] = (SL and SL.ActorPool and SL.ActorPool.GetCachedFont or LoadFont)(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 			Text=col ~= "Total Stream" and "0" or "None (0.0%)",
 			Name=col .. "Value",
 			InitCommand=function(self)
@@ -283,7 +283,7 @@ for i, row in ipairs(layout) do
 			end
 		}
 
-		af3[#af3+1] = LoadFont(ThemePrefs.Get("ThemeFont") .. " Normal")..{
+		af3[#af3+1] = (SL and SL.ActorPool and SL.ActorPool.GetCachedFont or LoadFont)(ThemePrefs.Get("ThemeFont") .. " Normal")..{
 			Text=col,
 			Name=col,
 			InitCommand=function(self)
