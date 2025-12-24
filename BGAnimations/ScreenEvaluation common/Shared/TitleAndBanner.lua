@@ -22,10 +22,6 @@ if song and song:HasBanner() then
 			self:zoom(0.6)
 			self:y(41)
 		end,
-		-- Unload banner texture when leaving screen to free memory
-		OffCommand=function(self)
-			self:UnloadBanner()
-		end,
 	}
 else
 	if HasGroupBanner() then
@@ -37,14 +33,10 @@ else
  			end,
  			OnCommand=function(self)
  				self:setsize(banner.width, 164)
- 				self:zoom(0.6)
- 				self:y(41)
- 			end,
- 			-- Unload banner texture when leaving screen to free memory
- 			OffCommand=function(self)
- 				self:UnloadBanner()
- 			end,
- 		};
+				self:zoom(0.6)
+				self:y(41)
+			end,
+		};
  	else
  		--fallback banner
  		af[#af+1] = LoadActor(banner.directory .. "/banner" .. SL.Global.ActiveColorIndex .. " (doubleres).png")..{
@@ -53,10 +45,6 @@ else
  				self:zoom(0.6)
  				self:y(41)
  			end,
- 			-- Unload texture when leaving screen to free memory
- 			OffCommand=function(self)
- 				self:unloadtexture()
- 			end
  		}
 	end
 end
