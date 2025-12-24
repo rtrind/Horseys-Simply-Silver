@@ -62,7 +62,6 @@ This fork removes features I don't use to keep things simple and reduce bugs:
 
 ### Other Removals
 - Genre sort (most packs don't supply correct genre data)
-- CD title display option
 - Tournament mode
 - Various unused graphics and sounds
 - Score vocalization
