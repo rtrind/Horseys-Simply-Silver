@@ -24,10 +24,9 @@ A heavily modified fork of [Horsey's Simply Love](https://github.com/Horsey-/Hor
 ### Custom Lua Music Wheel
 Completely replaced the engine's music wheel with a custom Lua implementation:
 - **Proper favorites handling** - Deduplicates favorites when both players favorite the same song
-- **Correct highscore display** - No more wrong scores showing in favorites sort
 - **Custom pack type icons** - Visual indicators for different song pack types
 - **Clean group names** - Automatically removes ordering specific prefix pattern (like "O2000a - Pack Name" → "Pack Name")
-- **Multiple sort methods** - Title, Artist, BPM, Length, Difficulty Number, Top Scores, Most Played
+- **Reworked sort methods** - Title, Artist, BPM, Length, Difficulty Number, Top Scores, Most Played
 
 ### BPM Change Lines
 Visual indicators during gameplay showing when BPM changes occur:
