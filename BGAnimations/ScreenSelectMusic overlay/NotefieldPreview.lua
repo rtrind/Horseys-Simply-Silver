@@ -4,7 +4,7 @@
 local NotefieldRenderAfter = 0 --THEME:GetMetric("Player","DrawDistanceAfterTargetsPixels")
 local PreviewDelay = THEME:GetMetric("ScreenSelectMusic", "SampleMusicDelay")
 -- Delay before showing the notefield preview to hide initial garbage frames (upstream bug workaround)
-local NotefieldShowDelay = 0.05
+local NotefieldShowDelay = 0.1
 
 -- Track if we've already created NoteFields (for reuse across screen reloads)
 local Pool = SL and SL.ActorPool or nil
