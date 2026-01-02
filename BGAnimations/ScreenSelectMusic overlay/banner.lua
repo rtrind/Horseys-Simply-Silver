@@ -26,11 +26,6 @@ t[#t+1] = Def.Sprite{
 		if Pool then Pool.RegisterBanner("FallbackBannerSprite", self) end
 	end,
 
-	-- Unload texture when leaving screen to free memory
-	OffCommand=function(self)
-		self:unloadtexture()
-	end,
-
 	CurrentSongChangedMessageCommand=function(self) self:playcommand("Set") end,
 	CurrentCourseChangedMessageCommand=function(self) self:playcommand("Set") end,
 	FocusedGroupChangedMessageCommand=function(self, params)
@@ -70,10 +65,6 @@ t[#t+1] = Def.Sprite{
 	end,
 	OnCommand=function(self)
 		self:playcommand("Set")
-	end,
-	-- Unload texture when leaving screen to free memory
-	OffCommand=function(self)
-		self:unloadtexture()
 	end,
 	CurrentSongChangedMessageCommand=function(self)
 		self:playcommand("Set")
@@ -121,10 +112,6 @@ if PREFSMAN:GetPreference("ShowBanners") then
 			self:setsize(bannerWidth, bannerHeight)
 			-- Register with pool for tracking
 			if Pool then Pool.RegisterBanner("BannerSprite", self) end
-		end,
-		-- Unload texture when leaving screen to free memory
-		OffCommand=function(self)
-			self:UnloadBanner()
 		end,
 		CurrentSongChangedMessageCommand=function(self)
 			self:playcommand("Set")
@@ -174,10 +161,6 @@ if ThemePrefs.Get("ShowCDTitles") then
 		end,
 		OnCommand=function(self)
 			self:playcommand("SetCD")
-		end,
-		-- Unload texture when leaving screen to free memory
-		OffCommand=function(self)
-			self:unloadtexture()
 		end,
 		CurrentSongChangedMessageCommand=function(self) self:playcommand("SetCD") end,
 		SwitchFocusToGroupsMessageCommand=function(self) self:GetChild("CdTitle"):visible(false) end,
